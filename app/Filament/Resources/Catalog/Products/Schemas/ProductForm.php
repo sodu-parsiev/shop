@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Catalog\Products\Schemas;
 
 use App\Enums\ProductStatus;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -38,6 +40,31 @@ class ProductForm
                     ->relationship('customizationServices', 'name')
                     ->multiple()
                     ->preload(),
+                Section::make('Media')
+                    ->components([
+                        FileUpload::make('cover_image')
+                            ->image()
+                            ->imageEditor()
+                            ->disk('public')
+                            ->directory('products/covers')
+                            ->visibility('public'),
+                        Repeater::make('images')
+                            ->relationship('images')
+                            ->orderColumn('sort_order')
+                            ->reorderable()
+                            ->defaultItems(0)
+                            ->addActionLabel('Add gallery image')
+                            ->collapsible()
+                            ->schema([
+                                FileUpload::make('path')
+                                    ->label('Image')
+                                    ->image()
+                                    ->required()
+                                    ->disk('public')
+                                    ->directory('products/gallery')
+                                    ->visibility('public'),
+                            ]),
+                    ]),
                 Textarea::make('short_description'),
                 Textarea::make('description'),
                 Textarea::make('composition'),

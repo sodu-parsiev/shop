@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'meta_description',
     'canonical_url',
     'og_image',
+    'cover_image',
 ])]
 class Product extends Model
 {
@@ -58,5 +59,10 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 }

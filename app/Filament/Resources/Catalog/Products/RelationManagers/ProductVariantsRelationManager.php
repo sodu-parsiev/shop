@@ -49,10 +49,14 @@ class ProductVariantsRelationManager extends RelationManager
                 Select::make('availability_status')
                     ->options(collect(AvailabilityStatus::cases())->mapWithKeys(fn (AvailabilityStatus $status) => [$status->value => $status->label()]))
                     ->default(AvailabilityStatus::MadeToOrder)
-                    ->required(),
+                    ->required()
+                    ->live(),
                 TextInput::make('stock_quantity')
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->visible(fn (Get $get): bool => $get('availability_status') === AvailabilityStatus::InStock->value)
+                    ->dehydratedWhenHidden()
+                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('availability_status') === AvailabilityStatus::InStock->value ? $state : null),
             ]);
     }
 
