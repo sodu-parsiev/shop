@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AvailabilityStatus;
+use App\Enums\ProductStatus;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\CustomizationService;
@@ -53,6 +55,19 @@ class CatalogSeeder extends Seeder
         $classicTee = Product::factory()->create([
             'name' => 'Classic Tee',
             'category_id' => $categories->first()->id,
+            'slug' => 'classic-tee',
+            'sku' => 'SKU-CLASSIC-TEE',
+            'short_description' => 'A timeless, everyday crew neck t-shirt.',
+            'description' => 'Our Classic Tee is made from soft, durable cotton and cut for a comfortable regular fit. Perfect as a blank canvas for custom prints.',
+            'composition' => '100% combed cotton',
+            'fit' => 'Regular Fit',
+            'moq' => 25,
+            'stock_conditions' => 'Ships within 3-5 business days once printed.',
+            'status' => ProductStatus::Active,
+            'recommended' => true,
+            'sort_order' => 0,
+            'meta_title' => 'Classic Tee | Custom Printed T-Shirts',
+            'meta_description' => 'Order the Classic Tee in bulk with custom printing.',
         ]);
         $classicTee->customizationServices()->attach($services->take(2)->pluck('id'));
         ProductVariant::factory()->create([
@@ -60,11 +75,26 @@ class CatalogSeeder extends Seeder
             'color_id' => $colors->first()->id,
             'size_id' => $sizes->first()->id,
             'density_id' => $densities->first()->id,
+            'availability_status' => AvailabilityStatus::InStock,
+            'stock_quantity' => 250,
         ]);
 
         $toteBag = Product::factory()->create([
             'name' => 'Canvas Tote Bag',
             'category_id' => $categories->get(2)->id,
+            'slug' => 'canvas-tote-bag',
+            'sku' => 'SKU-CANVAS-TOTE',
+            'short_description' => 'A sturdy canvas tote bag for everyday carry.',
+            'description' => 'Heavyweight canvas tote bag with reinforced handles, ideal for embroidery or vinyl branding.',
+            'composition' => '100% cotton canvas',
+            'fit' => null,
+            'moq' => 50,
+            'stock_conditions' => 'Made to order; allow 7-10 business days.',
+            'status' => ProductStatus::Active,
+            'recommended' => false,
+            'sort_order' => 1,
+            'meta_title' => 'Canvas Tote Bag | Custom Branded Totes',
+            'meta_description' => 'Order custom branded canvas tote bags in bulk.',
         ]);
         $toteBag->customizationServices()->attach($services->last()->id);
         ProductVariant::factory()->create([
@@ -72,6 +102,8 @@ class CatalogSeeder extends Seeder
             'color_id' => $colors->get(1)->id,
             'size_id' => $sizes->get(1)->id,
             'density_id' => $densities->get(1)->id,
+            'availability_status' => AvailabilityStatus::MadeToOrder,
+            'stock_quantity' => null,
         ]);
     }
 }

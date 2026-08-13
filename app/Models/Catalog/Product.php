@@ -2,6 +2,7 @@
 
 namespace App\Models\Catalog;
 
+use App\Enums\ProductStatus;
 use Database\Factories\Catalog\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,11 +11,39 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'category_id'])]
+#[Fillable([
+    'name',
+    'category_id',
+    'slug',
+    'sku',
+    'short_description',
+    'description',
+    'composition',
+    'fit',
+    'moq',
+    'stock_conditions',
+    'status',
+    'recommended',
+    'sort_order',
+    'meta_title',
+    'meta_description',
+    'canonical_url',
+    'og_image',
+])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'moq' => 'integer',
+            'recommended' => 'boolean',
+            'sort_order' => 'integer',
+            'status' => ProductStatus::class,
+        ];
+    }
 
     public function category(): BelongsTo
     {

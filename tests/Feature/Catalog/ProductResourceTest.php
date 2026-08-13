@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProductStatus;
 use App\Filament\Resources\Catalog\Products\Pages\CreateProduct;
 use App\Filament\Resources\Catalog\Products\Pages\EditProduct;
 use App\Filament\Resources\Catalog\Products\Pages\ListProducts;
@@ -32,15 +33,25 @@ test('it can create a product with a category and customization services', funct
     Livewire::test(CreateProduct::class)
         ->fillForm([
             'name' => 'Custom Tote Bag',
+            'slug' => 'custom-tote-bag',
+            'sku' => 'SKU-CUSTOM-TOTE',
             'category_id' => $category->id,
             'customizationServices' => $services->pluck('id')->all(),
+            'moq' => 10,
+            'status' => ProductStatus::Active->value,
+            'recommended' => true,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas('products', [
         'name' => 'Custom Tote Bag',
+        'slug' => 'custom-tote-bag',
+        'sku' => 'SKU-CUSTOM-TOTE',
         'category_id' => $category->id,
+        'moq' => 10,
+        'status' => ProductStatus::Active->value,
+        'recommended' => true,
     ]);
 
     $product = Product::where('name', 'Custom Tote Bag')->firstOrFail();
@@ -59,10 +70,42 @@ test('it requires a category when creating a product', function () {
     Livewire::test(CreateProduct::class)
         ->fillForm([
             'name' => 'No Category Product',
+            'slug' => 'no-category-product',
+            'sku' => 'SKU-NO-CATEGORY',
             'category_id' => null,
         ])
         ->call('create')
         ->assertHasFormErrors(['category_id' => 'required']);
+});
+
+test('it requires a unique slug and sku when creating a product', function () {
+    $category = Category::factory()->create();
+    $existing = Product::factory()->create(['slug' => 'existing-slug', 'sku' => 'SKU-EXISTING']);
+
+    Livewire::test(CreateProduct::class)
+        ->fillForm([
+            'name' => 'Another Product',
+            'slug' => $existing->slug,
+            'sku' => $existing->sku,
+            'category_id' => $category->id,
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['slug' => 'unique', 'sku' => 'unique']);
+});
+
+test('it requires an moq of at least 1 when creating a product', function () {
+    $category = Category::factory()->create();
+
+    Livewire::test(CreateProduct::class)
+        ->fillForm([
+            'name' => 'Low MOQ Product',
+            'slug' => 'low-moq-product',
+            'sku' => 'SKU-LOW-MOQ',
+            'category_id' => $category->id,
+            'moq' => 0,
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['moq' => 'min']);
 });
 
 test('it can update a product', function () {

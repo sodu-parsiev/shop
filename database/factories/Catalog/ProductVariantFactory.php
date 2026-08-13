@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Catalog;
 
+use App\Enums\AvailabilityStatus;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
@@ -26,6 +27,8 @@ class ProductVariantFactory extends Factory
             'color_id' => Color::factory(),
             'size_id' => Size::factory(),
             'density_id' => Density::factory(),
+            'availability_status' => fake()->randomElement(AvailabilityStatus::cases()),
+            'stock_quantity' => fake()->optional(0.7)->numberBetween(0, 500),
         ];
     }
 }

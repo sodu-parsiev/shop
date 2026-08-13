@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AvailabilityStatus;
 use App\Filament\Resources\Catalog\Products\Pages\EditProduct;
 use App\Filament\Resources\Catalog\Products\RelationManagers\ProductVariantsRelationManager;
 use App\Models\Catalog\Color;
@@ -33,6 +34,8 @@ test('it can create a product variant from the product edit page', function () {
             'color_id' => $color->id,
             'size_id' => $size->id,
             'density_id' => $density->id,
+            'availability_status' => AvailabilityStatus::InStock->value,
+            'stock_quantity' => 42,
         ])
         ->assertHasNoTableActionErrors();
 
@@ -41,6 +44,8 @@ test('it can create a product variant from the product edit page', function () {
         'color_id' => $color->id,
         'size_id' => $size->id,
         'density_id' => $density->id,
+        'availability_status' => AvailabilityStatus::InStock->value,
+        'stock_quantity' => 42,
     ]);
 });
 

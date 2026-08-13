@@ -36,4 +36,9 @@ class ProductPolicy
     {
         return $user->can('delete_any_product');
     }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('update_product');
+    }
 }
