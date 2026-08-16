@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'description', 'sort_order', 'is_active'])]
 class CustomizationService extends Model
 {
     /** @use HasFactory<CustomizationServiceFactory> */

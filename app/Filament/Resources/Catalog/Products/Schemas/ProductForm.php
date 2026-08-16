@@ -81,7 +81,10 @@ class ProductForm
                     ->options(collect(ProductStatus::cases())->mapWithKeys(fn (ProductStatus $status) => [$status->value => $status->label()]))
                     ->default(ProductStatus::Active)
                     ->required(),
-                Toggle::make('recommended')
+                Toggle::make('featured')
+                    ->default(false),
+                Toggle::make('show_on_landing')
+                    ->label('Show on landing page')
                     ->default(false),
                 Section::make('SEO')
                     ->components([

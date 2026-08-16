@@ -21,8 +21,7 @@ class ApplicationForm
                             ->required(),
                         TextInput::make('company'),
                         TextInput::make('email')
-                            ->email()
-                            ->required(),
+                            ->email(),
                         TextInput::make('phone'),
                         Textarea::make('message')
                             ->disabled()

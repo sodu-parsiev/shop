@@ -25,12 +25,14 @@ test('it can create a customization service', function () {
     Livewire::test(ManageCustomizationServices::class)
         ->callAction('create', data: [
             'name' => 'Embroidery',
+            'description' => 'Textured logo and text application for premium lines.',
             'is_active' => true,
         ])
         ->assertHasNoActionErrors();
 
     $this->assertDatabaseHas('customization_services', [
         'name' => 'Embroidery',
+        'description' => 'Textured logo and text application for premium lines.',
         'is_active' => true,
     ]);
 });

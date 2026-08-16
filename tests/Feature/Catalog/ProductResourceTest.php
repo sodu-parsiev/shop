@@ -39,7 +39,8 @@ test('it can create a product with a category and customization services', funct
             'customizationServices' => $services->pluck('id')->all(),
             'moq' => 10,
             'status' => ProductStatus::Active->value,
-            'recommended' => true,
+            'featured' => true,
+            'show_on_landing' => true,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -51,7 +52,8 @@ test('it can create a product with a category and customization services', funct
         'category_id' => $category->id,
         'moq' => 10,
         'status' => ProductStatus::Active->value,
-        'recommended' => true,
+        'featured' => true,
+        'show_on_landing' => true,
     ]);
 
     $product = Product::where('name', 'Custom Tote Bag')->firstOrFail();

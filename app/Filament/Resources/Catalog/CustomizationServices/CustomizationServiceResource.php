@@ -9,6 +9,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -34,6 +35,8 @@ class CustomizationServiceResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->required(),
+                Textarea::make('description')
+                    ->columnSpanFull(),
                 Toggle::make('is_active')
                     ->required()
                     ->default(true),

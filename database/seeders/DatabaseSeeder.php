@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             AdminUserSeeder::class,
             CatalogSeeder::class,
+            FaqSeeder::class,
+            HomePageContentSeeder::class,
         ]);
     }
 }

@@ -32,7 +32,9 @@ class ProductsTable
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge(),
-                IconColumn::make('recommended')
+                IconColumn::make('featured')
+                    ->boolean(),
+                IconColumn::make('show_on_landing')
                     ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -46,7 +48,8 @@ class ProductsTable
             ->filters([
                 SelectFilter::make('status')
                     ->options(collect(ProductStatus::cases())->mapWithKeys(fn (ProductStatus $status) => [$status->value => $status->label()])),
-                TernaryFilter::make('recommended'),
+                TernaryFilter::make('featured'),
+                TernaryFilter::make('show_on_landing'),
             ])
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
