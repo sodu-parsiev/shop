@@ -2,7 +2,11 @@
 
 namespace App\Filament\Resources\Catalog\Products\Schemas;
 
+use App\Enums\AvailabilityStatus;
 use App\Enums\ProductStatus;
+use App\Models\Catalog\Density;
+use App\Models\Catalog\Product;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -10,9 +14,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
+use Filament\Support\Icons\Heroicon;
 
 class ProductForm
 {
@@ -20,79 +26,174 @@ class ProductForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->required()
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
-                TextInput::make('slug')
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->rule('alpha_dash'),
-                TextInput::make('sku')
-                    ->required()
-                    ->unique(ignoreRecord: true),
-                Select::make('category_id')
-                    ->relationship('category', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload(),
-                Select::make('customizationServices')
-                    ->relationship('customizationServices', 'name')
-                    ->multiple()
-                    ->preload(),
-                Section::make('Media')
-                    ->components([
-                        FileUpload::make('cover_image')
-                            ->image()
-                            ->imageEditor()
-                            ->disk('public')
-                            ->directory('products/covers')
-                            ->visibility('public'),
-                        Repeater::make('images')
-                            ->relationship('images')
-                            ->orderColumn('sort_order')
-                            ->reorderable()
-                            ->defaultItems(0)
-                            ->addActionLabel('Add gallery image')
-                            ->collapsible()
-                            ->schema([
-                                FileUpload::make('path')
-                                    ->label('Image')
-                                    ->image()
+                Tabs::make('Product')
+                    ->columnSpanFull()
+                    ->tabs([
+                        Tab::make(__('General'))
+                            ->icon(Heroicon::OutlinedInformationCircle)
+                            ->components([
+                                TextInput::make('name')
+                                    ->label(__('Name'))
                                     ->required()
-                                    ->disk('public')
-                                    ->directory('products/gallery')
-                                    ->visibility('public'),
+                                    ->columnSpan(1),
+                                TextInput::make('slug')
+                                    ->label(__('Slug'))
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->visible(fn (?Product $record): bool => $record !== null)
+                                    ->columnSpan(1),
+                                TextInput::make('sku')
+                                    ->label(__('SKU'))
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->columnSpan(1),
+                                Select::make('category_id')
+                                    ->label(__('Category'))
+                                    ->relationship('category', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpan(1),
+                                Textarea::make('description')
+                                    ->label(__('Description'))
+                                    ->helperText(__('The first ~140 characters are also shown as the short blurb on the storefront catalog card.'))
+                                    ->columnSpanFull(),
+                                Textarea::make('composition')
+                                    ->label(__('Composition')),
+                                TextInput::make('fit')
+                                    ->label(__('Fit')),
+                            ])
+                            ->columns(2),
+                        Tab::make(__('Variants'))
+                            ->icon(Heroicon::OutlinedSwatch)
+                            ->components([
+                                Select::make('customizationServices')
+                                    ->label(__('Customization services'))
+                                    ->relationship('customizationServices', 'name')
+                                    ->multiple()
+                                    ->preload()
+                                    ->columnSpanFull(),
+                                Section::make(__('Colors, sizes & densities'))
+                                    ->description(__('The product will be offered in every selected color, size, and density.'))
+                                    ->components([
+                                        CheckboxList::make('colors')
+                                            ->label(__('Colors'))
+                                            ->relationship(
+                                                name: 'colors',
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('sort_order'),
+                                            )
+                                            ->bulkToggleable()
+                                            ->searchable()
+                                            ->columns(3),
+                                        CheckboxList::make('sizes')
+                                            ->label(__('Sizes'))
+                                            ->relationship(
+                                                name: 'sizes',
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('sort_order'),
+                                            )
+                                            ->bulkToggleable()
+                                            ->searchable()
+                                            ->columns(3),
+                                        CheckboxList::make('densities')
+                                            ->label(__('Densities'))
+                                            ->relationship(
+                                                name: 'densities',
+                                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('gsm'),
+                                            )
+                                            ->getOptionLabelFromRecordUsing(fn (Density $record): string => "{$record->name} ({$record->gsm} г/м²)")
+                                            ->bulkToggleable()
+                                            ->searchable()
+                                            ->columns(3),
+                                    ]),
                             ]),
-                    ]),
-                Textarea::make('short_description'),
-                Textarea::make('description'),
-                Textarea::make('composition'),
-                TextInput::make('fit'),
-                TextInput::make('moq')
-                    ->label('MOQ')
-                    ->numeric()
-                    ->minValue(1)
-                    ->default(1)
-                    ->required(),
-                Textarea::make('stock_conditions')
-                    ->label('Stock / conditions'),
-                Select::make('status')
-                    ->options(collect(ProductStatus::cases())->mapWithKeys(fn (ProductStatus $status) => [$status->value => $status->label()]))
-                    ->default(ProductStatus::Active)
-                    ->required(),
-                Toggle::make('featured')
-                    ->default(false),
-                Toggle::make('show_on_landing')
-                    ->label('Show on landing page')
-                    ->default(false),
-                Section::make('SEO')
-                    ->components([
-                        TextInput::make('meta_title'),
-                        Textarea::make('meta_description'),
-                        TextInput::make('canonical_url')
-                            ->url(),
-                        TextInput::make('og_image'),
+                        Tab::make(__('Inventory'))
+                            ->icon(Heroicon::OutlinedArchiveBox)
+                            ->components([
+                                TextInput::make('moq')
+                                    ->label(__('MOQ'))
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->default(5000)
+                                    ->required(),
+                                Select::make('availability_status')
+                                    ->label(__('Availability'))
+                                    ->options(collect(AvailabilityStatus::cases())->mapWithKeys(fn (AvailabilityStatus $status) => [$status->value => $status->label()]))
+                                    ->default(AvailabilityStatus::MadeToOrder)
+                                    ->required()
+                                    ->live(),
+                                TextInput::make('stock_quantity')
+                                    ->label(__('Stock quantity'))
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->visible(fn (Get $get): bool => $get('availability_status') === AvailabilityStatus::InStock->value)
+                                    ->dehydratedWhenHidden()
+                                    ->dehydrateStateUsing(fn ($state, Get $get) => $get('availability_status') === AvailabilityStatus::InStock->value ? $state : null),
+                                Textarea::make('stock_conditions')
+                                    ->label(__('Stock / conditions'))
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(2),
+                        Tab::make(__('Media'))
+                            ->icon(Heroicon::OutlinedPhoto)
+                            ->components([
+                                FileUpload::make('cover_image')
+                                    ->label(__('Cover image'))
+                                    ->image()
+                                    ->imageEditor()
+                                    ->disk('public')
+                                    ->directory('products/covers')
+                                    ->visibility('public'),
+                                Repeater::make('images')
+                                    ->relationship('images')
+                                    ->orderColumn('sort_order')
+                                    ->reorderable()
+                                    ->defaultItems(0)
+                                    ->addActionLabel(__('Add gallery image'))
+                                    ->collapsible()
+                                    ->schema([
+                                        FileUpload::make('path')
+                                            ->label(__('Image'))
+                                            ->image()
+                                            ->required()
+                                            ->disk('public')
+                                            ->directory('products/gallery')
+                                            ->visibility('public'),
+                                    ]),
+                            ]),
+                        Tab::make(__('Publishing'))
+                            ->icon(Heroicon::OutlinedGlobeAlt)
+                            ->components([
+                                Select::make('status')
+                                    ->label(__('Status'))
+                                    ->options(collect(ProductStatus::cases())->mapWithKeys(fn (ProductStatus $status) => [$status->value => $status->label()]))
+                                    ->default(ProductStatus::Active)
+                                    ->required(),
+                                Toggle::make('featured')
+                                    ->label(__('Featured'))
+                                    ->default(false),
+                                Toggle::make('show_on_landing')
+                                    ->label(__('Show on landing page'))
+                                    ->default(false),
+                            ])
+                            ->columns(3),
+                        Tab::make(__('SEO'))
+                            ->icon(Heroicon::OutlinedMagnifyingGlass)
+                            ->components([
+                                TextInput::make('meta_title')
+                                    ->label(__('Meta title'))
+                                    ->columnSpanFull(),
+                                Textarea::make('meta_description')
+                                    ->label(__('Meta description'))
+                                    ->columnSpanFull(),
+                                TextInput::make('canonical_url')
+                                    ->label(__('Canonical URL'))
+                                    ->url(),
+                                TextInput::make('og_image')
+                                    ->label(__('OG image')),
+                            ])
+                            ->columns(2),
                     ]),
             ]);
     }

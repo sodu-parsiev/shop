@@ -6,7 +6,7 @@ use Database\Factories\Catalog\DensityFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable(['name', 'gsm', 'sort_order', 'is_active'])]
 class Density extends Model
@@ -23,8 +23,8 @@ class Density extends Model
         ];
     }
 
-    public function variants(): HasMany
+    public function products(): BelongsToMany
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->belongsToMany(Product::class, 'product_density');
     }
 }

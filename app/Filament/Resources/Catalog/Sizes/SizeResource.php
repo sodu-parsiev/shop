@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Catalog\Sizes;
 
 use App\Filament\Resources\Catalog\Sizes\Pages\ManageSizes;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\Size;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -26,15 +27,30 @@ class SizeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Size');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Sizes');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->required()
                     ->default(true),
             ]);
@@ -45,14 +61,18 @@ class SizeResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -65,19 +85,19 @@ class SizeResource extends Resource
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make()
-                    ->disabled(fn (Size $record): bool => $record->variants()->exists())
-                    ->tooltip(fn (Size $record): ?string => $record->variants()->exists()
-                        ? 'Cannot delete: still used by one or more product variants.'
+                    ->disabled(fn (Size $record): bool => $record->products()->exists())
+                    ->tooltip(fn (Size $record): ?string => $record->products()->exists()
+                        ? __('Cannot delete: still in use.')
                         : null),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (Collection $records, DeleteBulkAction $action) {
-                            if ($records->contains(fn (Size $record) => $record->variants()->exists())) {
+                            if ($records->contains(fn (Size $record) => $record->products()->exists())) {
                                 Notification::make()
-                                    ->title('Cannot delete sizes')
-                                    ->body('One or more selected sizes are still used by product variants.')
+                                    ->title(__('Cannot delete'))
+                                    ->body(__('Some selected :items are still in use.', ['items' => mb_strtolower(static::getPluralModelLabel())]))
                                     ->danger()
                                     ->send();
 

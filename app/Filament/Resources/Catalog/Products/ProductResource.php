@@ -5,9 +5,9 @@ namespace App\Filament\Resources\Catalog\Products;
 use App\Filament\Resources\Catalog\Products\Pages\CreateProduct;
 use App\Filament\Resources\Catalog\Products\Pages\EditProduct;
 use App\Filament\Resources\Catalog\Products\Pages\ListProducts;
-use App\Filament\Resources\Catalog\Products\RelationManagers\ProductVariantsRelationManager;
 use App\Filament\Resources\Catalog\Products\Schemas\ProductForm;
 use App\Filament\Resources\Catalog\Products\Tables\ProductsTable;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\Product;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -21,7 +21,20 @@ class ProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Product');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Products');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -31,13 +44,6 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return ProductsTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            ProductVariantsRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

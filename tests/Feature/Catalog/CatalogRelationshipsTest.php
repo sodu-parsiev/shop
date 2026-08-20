@@ -5,7 +5,6 @@ use App\Models\Catalog\Color;
 use App\Models\Catalog\CustomizationService;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
-use App\Models\Catalog\ProductVariant;
 use App\Models\Catalog\Size;
 
 test('a category has many products', function () {
@@ -17,31 +16,34 @@ test('a category has many products', function () {
         ->and($product->category->is($category))->toBeTrue();
 });
 
-test('a color has many product variants', function () {
+test('a color belongs to many products', function () {
     $color = Color::factory()->create();
-    $variant = ProductVariant::factory()->create(['color_id' => $color->id]);
+    $product = Product::factory()->create();
+    $product->colors()->attach($color);
 
-    expect($color->variants)->toHaveCount(1)
-        ->and($color->variants->first()->is($variant))->toBeTrue()
-        ->and($variant->color->is($color))->toBeTrue();
+    expect($color->products)->toHaveCount(1)
+        ->and($color->products->first()->is($product))->toBeTrue()
+        ->and($product->colors->first()->is($color))->toBeTrue();
 });
 
-test('a size has many product variants', function () {
+test('a size belongs to many products', function () {
     $size = Size::factory()->create();
-    $variant = ProductVariant::factory()->create(['size_id' => $size->id]);
+    $product = Product::factory()->create();
+    $product->sizes()->attach($size);
 
-    expect($size->variants)->toHaveCount(1)
-        ->and($size->variants->first()->is($variant))->toBeTrue()
-        ->and($variant->size->is($size))->toBeTrue();
+    expect($size->products)->toHaveCount(1)
+        ->and($size->products->first()->is($product))->toBeTrue()
+        ->and($product->sizes->first()->is($size))->toBeTrue();
 });
 
-test('a density has many product variants', function () {
+test('a density belongs to many products', function () {
     $density = Density::factory()->create();
-    $variant = ProductVariant::factory()->create(['density_id' => $density->id]);
+    $product = Product::factory()->create();
+    $product->densities()->attach($density);
 
-    expect($density->variants)->toHaveCount(1)
-        ->and($density->variants->first()->is($variant))->toBeTrue()
-        ->and($variant->density->is($density))->toBeTrue();
+    expect($density->products)->toHaveCount(1)
+        ->and($density->products->first()->is($product))->toBeTrue()
+        ->and($product->densities->first()->is($density))->toBeTrue();
 });
 
 test('a customization service belongs to many products', function () {
@@ -53,20 +55,4 @@ test('a customization service belongs to many products', function () {
     expect($service->products)->toHaveCount(1)
         ->and($service->products->first()->is($product))->toBeTrue()
         ->and($product->customizationServices->first()->is($service))->toBeTrue();
-});
-
-test('a product variant resolves its product, color, size, and density', function () {
-    $variant = ProductVariant::factory()->create();
-
-    expect($variant->product)->toBeInstanceOf(Product::class)
-        ->and($variant->color)->toBeInstanceOf(Color::class)
-        ->and($variant->size)->toBeInstanceOf(Size::class)
-        ->and($variant->density)->toBeInstanceOf(Density::class);
-});
-
-test('a product has many variants', function () {
-    $product = Product::factory()->create();
-    ProductVariant::factory()->count(2)->create(['product_id' => $product->id]);
-
-    expect($product->variants)->toHaveCount(2);
 });

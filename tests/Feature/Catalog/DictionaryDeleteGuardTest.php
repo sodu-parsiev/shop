@@ -10,7 +10,6 @@ use App\Models\Catalog\Color;
 use App\Models\Catalog\CustomizationService;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
-use App\Models\Catalog\ProductVariant;
 use App\Models\Catalog\Size;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -35,17 +34,17 @@ dataset('dictionary delete guards', [
     'color' => [
         ManageColors::class,
         fn () => Color::factory()->create(),
-        fn (Color $color) => ProductVariant::factory()->create(['color_id' => $color->id]),
+        fn (Color $color) => Product::factory()->create()->colors()->attach($color),
     ],
     'size' => [
         ManageSizes::class,
         fn () => Size::factory()->create(),
-        fn (Size $size) => ProductVariant::factory()->create(['size_id' => $size->id]),
+        fn (Size $size) => Product::factory()->create()->sizes()->attach($size),
     ],
     'density' => [
         ManageDensities::class,
         fn () => Density::factory()->create(),
-        fn (Density $density) => ProductVariant::factory()->create(['density_id' => $density->id]),
+        fn (Density $density) => Product::factory()->create()->densities()->attach($density),
     ],
     'customization service' => [
         ManageCustomizationServices::class,
@@ -100,7 +99,8 @@ test('a raw database delete of an in-use dictionary value is rejected by the for
 
 test('a raw database delete of an in-use color is rejected by the foreign key', function () {
     $color = Color::factory()->create();
-    ProductVariant::factory()->create(['color_id' => $color->id]);
+    $product = Product::factory()->create();
+    $product->colors()->attach($color);
 
     expect(fn () => DB::table('colors')->where('id', $color->id)->delete())
         ->toThrow(QueryException::class);

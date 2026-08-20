@@ -18,7 +18,7 @@ class EditProduct extends EditRecord
     {
         return [
             Action::make('archive')
-                ->label('Archive')
+                ->label(__('Archive'))
                 ->icon(Heroicon::OutlinedArchiveBox)
                 ->color('warning')
                 ->requiresConfirmation()
@@ -27,7 +27,7 @@ class EditProduct extends EditRecord
                     $record->update(['status' => ProductStatus::Inactive]);
                 }),
             Action::make('restore')
-                ->label('Restore')
+                ->label(__('Restore'))
                 ->icon(Heroicon::OutlinedArrowUturnLeft)
                 ->color('success')
                 ->visible(fn (Product $record): bool => $record->status === ProductStatus::Inactive)

@@ -56,6 +56,85 @@ test('it shows active faqs and hides inactive ones', function () {
     $response->assertDontSee($inactive->question);
 });
 
+test('it renders mock storefront assets instead of placeholders', function () {
+    Product::factory()->create([
+        'name' => 'Базовая футболка — белая',
+        'cover_image' => '/brand/catalog-white-v2.jpg',
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('/brand/logo-dark.png', false);
+    $response->assertSee('/brand/model-motion.jpg', false);
+    $response->assertSee('/brand/mark.png', false);
+    $response->assertSee('/brand/catalog-white-v2.jpg', false);
+    $response->assertSee('id="contacts"', false);
+    $response->assertDontSee('placehold.co', false);
+});
+
+test('it renders admin editable seo metadata and structured data', function () {
+    HomePageContent::query()->updateOrCreate(['id' => 1], [
+        'content' => [
+            'seo' => [
+                'title' => 'Custom SEO title',
+                'description' => 'Custom SEO description',
+                'keywords' => 'custom, keywords',
+                'canonical_url' => '/custom-canonical',
+                'og_title' => 'Custom OG title',
+                'og_description' => 'Custom OG description',
+                'og_image' => '/brand/custom-og.jpg',
+                'icon' => '/brand/custom-icon.png',
+                'organization_name' => 'Custom Organization',
+                'organization_description' => 'Custom organization description',
+            ],
+            'cta_section' => [
+                'email' => 'sales@example.test',
+            ],
+        ],
+    ]);
+    Faq::factory()->create([
+        'question' => 'Как оформить заказ?',
+        'answer' => 'Добавьте товар и оставьте контакты.',
+        'is_active' => true,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('<title>Custom SEO title</title>', false);
+    $response->assertSee('<meta name="description" content="Custom SEO description">', false);
+    $response->assertSee('<meta name="keywords" content="custom, keywords">', false);
+    $response->assertSee('<link rel="canonical" href="'.asset('custom-canonical').'">', false);
+    $response->assertSee('<meta property="og:title" content="Custom OG title">', false);
+    $response->assertSee('<meta name="twitter:image" content="'.asset('brand/custom-og.jpg').'">', false);
+    $response->assertSee('<script type="application/ld+json">', false);
+    $response->assertSee('Custom Organization', false);
+    $response->assertSee('FAQPage', false);
+    $response->assertSee('Как оформить заказ?', false);
+});
+
+test('it renders order builder hooks with density and size preference filters', function () {
+    $product = Product::factory()->create([
+        'name' => 'Базовая футболка — белая',
+        'moq' => 7000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('$store.orderBuilder.addProduct', false);
+    $response->assertSee('id: '.$product->id.',', false);
+    $response->assertSee('moq: 7000', false);
+    $response->assertSee('name="`order_lines[${index}][product_id]`"', false);
+    $response->assertSee('name="`order_lines[${index}][quantity]`"', false);
+    $response->assertSee('name="`order_lines[${index}][density]`"', false);
+    $response->assertSee('name="`order_lines[${index}][size]`"', false);
+    $response->assertSee('x-model="$store.orderBuilder.preferredDensity"', false);
+    $response->assertSee('x-model="$store.orderBuilder.preferredSize"', false);
+});
+
 test('home page content resolves nested keys with a fallback', function () {
     $content = HomePageContent::create([
         'content' => ['hero' => ['headline_main' => 'База, на которой строятся']],

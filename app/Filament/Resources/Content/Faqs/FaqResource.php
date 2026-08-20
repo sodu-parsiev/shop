@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Content\Faqs;
 
 use App\Filament\Resources\Content\Faqs\Pages\ManageFaqs;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Content\Faq;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -25,19 +26,35 @@ class FaqResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::content();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Faq');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Faqs');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('question')
+                    ->label(__('Question'))
                     ->required()
                     ->columnSpanFull(),
                 Textarea::make('answer')
+                    ->label(__('Answer'))
                     ->required()
                     ->columnSpanFull(),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->required()
                     ->default(true),
             ]);
@@ -48,14 +65,18 @@ class FaqResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('question')
+                    ->label(__('Question'))
                     ->searchable(),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

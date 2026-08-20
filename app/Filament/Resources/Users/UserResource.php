@@ -7,6 +7,7 @@ use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
+use App\Filament\Support\NavigationGroups;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -20,7 +21,20 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::administration();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('User');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Users');
+    }
 
     public static function form(Schema $schema): Schema
     {

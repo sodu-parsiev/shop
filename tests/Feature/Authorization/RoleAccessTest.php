@@ -31,7 +31,7 @@ dataset('administration resources', [
     'roles' => ['/admin/roles'],
 ]);
 
-const APPLICATIONS_URL = '/admin/applications';
+const ORDERS_URL = '/admin/orders';
 
 // Administrator: full access.
 
@@ -41,10 +41,10 @@ test('administrator can access every content resource', function (string $url) {
     $this->actingAs($user)->get($url)->assertOk();
 })->with('content resources');
 
-test('administrator can access applications', function () {
+test('administrator can access orders', function () {
     $user = actingAsRole('Administrator');
 
-    $this->actingAs($user)->get(APPLICATIONS_URL)->assertOk();
+    $this->actingAs($user)->get(ORDERS_URL)->assertOk();
 });
 
 test('administrator can access administration resources', function (string $url) {
@@ -53,7 +53,7 @@ test('administrator can access administration resources', function (string $url)
     $this->actingAs($user)->get($url)->assertOk();
 })->with('administration resources');
 
-// Content Manager: content only, no applications, no user/role administration.
+// Content Manager: content only, no orders, no user/role administration.
 
 test('content manager can access every content resource', function (string $url) {
     $user = actingAsRole('Content Manager');
@@ -61,10 +61,10 @@ test('content manager can access every content resource', function (string $url)
     $this->actingAs($user)->get($url)->assertOk();
 })->with('content resources');
 
-test('content manager cannot access applications', function () {
+test('content manager cannot access orders', function () {
     $user = actingAsRole('Content Manager');
 
-    $this->actingAs($user)->get(APPLICATIONS_URL)->assertForbidden();
+    $this->actingAs($user)->get(ORDERS_URL)->assertForbidden();
 });
 
 test('content manager cannot access administration resources', function (string $url) {
@@ -73,12 +73,12 @@ test('content manager cannot access administration resources', function (string 
     $this->actingAs($user)->get($url)->assertForbidden();
 })->with('administration resources');
 
-// Sales Manager: applications only, no content editing, no user/role administration.
+// Sales Manager: orders only, no content editing, no user/role administration.
 
-test('sales manager can access applications', function () {
+test('sales manager can access orders', function () {
     $user = actingAsRole('Sales Manager');
 
-    $this->actingAs($user)->get(APPLICATIONS_URL)->assertOk();
+    $this->actingAs($user)->get(ORDERS_URL)->assertOk();
 });
 
 test('sales manager cannot access content resources', function (string $url) {

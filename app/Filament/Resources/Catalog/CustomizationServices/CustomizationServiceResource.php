@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Catalog\CustomizationServices;
 
 use App\Filament\Resources\Catalog\CustomizationServices\Pages\ManageCustomizationServices;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\CustomizationService;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -27,17 +28,33 @@ class CustomizationServiceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Customization service');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Customization services');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
                 Textarea::make('description')
+                    ->label(__('Description'))
                     ->columnSpanFull(),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->required()
                     ->default(true),
             ]);
@@ -48,14 +65,18 @@ class CustomizationServiceResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -70,7 +91,7 @@ class CustomizationServiceResource extends Resource
                 DeleteAction::make()
                     ->disabled(fn (CustomizationService $record): bool => $record->products()->exists())
                     ->tooltip(fn (CustomizationService $record): ?string => $record->products()->exists()
-                        ? 'Cannot delete: still assigned to one or more products.'
+                        ? __('Cannot delete: still in use.')
                         : null),
             ])
             ->toolbarActions([
@@ -79,8 +100,8 @@ class CustomizationServiceResource extends Resource
                         ->before(function (Collection $records, DeleteBulkAction $action) {
                             if ($records->contains(fn (CustomizationService $record) => $record->products()->exists())) {
                                 Notification::make()
-                                    ->title('Cannot delete customization services')
-                                    ->body('One or more selected services are still assigned to products.')
+                                    ->title(__('Cannot delete'))
+                                    ->body(__('Some selected :items are still in use.', ['items' => mb_strtolower(static::getPluralModelLabel())]))
                                     ->danger()
                                     ->send();
 

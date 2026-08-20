@@ -22,7 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'customization_service',
         'page',
         'faq',
-        'application',
+        'order',
         'user',
         'role',
     ];
@@ -49,7 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
-        Permission::findOrCreate('export_application');
+        Permission::findOrCreate('export_order');
         Permission::findOrCreate('manage_media');
         Permission::findOrCreate('manage_seo');
 
@@ -76,10 +76,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Role::findOrCreate('Sales Manager')
             ->syncPermissions([
-                'view_any_application',
-                'view_application',
-                'update_application',
-                'export_application',
+                'view_any_order',
+                'view_order',
+                'update_order',
+                'export_order',
             ]);
     }
 }

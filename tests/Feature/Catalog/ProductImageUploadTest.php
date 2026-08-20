@@ -27,7 +27,6 @@ test('it can upload a cover image when creating a product', function () {
     Livewire::test(CreateProduct::class)
         ->fillForm([
             'name' => 'Cover Image Product',
-            'slug' => 'cover-image-product',
             'sku' => 'SKU-COVER',
             'category_id' => $category->id,
             'cover_image' => UploadedFile::fake()->image('cover.jpg'),
@@ -35,7 +34,7 @@ test('it can upload a cover image when creating a product', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $product = Product::where('slug', 'cover-image-product')->firstOrFail();
+    $product = Product::where('sku', 'SKU-COVER')->firstOrFail();
 
     expect($product->cover_image)->not->toBeNull();
     Storage::disk('public')->assertExists($product->cover_image);

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CatalogSeeder::class,
             FaqSeeder::class,
             HomePageContentSeeder::class,
+            StorefrontMockDesignSeeder::class,
         ]);
     }
 }

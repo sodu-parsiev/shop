@@ -11,19 +11,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'name',
     'category_id',
     'slug',
     'sku',
-    'short_description',
     'description',
     'composition',
     'fit',
     'moq',
     'stock_conditions',
+    'availability_status',
+    'stock_quantity',
     'status',
     'featured',
     'show_on_landing',
@@ -39,6 +40,15 @@ class Product extends Model
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product): void {
+            if (blank($product->slug)) {
+                $product->slug = Str::slug($product->name.'-'.$product->sku);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -47,6 +57,8 @@ class Product extends Model
             'show_on_landing' => 'boolean',
             'sort_order' => 'integer',
             'status' => ProductStatus::class,
+            'availability_status' => AvailabilityStatus::class,
+            'stock_quantity' => 'integer',
         ];
     }
 
@@ -60,9 +72,19 @@ class Product extends Model
         return $this->belongsToMany(CustomizationService::class, 'product_customization_service');
     }
 
-    public function variants(): HasMany
+    public function colors(): BelongsToMany
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->belongsToMany(Color::class, 'product_color')->orderBy('sort_order');
+    }
+
+    public function sizes(): BelongsToMany
+    {
+        return $this->belongsToMany(Size::class, 'product_size')->orderBy('sort_order');
+    }
+
+    public function densities(): BelongsToMany
+    {
+        return $this->belongsToMany(Density::class, 'product_density')->orderBy('gsm');
     }
 
     public function images(): HasMany
@@ -72,35 +94,7 @@ class Product extends Model
 
     public function isInStock(): bool
     {
-        return $this->variants->contains(
-            fn (ProductVariant $variant) => $variant->availability_status === AvailabilityStatus::InStock
-                && ($variant->stock_quantity ?? 0) > 0
-        );
-    }
-
-    /**
-     * @return Collection<int, Color>
-     */
-    public function distinctColors(): Collection
-    {
-        return $this->variants
-            ->pluck('color')
-            ->filter()
-            ->unique('id')
-            ->sortBy('sort_order')
-            ->values();
-    }
-
-    /**
-     * @return Collection<int, Density>
-     */
-    public function distinctDensities(): Collection
-    {
-        return $this->variants
-            ->pluck('density')
-            ->filter()
-            ->unique('id')
-            ->sortBy('gsm')
-            ->values();
+        return $this->availability_status === AvailabilityStatus::InStock
+            && ($this->stock_quantity ?? 0) > 0;
     }
 }

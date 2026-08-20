@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Content\Pages;
 
 use App\Filament\Resources\Content\Pages\Pages\ManagePages;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Content\Page;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -22,13 +23,27 @@ class PageResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::content();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Page');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Pages');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
             ]);
     }
@@ -38,12 +53,15 @@ class PageResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

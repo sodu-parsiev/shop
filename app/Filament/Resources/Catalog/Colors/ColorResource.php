@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Catalog\Colors;
 
 use App\Filament\Resources\Catalog\Colors\Pages\ManageColors;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\Color;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -28,19 +29,35 @@ class ColorResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Color');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Colors');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
                 ColorPicker::make('hex_code')
+                    ->label(__('Hex code'))
                     ->hex()
                     ->required()
                     ->regex('/^#[0-9A-Fa-f]{6}$/'),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->required()
                     ->default(true),
             ]);
@@ -51,15 +68,20 @@ class ColorResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
-                ColorColumn::make('hex_code'),
+                ColorColumn::make('hex_code')
+                    ->label(__('Hex code')),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_masculine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -72,19 +94,19 @@ class ColorResource extends Resource
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make()
-                    ->disabled(fn (Color $record): bool => $record->variants()->exists())
-                    ->tooltip(fn (Color $record): ?string => $record->variants()->exists()
-                        ? 'Cannot delete: still used by one or more product variants.'
+                    ->disabled(fn (Color $record): bool => $record->products()->exists())
+                    ->tooltip(fn (Color $record): ?string => $record->products()->exists()
+                        ? __('Cannot delete: still in use.')
                         : null),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (Collection $records, DeleteBulkAction $action) {
-                            if ($records->contains(fn (Color $record) => $record->variants()->exists())) {
+                            if ($records->contains(fn (Color $record) => $record->products()->exists())) {
                                 Notification::make()
-                                    ->title('Cannot delete colors')
-                                    ->body('One or more selected colors are still used by product variants.')
+                                    ->title(__('Cannot delete'))
+                                    ->body(__('Some selected :items are still in use.', ['items' => mb_strtolower(static::getPluralModelLabel())]))
                                     ->danger()
                                     ->send();
 

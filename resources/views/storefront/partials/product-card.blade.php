@@ -1,17 +1,25 @@
 @php
     $inStock = $product->isInStock();
-    $colors = $product->distinctColors();
-    $densities = $product->distinctDensities();
-    $sizeCount = $product->variants->pluck('size_id')->unique()->count();
+    $colors = $product->colors;
+    $densities = $product->densities;
+    $sizeCount = $product->sizes->count();
+    $densityLabel = $inStock
+        ? 'По текущей складской партии'
+        : ($densities->pluck('name')->implode(' / ') ?: 'По модели и ТЗ');
+    $sizeLabel = $inStock
+        ? 'Размерный ряд и остатки — по запросу'
+        : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерная сетка по спецификации');
+    $coverImage = $product->cover_image ?: asset('brand/catalog-white-v2.jpg');
+    $categoryLabel = $product->category?->name ?? $homeContent->get('catalog.kicker');
 @endphp
 
 <article
     data-category="{{ $product->category_id }}"
     x-show="matches({{ $product->category_id }}, {{ $inStock ? 'true' : 'false' }})"
-    class="flex flex-col overflow-hidden rounded-2xl bg-white text-brand-black"
+    class="flex flex-col overflow-hidden bg-white text-brand-black"
 >
-    <div class="relative aspect-[3/4] w-full overflow-hidden bg-brand-black/5">
-        <div class="absolute top-3 left-3 z-10">
+    <div class="relative aspect-[4/5] w-full overflow-hidden bg-brand-cream">
+        <div class="absolute left-4 top-4 z-10">
             @if ($inStock)
                 <x-storefront.pill-badge tone="green">{{ $homeContent->get('catalog.badge_in_stock') }}</x-storefront.pill-badge>
             @else
@@ -20,30 +28,30 @@
         </div>
 
         <img
-            src="{{ $product->cover_image }}"
+            src="{{ $coverImage }}"
             alt="{{ $product->name }}"
             class="h-full w-full object-cover"
             loading="lazy"
         >
     </div>
 
-    <div class="flex flex-1 flex-col gap-3 p-5">
+    <div class="flex flex-1 flex-col gap-4 p-5">
         <div class="flex items-center justify-between text-xs font-bold tracking-wide text-brand-black/40 uppercase">
-            <span>{{ $homeContent->get('catalog.kicker') }}</span>
+            <span>{{ $categoryLabel }}</span>
             <span>{{ $homeContent->get('catalog.moq_prefix') }} {{ number_format($product->moq, 0, ',', ' ') }} {{ $homeContent->get('catalog.qty_unit') }}</span>
         </div>
 
-        <h3 class="text-lg font-extrabold">{{ $product->name }}</h3>
-        <p class="text-sm text-brand-black/60">{{ $product->short_description }}</p>
+        <h3 class="text-2xl font-normal leading-tight">{{ $product->name }}</h3>
+        <p class="text-sm text-brand-black/60">{{ str($product->description)->limit(140) }}</p>
 
-        <dl class="mt-2 space-y-1 border-t border-brand-black/10 pt-3 text-sm">
-            <div class="flex justify-between gap-4">
+        <dl class="mt-2 divide-y divide-brand-black/10 border-y border-brand-black/10 text-sm">
+            <div class="flex justify-between gap-4 py-3">
                 <dt class="text-brand-black/50">{{ $homeContent->get('catalog.density_label') }}</dt>
-                <dd class="text-right font-semibold">{{ $densities->pluck('name')->implode(' / ') }}</dd>
+                <dd class="text-right font-semibold">{{ $densityLabel }}</dd>
             </div>
-            <div class="flex justify-between gap-4">
+            <div class="flex justify-between gap-4 py-3">
                 <dt class="text-brand-black/50">{{ $homeContent->get('catalog.sizes_label') }}</dt>
-                <dd class="text-right font-semibold">{{ $sizeCount }} {{ $homeContent->get('catalog.sizes_unit') }}</dd>
+                <dd class="text-right font-semibold">{{ $sizeCount > 0 ? $sizeLabel : $homeContent->get('catalog.filter_size_grid_label') }}</dd>
             </div>
         </dl>
 
@@ -63,16 +71,27 @@
             </div>
         @endif
 
-        <div class="mt-auto flex items-end justify-between gap-3 border-t border-brand-black/10 pt-3">
+        <div class="mt-auto flex items-end justify-between gap-3 pt-2">
             <div>
                 <p class="text-xs text-brand-black/50">{{ $homeContent->get('catalog.price_label') }}</p>
-                <p class="text-base font-extrabold">{{ $homeContent->get('catalog.price_value') }}</p>
+                <p class="text-2xl font-normal leading-none">{{ $homeContent->get('catalog.price_value') }}</p>
                 <p class="text-xs text-brand-black/40">{{ $homeContent->get('catalog.price_note_small') }}</p>
             </div>
-            <a href="#apply" class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-2 text-sm font-bold text-white">
+            <button
+                type="button"
+                @click="$store.orderBuilder.addProduct({
+                    id: {{ $product->id }},
+                    name: @js($product->name),
+                    category: @js($categoryLabel),
+                    availability: @js($inStock ? 'На складе' : 'Под заказ'),
+                    moq: {{ $product->moq }},
+                    image: @js($coverImage),
+                })"
+                class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-3 text-xs font-bold text-white sm:text-sm"
+            >
                 {{ $inStock ? $homeContent->get('catalog.cta_stock') : $homeContent->get('catalog.cta_made_to_order') }}
-                <span aria-hidden="true">↗</span>
-            </a>
+                <span aria-hidden="true">&#8599;&#65038;</span>
+            </button>
         </div>
     </div>
 </article>

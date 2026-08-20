@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Catalog\Densities;
 
 use App\Filament\Resources\Catalog\Densities\Pages\ManageDensities;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\Density;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -26,20 +27,36 @@ class DensityResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Density');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Densities');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
                 TextInput::make('gsm')
+                    ->label(__('Density (g/m²)'))
                     ->numeric()
                     ->required()
                     ->minValue(1)
-                    ->suffix('gsm'),
+                    ->suffix('г/м²'),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->required()
                     ->default(true),
             ]);
@@ -50,17 +67,22 @@ class DensityResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 TextColumn::make('gsm')
-                    ->suffix(' gsm')
+                    ->label(__('Density (g/m²)'))
+                    ->suffix(' г/м²')
                     ->sortable(),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -73,19 +95,19 @@ class DensityResource extends Resource
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make()
-                    ->disabled(fn (Density $record): bool => $record->variants()->exists())
-                    ->tooltip(fn (Density $record): ?string => $record->variants()->exists()
-                        ? 'Cannot delete: still used by one or more product variants.'
+                    ->disabled(fn (Density $record): bool => $record->products()->exists())
+                    ->tooltip(fn (Density $record): ?string => $record->products()->exists()
+                        ? __('Cannot delete: still in use.')
                         : null),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (Collection $records, DeleteBulkAction $action) {
-                            if ($records->contains(fn (Density $record) => $record->variants()->exists())) {
+                            if ($records->contains(fn (Density $record) => $record->products()->exists())) {
                                 Notification::make()
-                                    ->title('Cannot delete densities')
-                                    ->body('One or more selected densities are still used by product variants.')
+                                    ->title(__('Cannot delete'))
+                                    ->body(__('Some selected :items are still in use.', ['items' => mb_strtolower(static::getPluralModelLabel())]))
                                     ->danger()
                                     ->send();
 

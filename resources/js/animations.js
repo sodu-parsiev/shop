@@ -25,17 +25,15 @@ function initScrollAnimations() {
             duration: 0.6,
             stagger: 0.12,
             ease: 'power2.out',
-            scrollTrigger: { trigger: group, start: 'top 80%' },
+            scrollTrigger: { trigger: group, start: 'top 95%' },
         });
     });
 
-    const hero = document.querySelector('[data-animate="hero-pin"]');
+    const hero = document.querySelector('[data-animate="hero"]');
     const heroPhoto = hero?.querySelector('[data-hero-photo]');
 
     if (hero && heroPhoto) {
-        gsap.timeline({
-            scrollTrigger: { trigger: hero, start: 'top top', end: '+=60%', pin: true, scrub: true },
-        }).to(heroPhoto, { scale: 1.05, y: -20 });
+        gsap.fromTo(heroPhoto, { scale: 1.02 }, { scale: 1, duration: 0.9, ease: 'power2.out' });
     }
 }
 

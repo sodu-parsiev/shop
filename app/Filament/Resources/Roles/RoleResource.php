@@ -7,6 +7,7 @@ use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Roles\Schemas\RoleForm;
 use App\Filament\Resources\Roles\Tables\RolesTable;
+use App\Filament\Support\NavigationGroups;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -20,7 +21,20 @@ class RoleResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::administration();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Role');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Roles');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\NavigationGroups;
 use App\Models\Content\HomePageContent;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -13,7 +14,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
-use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
@@ -24,11 +24,14 @@ class ManageHomePageContent extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Content';
+    protected static ?string $navigationLabel = 'Главная страница';
 
-    protected static ?string $navigationLabel = 'Home Page Content';
+    protected static ?string $title = 'Главная страница';
 
-    protected static ?string $title = 'Home Page Content';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::content();
+    }
 
     /**
      * @var array<string, mixed>|null
@@ -61,6 +64,21 @@ class ManageHomePageContent extends Page
                         TextInput::make('nav.apply_button')->label('Кнопка «Заявка»'),
                     ])
                     ->columns(3),
+
+                Section::make('SEO')
+                    ->schema([
+                        TextInput::make('seo.title')->label('Заголовок (Title)')->columnSpanFull(),
+                        Textarea::make('seo.description')->label('Meta-описание')->columnSpanFull(),
+                        Textarea::make('seo.keywords')->label('Ключевые слова')->columnSpanFull(),
+                        TextInput::make('seo.canonical_url')->label('Канонический URL'),
+                        TextInput::make('seo.og_title')->label('Заголовок OpenGraph'),
+                        Textarea::make('seo.og_description')->label('Описание OpenGraph')->columnSpanFull(),
+                        TextInput::make('seo.og_image')->label('Изображение OpenGraph'),
+                        TextInput::make('seo.icon')->label('Иконка'),
+                        TextInput::make('seo.organization_name')->label('Название организации'),
+                        Textarea::make('seo.organization_description')->label('Описание организации')->columnSpanFull(),
+                    ])
+                    ->columns(2),
 
                 Section::make('Hero')
                     ->schema([
@@ -115,10 +133,22 @@ class ManageHomePageContent extends Page
                         TextInput::make('catalog.availability_order_label')->label('Фильтр наличия: «Под заказ»'),
                         TextInput::make('catalog.filter_category_label')->label('Подпись поля «Категория»'),
                         TextInput::make('catalog.filter_all_label')->label('Категория: значение «Все»'),
-                        TextInput::make('catalog.filter_density_label')->label('Подпись поля «Плотность»'),
-                        TextInput::make('catalog.filter_manager_label')->label('Плотность: placeholder («Уточнить с менеджером»)'),
-                        TextInput::make('catalog.filter_size_label')->label('Подпись поля «Размерная сетка»'),
                         TextInput::make('catalog.filter_size_grid_label')->label('Размерная сетка: placeholder'),
+                        TextInput::make('catalog.filter_density_label')->label('Подпись поля «Желаемая плотность»'),
+                        TextInput::make('catalog.filter_density_default')->label('Плотность: значение по умолчанию'),
+                        Repeater::make('catalog.filter_density_options')
+                            ->label('Плотность: варианты выбора')
+                            ->schema([
+                                TextInput::make('value')->label('Текст'),
+                            ])
+                            ->columnSpanFull(),
+                        TextInput::make('catalog.filter_size_label')->label('Подпись поля «Размерная сетка»'),
+                        Repeater::make('catalog.filter_size_options')
+                            ->label('Размерная сетка: варианты выбора')
+                            ->schema([
+                                TextInput::make('value')->label('Текст'),
+                            ])
+                            ->columnSpanFull(),
                         TextInput::make('catalog.filter_qty_label')->label('Подпись поля «Объём партии»'),
                         Textarea::make('catalog.price_note')->label('Примечание о цене')->columnSpanFull(),
                         TextInput::make('catalog.badge_in_stock')->label('Бейдж: на складе'),

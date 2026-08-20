@@ -2,7 +2,9 @@
 
 namespace App\Enums;
 
-enum ProductStatus: string
+use Filament\Support\Contracts\HasLabel;
+
+enum ProductStatus: string implements HasLabel
 {
     case Active = 'active';
     case Inactive = 'inactive';
@@ -10,8 +12,13 @@ enum ProductStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Active => 'Active',
-            self::Inactive => 'Inactive',
+            self::Active => __('Active'),
+            self::Inactive => __('Inactive'),
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
     }
 }

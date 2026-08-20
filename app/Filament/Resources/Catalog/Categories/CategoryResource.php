@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Catalog\Categories;
 
 use App\Filament\Resources\Catalog\Categories\Pages\ManageCategories;
+use App\Filament\Support\NavigationGroups;
 use App\Models\Catalog\Category;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -26,15 +27,30 @@ class CategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalog';
+    public static function getNavigationGroup(): ?string
+    {
+        return NavigationGroups::catalog();
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Category');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Categories');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required(),
                 Toggle::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->required()
                     ->default(true),
             ]);
@@ -45,14 +61,18 @@ class CategoryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 IconColumn::make('is_active')
+                    ->label(__('toggles.is_active_feminine'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -67,7 +87,7 @@ class CategoryResource extends Resource
                 DeleteAction::make()
                     ->disabled(fn (Category $record): bool => $record->products()->exists())
                     ->tooltip(fn (Category $record): ?string => $record->products()->exists()
-                        ? 'Cannot delete: still assigned to one or more products.'
+                        ? __('Cannot delete: still in use.')
                         : null),
             ])
             ->toolbarActions([
@@ -76,8 +96,8 @@ class CategoryResource extends Resource
                         ->before(function (Collection $records, DeleteBulkAction $action) {
                             if ($records->contains(fn (Category $record) => $record->products()->exists())) {
                                 Notification::make()
-                                    ->title('Cannot delete categories')
-                                    ->body('One or more selected categories are still assigned to products.')
+                                    ->title(__('Cannot delete'))
+                                    ->body(__('Some selected :items are still in use.', ['items' => mb_strtolower(static::getPluralModelLabel())]))
                                     ->danger()
                                     ->send();
 

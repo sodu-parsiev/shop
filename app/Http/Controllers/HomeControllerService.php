@@ -24,7 +24,7 @@ class HomeControllerService
     public function getHomePageData(): array
     {
         $products = Product::query()
-            ->with(['category', 'variants.color', 'variants.density', 'images'])
+            ->with(['category', 'colors', 'densities', 'sizes', 'images'])
             ->where('show_on_landing', true)
             ->where('status', ProductStatus::Active)
             ->orderBy('sort_order')

@@ -2,11 +2,11 @@
 
 namespace Database\Factories\Catalog;
 
+use App\Enums\AvailabilityStatus;
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Product>
@@ -25,14 +25,14 @@ class ProductFactory extends Factory
         return [
             'name' => $name,
             'category_id' => Category::factory(),
-            'slug' => Str::slug($name),
             'sku' => fake()->unique()->bothify('SKU-#####'),
-            'short_description' => fake()->sentence(),
             'description' => fake()->paragraph(),
             'composition' => fake()->sentence(),
             'fit' => fake()->randomElement(['Regular Fit', 'Slim Fit', 'Oversized']),
             'moq' => fake()->numberBetween(1, 50),
             'stock_conditions' => fake()->optional()->sentence(),
+            'availability_status' => fake()->randomElement(AvailabilityStatus::cases()),
+            'stock_quantity' => fake()->optional(0.5)->numberBetween(0, 500),
             'status' => ProductStatus::Active,
             'featured' => fake()->boolean(20),
             'show_on_landing' => fake()->boolean(50),

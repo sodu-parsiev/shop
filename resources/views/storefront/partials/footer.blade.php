@@ -1,9 +1,9 @@
-<footer id="contacts" class="bg-brand-black py-12 text-white/70">
-    <div class="px-6 lg:px-16">
+<footer class="bg-brand-black py-12 text-white/70 lg:py-16">
+    <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
         <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" class="h-12 w-auto">
-                <p class="mt-3 text-sm">{{ $homeContent->get('footer.tagline') }}</p>
+                <img src="{{ asset('brand/logo.png') }}" alt="{{ config('app.name') }}" class="h-14 w-auto">
+                <p class="mt-5 max-w-xs text-sm leading-relaxed">{{ $homeContent->get('footer.tagline') }}</p>
             </div>
 
             <div>

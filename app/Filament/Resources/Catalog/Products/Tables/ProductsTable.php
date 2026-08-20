@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Catalog\Products\Tables;
 
+use App\Enums\AvailabilityStatus;
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Product;
 use Filament\Actions\Action;
@@ -24,45 +25,62 @@ class ProductsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable(),
                 TextColumn::make('sku')
+                    ->label(__('SKU'))
                     ->searchable(),
                 TextColumn::make('category.name')
+                    ->label(__('Category'))
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('status')
+                    ->label(__('Status'))
+                    ->badge(),
+                TextColumn::make('availability_status')
+                    ->label(__('Availability'))
                     ->badge(),
                 IconColumn::make('featured')
+                    ->label(__('Featured'))
                     ->boolean(),
                 IconColumn::make('show_on_landing')
+                    ->label(__('Show on landing page'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('Created at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('Updated at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')
+                    ->label(__('Status'))
                     ->options(collect(ProductStatus::cases())->mapWithKeys(fn (ProductStatus $status) => [$status->value => $status->label()])),
-                TernaryFilter::make('featured'),
-                TernaryFilter::make('show_on_landing'),
+                SelectFilter::make('availability_status')
+                    ->label(__('Availability'))
+                    ->options(collect(AvailabilityStatus::cases())->mapWithKeys(fn (AvailabilityStatus $status) => [$status->value => $status->label()])),
+                TernaryFilter::make('featured')
+                    ->label(__('Featured')),
+                TernaryFilter::make('show_on_landing')
+                    ->label(__('Show on landing page')),
             ])
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
             ->recordActions([
                 Action::make('archive')
-                    ->label('Archive')
+                    ->label(__('Archive'))
                     ->icon(Heroicon::OutlinedArchiveBox)
                     ->color('warning')
                     ->requiresConfirmation()
                     ->visible(fn (Product $record): bool => $record->status === ProductStatus::Active)
                     ->action(fn (Product $record) => $record->update(['status' => ProductStatus::Inactive])),
                 Action::make('restore')
-                    ->label('Restore')
+                    ->label(__('Restore'))
                     ->icon(Heroicon::OutlinedArrowUturnLeft)
                     ->color('success')
                     ->visible(fn (Product $record): bool => $record->status === ProductStatus::Inactive)
@@ -72,7 +90,7 @@ class ProductsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('archive')
-                        ->label('Archive selected')
+                        ->label(__('Archive selected'))
                         ->icon(Heroicon::OutlinedArchiveBox)
                         ->color('warning')
                         ->requiresConfirmation()
