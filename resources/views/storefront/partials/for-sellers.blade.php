@@ -1,5 +1,5 @@
 <section class="border-b border-brand-black/10 bg-brand-pink py-16 text-white lg:py-28">
-    <div class="mx-auto grid max-w-[1324px] grid-cols-1 gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:px-0">
+    <div class="storefront-shell grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div>
             <x-storefront.section-label number="03">{{ $homeContent->get('sellers.eyebrow') }}</x-storefront.section-label>
 

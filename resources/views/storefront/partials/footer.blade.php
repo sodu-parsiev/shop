@@ -1,5 +1,5 @@
 <footer class="bg-brand-black py-12 text-white/70 lg:py-16">
-    <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+    <div class="storefront-shell">
         <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 <img src="{{ asset('brand/logo.png') }}" alt="{{ config('app.name') }}" class="h-14 w-auto">
@@ -9,26 +9,30 @@
             <div>
                 <p class="text-xs font-bold tracking-widest text-brand-pink uppercase">{{ $homeContent->get('footer.nav_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm">
-                    <li><a href="#catalog" class="hover:text-white">{{ $homeContent->get('nav.catalog') }}</a></li>
-                    <li><a href="#production" class="hover:text-white">{{ $homeContent->get('nav.production') }}</a></li>
-                    <li><a href="#customization" class="hover:text-white">{{ $homeContent->get('nav.customization') }}</a></li>
-                    <li><a href="#terms" class="hover:text-white">{{ $homeContent->get('nav.terms') }}</a></li>
+                    <li><a href="{{ route('home') }}#catalog" class="hover:text-white">{{ $homeContent->get('nav.catalog') }}</a></li>
+                    <li><a href="{{ route('home') }}#production" class="hover:text-white">{{ $homeContent->get('nav.production') }}</a></li>
+                    <li><a href="{{ route('home') }}#customization" class="hover:text-white">{{ $homeContent->get('nav.customization') }}</a></li>
+                    <li><a href="{{ route('home') }}#terms" class="hover:text-white">{{ $homeContent->get('nav.terms') }}</a></li>
                 </ul>
             </div>
 
             <div>
-                <p class="text-xs font-bold tracking-widest text-brand-pink uppercase">{{ $homeContent->get('footer.order_heading') }}</p>
+                <p class="text-xs font-bold tracking-widest text-brand-pink uppercase">{{ $homeContent->get('footer.legal_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm">
-                    @foreach ($homeContent->get('footer.order_items', []) as $item)
-                        <li>{{ $item['label'] }}</li>
-                    @endforeach
+                    <li><a href="{{ route('legal.privacy') }}" class="hover:text-white">{{ $homeContent->get('footer.privacy') }}</a></li>
+                    <li><a href="{{ route('legal.consent') }}" class="hover:text-white">{{ $homeContent->get('footer.consent') }}</a></li>
+                    <li><a href="{{ route('legal.requisites') }}" class="hover:text-white">{{ $homeContent->get('footer.requisites') }}</a></li>
                 </ul>
             </div>
 
             <div>
                 <p class="text-xs font-bold tracking-widest text-brand-pink uppercase">{{ $homeContent->get('footer.contacts_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm">
-                    <li>{{ $homeContent->get('cta_section.email') }}</li>
+                    <li>
+                        <a href="mailto:{{ $homeContent->get('cta_section.email') }}" class="hover:text-white" @click="storefrontAnalytics.track('contact_click', { type: 'email', location: 'footer' })">
+                            {{ $homeContent->get('cta_section.email') }}
+                        </a>
+                    </li>
                     <li>{{ $homeContent->get('cta_section.address') }}</li>
                 </ul>
             </div>

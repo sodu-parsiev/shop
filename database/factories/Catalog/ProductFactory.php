@@ -24,11 +24,17 @@ class ProductFactory extends Factory
 
         return [
             'name' => $name,
+            'h1' => $name,
             'category_id' => Category::factory(),
             'sku' => fake()->unique()->bothify('SKU-#####'),
+            'short_description' => fake()->sentence(),
             'description' => fake()->paragraph(),
             'composition' => fake()->sentence(),
             'fit' => fake()->randomElement(['Regular Fit', 'Slim Fit', 'Oversized']),
+            'size_table' => [
+                ['size' => 'S', 'chest' => '50', 'length' => '68'],
+                ['size' => 'M', 'chest' => '52', 'length' => '70'],
+            ],
             'moq' => fake()->numberBetween(1, 50),
             'stock_conditions' => fake()->optional()->sentence(),
             'availability_status' => fake()->randomElement(AvailabilityStatus::cases()),

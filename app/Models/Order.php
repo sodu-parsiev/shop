@@ -11,7 +11,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['customer_name', 'company', 'email', 'phone', 'message', 'status', 'internal_notes', 'assigned_to'])]
+#[Fillable([
+    'request_number',
+    'customer_name',
+    'company',
+    'email',
+    'phone',
+    'preferred_contact_method',
+    'message',
+    'consent_accepted_at',
+    'consent_ip',
+    'submission_token',
+    'landing_url',
+    'source_url',
+    'referrer_url',
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'status',
+    'internal_notes',
+    'assigned_to',
+])]
 #[Appends(['line_summary'])]
 class Order extends Model
 {
@@ -22,6 +44,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class,
+            'consent_accepted_at' => 'datetime',
         ];
     }
 
@@ -43,11 +66,23 @@ class Order extends Model
 
         return $this->lines
             ->map(fn (OrderLine $line): string => sprintf(
-                '%s — %s шт. (MOQ %s)',
+                '%s — %s шт. (MOQ %s)%s',
                 $line->product_name,
                 number_format($line->quantity, 0, ',', ' '),
-                number_format($line->product_moq, 0, ',', ' ')
+                number_format($line->product_moq, 0, ',', ' '),
+                $this->linePreferences($line),
             ))
             ->implode("\n");
+    }
+
+    private function linePreferences(OrderLine $line): string
+    {
+        $preferences = collect([
+            $line->preferred_color,
+            $line->preferred_density,
+            $line->preferred_size,
+        ])->filter()->implode(', ');
+
+        return $preferences ? " — {$preferences}" : '';
     }
 }

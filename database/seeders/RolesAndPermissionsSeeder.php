@@ -21,6 +21,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'density',
         'customization_service',
         'page',
+        'redirect',
         'faq',
         'order',
         'user',
@@ -38,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'density',
         'customization_service',
         'page',
+        'redirect',
         'faq',
     ];
 

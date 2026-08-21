@@ -36,6 +36,10 @@ class ProductForm
                                     ->label(__('Name'))
                                     ->required()
                                     ->columnSpan(1),
+                                TextInput::make('h1')
+                                    ->label(__('H1'))
+                                    ->helperText(__('Optional public product page H1. Falls back to the product name.'))
+                                    ->columnSpan(1),
                                 TextInput::make('slug')
                                     ->label(__('Slug'))
                                     ->disabled()
@@ -54,14 +58,34 @@ class ProductForm
                                     ->searchable()
                                     ->preload()
                                     ->columnSpan(1),
+                                Textarea::make('short_description')
+                                    ->label(__('Short description'))
+                                    ->helperText(__('Shown on catalog cards and used as SEO fallback.'))
+                                    ->rows(3)
+                                    ->columnSpanFull(),
                                 Textarea::make('description')
                                     ->label(__('Description'))
-                                    ->helperText(__('The first ~140 characters are also shown as the short blurb on the storefront catalog card.'))
                                     ->columnSpanFull(),
                                 Textarea::make('composition')
                                     ->label(__('Composition')),
                                 TextInput::make('fit')
                                     ->label(__('Fit')),
+                                Repeater::make('size_table')
+                                    ->label(__('Size table'))
+                                    ->schema([
+                                        TextInput::make('size')
+                                            ->label(__('Size'))
+                                            ->required(),
+                                        TextInput::make('chest')
+                                            ->label(__('Chest'))
+                                            ->required(),
+                                        TextInput::make('length')
+                                            ->label(__('Length'))
+                                            ->required(),
+                                    ])
+                                    ->columns(3)
+                                    ->defaultItems(0)
+                                    ->columnSpanFull(),
                             ])
                             ->columns(2),
                         Tab::make(__('Variants'))
@@ -160,6 +184,8 @@ class ProductForm
                                             ->disk('public')
                                             ->directory('products/gallery')
                                             ->visibility('public'),
+                                        TextInput::make('alt_text')
+                                            ->label(__('Alt text')),
                                     ]),
                             ]),
                         Tab::make(__('Publishing'))

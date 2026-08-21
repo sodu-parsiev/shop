@@ -2,16 +2,19 @@
     'title' => null,
     'homeContent' => null,
     'faqs' => collect(),
+    'seoMeta' => [],
+    'schemaGraph' => [],
 ])
 
 @php
     $seo = $homeContent?->get('seo', []) ?? [];
-    $pageTitle = $title ?: data_get($seo, 'title', config('app.name'));
-    $description = data_get($seo, 'description');
+    $pageTitle = $title ?: data_get($seoMeta, 'title') ?: data_get($seo, 'title', config('app.name'));
+    $description = data_get($seoMeta, 'description') ?: data_get($seo, 'description');
     $keywords = data_get($seo, 'keywords');
-    $canonicalUrl = data_get($seo, 'canonical_url') ?: url('/');
-    $ogTitle = data_get($seo, 'og_title') ?: $pageTitle;
-    $ogDescription = data_get($seo, 'og_description') ?: $description;
+    $canonicalUrl = data_get($seoMeta, 'canonical_url') ?: data_get($seo, 'canonical_url') ?: url('/');
+    $ogTitle = data_get($seoMeta, 'og_title') ?: data_get($seo, 'og_title') ?: $pageTitle;
+    $ogDescription = data_get($seoMeta, 'og_description') ?: data_get($seo, 'og_description') ?: $description;
+    $ogType = data_get($seoMeta, 'og_type', 'website');
     $toAbsoluteUrl = static function (?string $value): ?string {
         if (! $value) {
             return null;
@@ -23,7 +26,7 @@
 
         return asset(ltrim($value, '/'));
     };
-    $ogImage = $toAbsoluteUrl(data_get($seo, 'og_image') ?: '/brand/model-motion.jpg');
+    $ogImage = $toAbsoluteUrl(data_get($seoMeta, 'og_image') ?: data_get($seo, 'og_image') ?: '/brand/model-motion.jpg');
     $icon = $toAbsoluteUrl(data_get($seo, 'icon') ?: '/brand/mark.png');
     $organization = array_filter([
         '@type' => 'Organization',
@@ -33,6 +36,15 @@
         'email' => $homeContent?->get('cta_section.email'),
         'description' => data_get($seo, 'organization_description') ?: $description,
         'areaServed' => ['@type' => 'Country', 'name' => 'Россия'],
+    ]);
+    $localBusiness = array_filter([
+        '@type' => 'LocalBusiness',
+        '@id' => url('/#localbusiness'),
+        'name' => data_get($seo, 'organization_name') ?: config('app.name'),
+        'url' => url('/'),
+        'email' => $homeContent?->get('cta_section.email'),
+        'address' => $homeContent?->get('cta_section.address'),
+        'description' => data_get($seo, 'organization_description') ?: $description,
     ]);
     $faqSchema = collect($faqs)
         ->map(fn ($faq): array => [
@@ -45,15 +57,18 @@
         ])
         ->values()
         ->all();
+    $graph = array_values(array_filter(array_merge([
+        $organization,
+        $localBusiness,
+        $faqSchema === [] ? null : [
+            '@type' => 'FAQPage',
+            'mainEntity' => $faqSchema,
+        ],
+    ], $schemaGraph)));
+
     $schema = [
         '@context' => 'https://schema.org',
-        '@graph' => array_values(array_filter([
-            $organization,
-            $faqSchema === [] ? null : [
-                '@type' => 'FAQPage',
-                'mainEntity' => $faqSchema,
-            ],
-        ])),
+        '@graph' => $graph,
     ];
 @endphp
 
@@ -76,7 +91,7 @@
             <link rel="icon" href="{{ $icon }}">
             <link rel="apple-touch-icon" href="{{ $icon }}">
         @endif
-        <meta property="og:type" content="website">
+        <meta property="og:type" content="{{ $ogType }}">
         <meta property="og:locale" content="ru_RU">
         <meta property="og:title" content="{{ $ogTitle }}">
         @if ($ogDescription)

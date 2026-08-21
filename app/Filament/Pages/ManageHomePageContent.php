@@ -40,7 +40,7 @@ class ManageHomePageContent extends Page
 
     public function mount(): void
     {
-        $this->form->fill($this->record()->content ?? []);
+        $this->form->fill($this->record()->contentWithDefaults());
     }
 
     protected function record(): HomePageContent
@@ -258,11 +258,19 @@ class ManageHomePageContent extends Page
                         TextInput::make('form.company')->label('Поле: компания'),
                         TextInput::make('form.contact_person')->label('Поле: контактное лицо'),
                         TextInput::make('form.phone')->label('Поле: телефон'),
+                        TextInput::make('form.email')->label('Поле: email'),
+                        TextInput::make('form.preferred_contact_method')->label('Поле: способ связи'),
+                        TextInput::make('form.contact_phone')->label('Вариант связи: телефон'),
+                        TextInput::make('form.contact_email')->label('Вариант связи: email'),
                         TextInput::make('form.volume')->label('Поле: объём'),
                         TextInput::make('form.comment')->label('Поле: комментарий'),
+                        TextInput::make('form.consent')->label('Текст согласия')->columnSpanFull(),
+                        TextInput::make('form.privacy_link')->label('Ссылка: политика конфиденциальности'),
+                        TextInput::make('form.consent_link')->label('Ссылка: согласие на обработку'),
                         TextInput::make('form.submit')->label('Кнопка отправки'),
                         Textarea::make('form.helper')->label('Пояснение под формой')->columnSpanFull(),
                         TextInput::make('form.success')->label('Сообщение об успехе')->columnSpanFull(),
+                        TextInput::make('form.success_number_label')->label('Подпись номера заявки'),
                         Repeater::make('form.volume_options')
                             ->label('Варианты объёма')
                             ->schema([
@@ -279,6 +287,10 @@ class ManageHomePageContent extends Page
                         TextInput::make('footer.tagline')->label('Слоган'),
                         TextInput::make('footer.nav_heading')->label('Заголовок: навигация'),
                         TextInput::make('footer.order_heading')->label('Заголовок: заказ'),
+                        TextInput::make('footer.legal_heading')->label('Заголовок: документы'),
+                        TextInput::make('footer.privacy')->label('Документ: политика конфиденциальности'),
+                        TextInput::make('footer.consent')->label('Документ: согласие на обработку'),
+                        TextInput::make('footer.requisites')->label('Документ: реквизиты'),
                         TextInput::make('footer.contacts_heading')->label('Заголовок: контакты'),
                         TextInput::make('footer.copyright')->label('Копирайт'),
                         TextInput::make('footer.made_for')->label('Подпись внизу'),

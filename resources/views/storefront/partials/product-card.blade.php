@@ -11,11 +11,19 @@
         : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерная сетка по спецификации');
     $coverImage = $product->cover_image ?: asset('brand/catalog-white-v2.jpg');
     $categoryLabel = $product->category?->name ?? $homeContent->get('catalog.kicker');
+    $defaultDensity = $densities->first()?->name ?: 'Уточнить с менеджером';
+    $defaultSize = $product->sizes->first()?->name ?: $homeContent->get('catalog.filter_size_grid_label');
+    $defaultColor = $product->colors->first()?->name ?: 'Уточнить с менеджером';
 @endphp
 
 <article
     data-category="{{ $product->category_id }}"
-    x-show="matches({{ $product->category_id }}, {{ $inStock ? 'true' : 'false' }})"
+    data-in-stock="{{ $inStock ? 'true' : 'false' }}"
+    data-colors='@json($product->colors->pluck('id')->map(fn ($id) => (string) $id)->values())'
+    data-densities='@json($product->densities->pluck('id')->map(fn ($id) => (string) $id)->values())'
+    data-sizes='@json($product->sizes->pluck('id')->map(fn ($id) => (string) $id)->values())'
+    data-product-card
+    x-show="matches($el)"
     class="flex flex-col overflow-hidden bg-white text-brand-black"
 >
     <div class="relative aspect-[4/5] w-full overflow-hidden bg-brand-cream">
@@ -41,8 +49,10 @@
             <span>{{ $homeContent->get('catalog.moq_prefix') }} {{ number_format($product->moq, 0, ',', ' ') }} {{ $homeContent->get('catalog.qty_unit') }}</span>
         </div>
 
-        <h3 class="text-2xl font-normal leading-tight">{{ $product->name }}</h3>
-        <p class="text-sm text-brand-black/60">{{ str($product->description)->limit(140) }}</p>
+        <h3 class="text-2xl font-normal leading-tight">
+            <a href="{{ $product->publicUrl() }}" class="hover:text-brand-pink">{{ $product->name }}</a>
+        </h3>
+        <p class="text-sm text-brand-black/60">{{ str($product->short_description ?: $product->description)->limit(140) }}</p>
 
         <dl class="mt-2 divide-y divide-brand-black/10 border-y border-brand-black/10 text-sm">
             <div class="flex justify-between gap-4 py-3">
@@ -76,6 +86,7 @@
                 <p class="text-xs text-brand-black/50">{{ $homeContent->get('catalog.price_label') }}</p>
                 <p class="text-2xl font-normal leading-none">{{ $homeContent->get('catalog.price_value') }}</p>
                 <p class="text-xs text-brand-black/40">{{ $homeContent->get('catalog.price_note_small') }}</p>
+                <a href="{{ $product->publicUrl() }}" class="mt-3 inline-block text-xs font-bold text-brand-pink">Подробнее</a>
             </div>
             <button
                 type="button"
@@ -86,6 +97,9 @@
                     availability: @js($inStock ? 'На складе' : 'Под заказ'),
                     moq: {{ $product->moq }},
                     image: @js($coverImage),
+                    density: selectedOptionLabel('density', @js($defaultDensity)),
+                    size: selectedOptionLabel('size', @js($defaultSize)),
+                    color: selectedOptionLabel('color', @js($defaultColor)),
                 })"
                 class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-3 text-xs font-bold text-white sm:text-sm"
             >

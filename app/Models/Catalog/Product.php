@@ -15,12 +15,15 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'name',
+    'h1',
     'category_id',
     'slug',
     'sku',
+    'short_description',
     'description',
     'composition',
     'fit',
+    'size_table',
     'moq',
     'stock_conditions',
     'availability_status',
@@ -56,6 +59,7 @@ class Product extends Model
             'featured' => 'boolean',
             'show_on_landing' => 'boolean',
             'sort_order' => 'integer',
+            'size_table' => 'array',
             'status' => ProductStatus::class,
             'availability_status' => AvailabilityStatus::class,
             'stock_quantity' => 'integer',
@@ -96,5 +100,10 @@ class Product extends Model
     {
         return $this->availability_status === AvailabilityStatus::InStock
             && ($this->stock_quantity ?? 0) > 0;
+    }
+
+    public function publicUrl(): string
+    {
+        return route('products.show', ['product' => $this->slug]);
     }
 }

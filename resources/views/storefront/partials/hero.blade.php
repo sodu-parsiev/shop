@@ -1,5 +1,5 @@
 <section id="top" data-animate="hero" class="border-b border-brand-black/10 bg-white">
-    <div class="mx-auto grid max-w-[1324px] grid-cols-1 items-center gap-12 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(430px,0.86fr)] lg:gap-20 lg:px-0 lg:py-14">
+    <div class="storefront-shell grid grid-cols-1 items-center gap-12 py-10 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(430px,0.86fr)] lg:gap-20 lg:py-14">
         <div>
             <div class="flex flex-wrap gap-2">
                 <x-storefront.pill-badge tone="outline">{{ $homeContent->get('hero.tag_production') }}</x-storefront.pill-badge>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="bg-brand-pink py-4 text-white">
-        <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+        <div class="storefront-shell">
             <x-storefront.marquee :text="$homeContent->get('hero.bottom_ticker')" />
         </div>
     </div>

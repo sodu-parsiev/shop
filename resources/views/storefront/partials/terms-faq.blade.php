@@ -1,6 +1,6 @@
 <section id="terms" class="border-b border-brand-black/10">
     <div class="bg-brand-black py-16 text-white lg:py-28">
-        <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+        <div class="storefront-shell">
             <x-storefront.section-label number="06">{{ $homeContent->get('terms.eyebrow') }}</x-storefront.section-label>
 
             <h2 class="mt-6 max-w-[960px] text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[78px]">
@@ -21,7 +21,7 @@
     </div>
 
     <div class="bg-white py-16 lg:py-24">
-        <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+        <div class="storefront-shell">
             <div x-data="faqAccordion">
                 <p class="text-xs font-bold tracking-widest text-brand-black/40 uppercase">{{ $homeContent->get('faq.heading') }}</p>
                 <h3 class="mt-3 text-[42px] leading-none font-normal sm:text-[64px]">
@@ -59,7 +59,7 @@
     </div>
 
     <div class="bg-[#e5e0d0] py-16 lg:py-24">
-        <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+        <div class="storefront-shell">
             <div class="grid gap-8 bg-white p-8 sm:grid-cols-[auto_1fr_auto] sm:items-center lg:p-12">
                 <img src="{{ asset('brand/mark.png') }}" alt="" class="h-16 w-16">
                 <div>

@@ -29,6 +29,7 @@ class OrderLineFactory extends Factory
             'product_moq' => 5000,
             'preferred_density' => fake()->optional()->randomElement(['180 gsm', '200 gsm', '240 gsm']),
             'preferred_size' => fake()->optional()->randomElement(['XS–XL', 'S–2XL']),
+            'preferred_color' => fake()->optional()->randomElement(['Белый', 'Чёрный', 'Цвет по ТЗ']),
         ];
     }
 }

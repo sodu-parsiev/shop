@@ -2,7 +2,10 @@
 
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Category;
+use App\Models\Catalog\Color;
+use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
 
@@ -39,6 +42,16 @@ test('it shows products flagged to show on landing and active', function () {
 test('it shows active categories and hides inactive ones', function () {
     $active = Category::factory()->create(['name' => 'Базовые футболки', 'is_active' => true]);
     $inactive = Category::factory()->create(['name' => 'Скрытая категория', 'is_active' => false]);
+    Product::factory()->create([
+        'category_id' => $active->id,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    Product::factory()->create([
+        'category_id' => $inactive->id,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
 
     $response = $this->get('/');
 
@@ -110,17 +123,24 @@ test('it renders admin editable seo metadata and structured data', function () {
     $response->assertSee('<meta name="twitter:image" content="'.asset('brand/custom-og.jpg').'">', false);
     $response->assertSee('<script type="application/ld+json">', false);
     $response->assertSee('Custom Organization', false);
+    $response->assertSee('LocalBusiness', false);
     $response->assertSee('FAQPage', false);
     $response->assertSee('Как оформить заказ?', false);
 });
 
-test('it renders order builder hooks with density and size preference filters', function () {
+test('it renders order builder hooks with real catalog filters and preferences', function () {
     $product = Product::factory()->create([
         'name' => 'Базовая футболка — белая',
         'moq' => 7000,
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
+    $color = Color::factory()->create(['name' => 'Белый']);
+    $size = Size::factory()->create(['name' => 'S']);
+    $density = Density::factory()->create(['name' => '180 gsm', 'gsm' => 180]);
+    $product->colors()->attach($color);
+    $product->sizes()->attach($size);
+    $product->densities()->attach($density);
 
     $response = $this->get('/');
 
@@ -131,8 +151,14 @@ test('it renders order builder hooks with density and size preference filters', 
     $response->assertSee('name="`order_lines[${index}][quantity]`"', false);
     $response->assertSee('name="`order_lines[${index}][density]`"', false);
     $response->assertSee('name="`order_lines[${index}][size]`"', false);
-    $response->assertSee('x-model="$store.orderBuilder.preferredDensity"', false);
-    $response->assertSee('x-model="$store.orderBuilder.preferredSize"', false);
+    $response->assertSee('name="`order_lines[${index}][color]`"', false);
+    $response->assertSee('x-data=\'catalogFilter(', false);
+    $response->assertSee('data-colors=', false);
+    $response->assertSee('data-densities=', false);
+    $response->assertSee('data-sizes=', false);
+    $response->assertSee('value="'.$color->id.'"', false);
+    $response->assertSee('value="'.$density->id.'"', false);
+    $response->assertSee('value="'.$size->id.'"', false);
 });
 
 test('home page content resolves nested keys with a fallback', function () {
@@ -141,5 +167,23 @@ test('home page content resolves nested keys with a fallback', function () {
     ]);
 
     expect($content->get('hero.headline_main'))->toBe('База, на которой строятся');
+    expect($content->get('form.consent'))->toBe('Согласен на обработку персональных данных');
     expect($content->get('hero.missing_key', 'default'))->toBe('default');
+});
+
+test('it renders consent copy for older homepage content records', function () {
+    HomePageContent::query()->updateOrCreate(['id' => 1], [
+        'content' => [
+            'form' => [
+                'phone' => 'ТЕЛЕФОН',
+                'submit' => 'Сформировать заявку',
+            ],
+        ],
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('Согласен на обработку персональных данных', false);
+    $response->assertSee('Политика конфиденциальности', false);
+    $response->assertSee('Согласие на обработку', false);
 });

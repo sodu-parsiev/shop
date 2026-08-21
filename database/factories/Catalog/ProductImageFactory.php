@@ -21,6 +21,7 @@ class ProductImageFactory extends Factory
         return [
             'product_id' => Product::factory(),
             'path' => 'products/gallery/'.fake()->uuid().'.jpg',
+            'alt_text' => fake()->optional()->sentence(3),
             'sort_order' => fake()->numberBetween(0, 10),
         ];
     }

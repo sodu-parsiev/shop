@@ -1,5 +1,5 @@
 <section id="customization" class="border-b border-brand-black/10 bg-brand-cream py-16 lg:py-28">
-    <div class="mx-auto max-w-[1324px] px-5 sm:px-8 lg:px-0">
+    <div class="storefront-shell">
         <x-storefront.section-label number="05">{{ $homeContent->get('customization_section.eyebrow') }}</x-storefront.section-label>
 
         <h2 class="mt-6 max-w-[1120px] text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[76px]">

@@ -11,8 +11,12 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): RedirectResponse
     {
-        $this->service->createFromRequest($request);
+        $order = $this->service->createFromRequest($request);
 
-        return back()->with('orderSubmitted', true);
+        $request->session()->forget('order_submission_token');
+
+        return back()
+            ->with('orderSubmitted', true)
+            ->with('orderRequestNumber', $order->request_number);
     }
 }

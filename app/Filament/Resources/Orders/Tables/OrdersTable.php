@@ -9,9 +9,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ExportBulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrdersTable
 {
@@ -19,6 +22,11 @@ class OrdersTable
     {
         return $table
             ->columns([
+                TextColumn::make('request_number')
+                    ->label(__('Request number'))
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder(__('Pending')),
                 TextColumn::make('customer_name')
                     ->label(__('Customer name'))
                     ->searchable(),
@@ -28,9 +36,19 @@ class OrdersTable
                 TextColumn::make('email')
                     ->label(__('Email'))
                     ->searchable(),
+                TextColumn::make('phone')
+                    ->label(__('Phone'))
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('preferred_contact_method')
+                    ->label(__('Preferred contact method'))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->label(__('Status'))
                     ->badge(),
+                TextColumn::make('utm_source')
+                    ->label(__('UTM source'))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('assignedManager.name')
                     ->label(__('Assigned manager'))
                     ->placeholder(__('Unassigned')),
@@ -48,6 +66,16 @@ class OrdersTable
                     ->label(__('Status'))
                     ->options(fn () => collect(OrderStatus::cases())
                         ->mapWithKeys(fn (OrderStatus $status) => [$status->value => $status->label()])),
+                Filter::make('created_at')
+                    ->schema([
+                        DatePicker::make('from')
+                            ->label(__('From')),
+                        DatePicker::make('until')
+                            ->label(__('Until')),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['from'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', '>=', $date))
+                        ->when($data['until'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', '<=', $date))),
             ])
             ->recordActions([
                 EditAction::make(),

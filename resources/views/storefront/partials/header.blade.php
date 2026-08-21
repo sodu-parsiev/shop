@@ -1,15 +1,19 @@
+@php
+    $contactHref = request()->routeIs('home', 'products.show') ? '#contacts' : route('home').'#contacts';
+@endphp
+
 <header class="sticky top-0 z-40 border-b border-brand-black/10 bg-white/95 backdrop-blur">
-    <div x-data="mobileNav" class="relative mx-auto flex h-[72px] max-w-[1324px] items-center justify-between gap-4 px-5 sm:h-[86px] sm:px-8 lg:px-0">
+    <div x-data="mobileNav" class="relative storefront-shell flex h-[72px] items-center justify-between gap-4 sm:h-[86px]">
         <a href="{{ route('home') }}" class="flex items-center" aria-label="{{ config('app.name') }} — на главную">
             <img src="{{ asset('brand/logo-dark.png') }}" alt="{{ config('app.name') }}" class="h-11 w-auto sm:h-14">
         </a>
 
         <nav class="hidden items-center gap-8 text-sm font-bold md:flex">
-            <a href="#catalog" class="hover:text-brand-pink">{{ $homeContent->get('nav.catalog') }}</a>
-            <a href="#production" class="hover:text-brand-pink">{{ $homeContent->get('nav.production') }}</a>
-            <a href="#customization" class="hover:text-brand-pink">{{ $homeContent->get('nav.customization') }}</a>
-            <a href="#terms" class="hover:text-brand-pink">{{ $homeContent->get('nav.terms') }}</a>
-            <a href="#contacts" class="hover:text-brand-pink">{{ $homeContent->get('nav.contacts') }}</a>
+            <a href="{{ route('home') }}#catalog" class="hover:text-brand-pink">{{ $homeContent->get('nav.catalog') }}</a>
+            <a href="{{ route('home') }}#production" class="hover:text-brand-pink">{{ $homeContent->get('nav.production') }}</a>
+            <a href="{{ route('home') }}#customization" class="hover:text-brand-pink">{{ $homeContent->get('nav.customization') }}</a>
+            <a href="{{ route('home') }}#terms" class="hover:text-brand-pink">{{ $homeContent->get('nav.terms') }}</a>
+            <a href="{{ $contactHref }}" class="hover:text-brand-pink">{{ $homeContent->get('nav.contacts') }}</a>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -41,11 +45,11 @@
             @click.outside="open = false"
             class="absolute inset-x-0 top-full z-40 flex flex-col gap-4 border-b border-brand-black/10 bg-white px-5 py-5 text-sm font-bold md:hidden"
         >
-            <a href="#catalog" @click="open = false">{{ $homeContent->get('nav.catalog') }}</a>
-            <a href="#production" @click="open = false">{{ $homeContent->get('nav.production') }}</a>
-            <a href="#customization" @click="open = false">{{ $homeContent->get('nav.customization') }}</a>
-            <a href="#terms" @click="open = false">{{ $homeContent->get('nav.terms') }}</a>
-            <a href="#contacts" @click="open = false">{{ $homeContent->get('nav.contacts') }}</a>
+            <a href="{{ route('home') }}#catalog" @click="open = false">{{ $homeContent->get('nav.catalog') }}</a>
+            <a href="{{ route('home') }}#production" @click="open = false">{{ $homeContent->get('nav.production') }}</a>
+            <a href="{{ route('home') }}#customization" @click="open = false">{{ $homeContent->get('nav.customization') }}</a>
+            <a href="{{ route('home') }}#terms" @click="open = false">{{ $homeContent->get('nav.terms') }}</a>
+            <a href="{{ $contactHref }}" @click="open = false">{{ $homeContent->get('nav.contacts') }}</a>
         </div>
     </div>
 </header>

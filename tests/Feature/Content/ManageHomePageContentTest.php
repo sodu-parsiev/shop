@@ -33,6 +33,21 @@ test('it loads existing content into the form', function () {
         ]);
 });
 
+test('it loads default values for missing public form labels', function () {
+    HomePageContent::create([
+        'content' => ['form' => ['phone' => 'ТЕЛЕФОН']],
+    ]);
+
+    Livewire::test(ManageHomePageContent::class)
+        ->assertFormSet([
+            'form.phone' => 'ТЕЛЕФОН',
+            'form.consent' => 'Согласен на обработку персональных данных',
+            'form.privacy_link' => 'Политика конфиденциальности',
+            'form.consent_link' => 'Согласие на обработку',
+            'footer.legal_heading' => 'ДОКУМЕНТЫ',
+        ]);
+});
+
 test('saving updates the singleton content row', function () {
     HomePageContent::create(['content' => []]);
 

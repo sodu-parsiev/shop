@@ -1,0 +1,64 @@
+<?php
+
+use App\Enums\ProductStatus;
+use App\Models\Catalog\Color;
+use App\Models\Catalog\CustomizationService;
+use App\Models\Catalog\Density;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductImage;
+use App\Models\Catalog\Size;
+use App\Models\Content\HomePageContent;
+
+test('an active product has a public detail page with gallery specs and product schema', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'name' => 'Футболка Test',
+        'slug' => 'test-tee',
+        'sku' => 'SKU-TEST-TEE',
+        'h1' => 'Футболка Test оптом',
+        'short_description' => 'Короткое описание товара.',
+        'description' => 'Полное описание товара.',
+        'composition' => '100% хлопок',
+        'fit' => 'Regular Fit',
+        'size_table' => [
+            ['size' => 'M', 'chest' => '52', 'length' => '70'],
+        ],
+        'status' => ProductStatus::Active,
+        'cover_image' => '/brand/catalog-white-v2.jpg',
+    ]);
+    $color = Color::factory()->create(['name' => 'Белый']);
+    $density = Density::factory()->create(['name' => '180 gsm', 'gsm' => 180]);
+    $size = Size::factory()->create(['name' => 'M']);
+    $service = CustomizationService::factory()->create(['name' => 'Вышивка', 'description' => 'Нанесение логотипа.']);
+    ProductImage::factory()->create([
+        'product_id' => $product->id,
+        'path' => '/brand/model-close.jpg',
+        'alt_text' => 'Футболка крупно',
+    ]);
+    $product->colors()->attach($color);
+    $product->densities()->attach($density);
+    $product->sizes()->attach($size);
+    $product->customizationServices()->attach($service);
+
+    $response = $this->get('/catalog/test-tee');
+
+    $response->assertOk();
+    $response->assertSee('Футболка Test оптом');
+    $response->assertSee('Короткое описание товара.');
+    $response->assertSee('100% хлопок');
+    $response->assertSee('180 gsm');
+    $response->assertSee('Размерная таблица');
+    $response->assertSee('Вышивка');
+    $response->assertSee('Product', false);
+    $response->assertSee('BreadcrumbList', false);
+    $response->assertDontSee('"Offer"', false);
+});
+
+test('inactive products are not publicly visible', function () {
+    $product = Product::factory()->create([
+        'slug' => 'inactive-tee',
+        'status' => ProductStatus::Inactive,
+    ]);
+
+    $this->get($product->publicUrl())->assertNotFound();
+});

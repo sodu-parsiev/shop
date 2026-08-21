@@ -23,6 +23,7 @@ dataset('content resources', [
     'densities' => ['/admin/catalog/densities'],
     'customization services' => ['/admin/catalog/customization-services'],
     'pages' => ['/admin/content/pages'],
+    'redirects' => ['/admin/content/redirects'],
     'faqs' => ['/admin/content/faqs'],
 ]);
 

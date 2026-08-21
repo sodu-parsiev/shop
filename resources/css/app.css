@@ -16,3 +16,20 @@
     --color-brand-cream: #f7f3ec;
     --color-brand-ink: #1a1512;
 }
+
+.storefront-shell {
+    width: 100%;
+    padding-inline: 18px;
+}
+
+@media (min-width: 801px) {
+    .storefront-shell {
+        padding-inline: 4vw;
+    }
+}
+
+@media (max-width: 380px) {
+    .storefront-shell {
+        padding-inline: 14px;
+    }
+}

@@ -113,12 +113,15 @@ class CatalogSeeder extends Seeder
     {
         return Product::factory()->create([
             'name' => 'Базовая футболка — белая',
+            'h1' => 'Базовая футболка — белая оптом',
             'category_id' => $category->id,
             'slug' => 'basic-tee-white',
             'sku' => 'SKU-TEE-WHITE',
+            'short_description' => 'Белая базовая футболка со склада для крупных B2B-партий.',
             'description' => 'Готовая партия базовых футболок без принта. Можно заказать брендирование, упаковку и маркировку.',
             'composition' => '100% хлопок',
             'fit' => 'Regular Fit',
+            'size_table' => $this->defaultSizeTable(),
             'moq' => 5000,
             'stock_conditions' => 'Готовая партия на складе — по текущим остаткам.',
             'availability_status' => AvailabilityStatus::InStock,
@@ -135,12 +138,15 @@ class CatalogSeeder extends Seeder
     {
         return Product::factory()->create([
             'name' => 'Базовая футболка — чёрная',
+            'h1' => 'Базовая футболка — чёрная оптом',
             'category_id' => $category->id,
             'slug' => 'basic-tee-black',
             'sku' => 'SKU-TEE-BLACK',
+            'short_description' => 'Чёрная базовая футболка со склада для крупных B2B-партий.',
             'description' => 'Готовая партия базовых футболок без принта. Можно заказать брендирование, упаковку и маркировку.',
             'composition' => '100% хлопок',
             'fit' => 'Regular Fit',
+            'size_table' => $this->defaultSizeTable(),
             'moq' => 5000,
             'stock_conditions' => 'Готовая партия на складе — по текущим остаткам.',
             'availability_status' => AvailabilityStatus::InStock,
@@ -157,12 +163,15 @@ class CatalogSeeder extends Seeder
     {
         return Product::factory()->create([
             'name' => 'Футболки в цвете бренда',
+            'h1' => 'Футболки в цвете бренда под заказ',
             'category_id' => $category->id,
             'slug' => 'brand-color-tee',
             'sku' => 'SKU-TEE-BRAND',
+            'short_description' => 'Серийный пошив футболок в нужном цвете, плотности и посадке.',
             'description' => 'Пошив партии в нужном цвете, плотности и посадке. Перед запуском согласуем образец и параметры ткани.',
             'composition' => '100% хлопок',
             'fit' => 'Regular Fit',
+            'size_table' => $this->defaultSizeTable(),
             'moq' => 5000,
             'stock_conditions' => 'Производство под заказ после согласования образца.',
             'availability_status' => AvailabilityStatus::MadeToOrder,
@@ -179,12 +188,15 @@ class CatalogSeeder extends Seeder
     {
         return Product::factory()->create([
             'name' => 'Футболка Heavy Oversize',
+            'h1' => 'Футболка Heavy Oversize под заказ',
             'category_id' => $category->id,
             'slug' => 'heavy-oversize-tee',
             'sku' => 'SKU-TEE-OVERSIZE',
+            'short_description' => 'Плотная футболка свободной посадки для премиальной линейки.',
             'description' => 'Плотная футболка свободной посадки для премиальной линейки маркетплейса. Производство под заказ.',
             'composition' => '100% хлопок',
             'fit' => 'Oversized',
+            'size_table' => $this->defaultSizeTable(),
             'moq' => 5000,
             'stock_conditions' => 'Производство под заказ после согласования образца.',
             'availability_status' => AvailabilityStatus::MadeToOrder,
@@ -201,12 +213,17 @@ class CatalogSeeder extends Seeder
     {
         return Product::factory()->create([
             'name' => 'Худи, свитшоты и лонгсливы',
+            'h1' => 'Худи, свитшоты и лонгсливы под бренд',
             'category_id' => $category->id,
             'slug' => 'full-cycle-custom-production',
             'sku' => 'SKU-TEE-CUSTOM',
+            'short_description' => 'Полный цикл разработки и пошива моделей под техническое задание.',
             'description' => 'Разработаем или адаптируем модель под ваш бренд. Лекала, образец, пошив, упаковка и маркировка партии.',
             'composition' => 'По техническому заданию',
             'fit' => null,
+            'size_table' => [
+                ['size' => 'По ТЗ', 'chest' => 'По лекалу', 'length' => 'По лекалу'],
+            ],
             'moq' => 5000,
             'stock_conditions' => 'Индивидуальный график производства по спецификации.',
             'availability_status' => AvailabilityStatus::MadeToOrder,
@@ -233,5 +250,20 @@ class CatalogSeeder extends Seeder
         $product->colors()->attach($colors->pluck('id'));
         $product->densities()->attach($densities->pluck('id'));
         $product->sizes()->attach($sizeIds);
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function defaultSizeTable(): array
+    {
+        return [
+            ['size' => 'XS', 'chest' => '48', 'length' => '66'],
+            ['size' => 'S', 'chest' => '50', 'length' => '68'],
+            ['size' => 'M', 'chest' => '52', 'length' => '70'],
+            ['size' => 'L', 'chest' => '54', 'length' => '72'],
+            ['size' => 'XL', 'chest' => '56', 'length' => '74'],
+            ['size' => 'XXL', 'chest' => '58', 'length' => '76'],
+        ];
     }
 }

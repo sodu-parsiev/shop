@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'product_moq',
     'preferred_density',
     'preferred_size',
+    'preferred_color',
 ])]
 class OrderLine extends Model
 {

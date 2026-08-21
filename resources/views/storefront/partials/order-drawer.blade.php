@@ -1,4 +1,5 @@
 <div
+    x-data
     x-cloak
     x-show="$store.orderBuilder.drawerOpen"
     x-transition.opacity
@@ -34,7 +35,7 @@
                         <div class="min-w-0">
                             <p class="font-bold leading-tight" x-text="line.name"></p>
                             <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>
-                            <p class="mt-1 text-xs text-brand-black/40" x-text="`${line.density} · ${line.size}`"></p>
+                            <p class="mt-1 text-xs text-brand-black/40" x-text="[line.color, line.density, line.size].filter(Boolean).join(' · ')"></p>
                             <label class="mt-3 block text-xs font-bold tracking-wide text-brand-black/40 uppercase">
                                 Количество
                                 <input
