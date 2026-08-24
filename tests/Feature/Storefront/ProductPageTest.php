@@ -62,3 +62,49 @@ test('inactive products are not publicly visible', function () {
 
     $this->get($product->publicUrl())->assertNotFound();
 });
+
+test('the product page renders a picker only for axes that have attached options', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'only-sizes-tee',
+        'status' => ProductStatus::Active,
+    ]);
+    $product->sizes()->attach(Size::factory()->create(['name' => 'M']));
+
+    $response = $this->get($product->publicUrl());
+
+    $response->assertOk();
+    $response->assertSee('x-model="selectedSizes"', false);
+    $response->assertSee('value="M"', false);
+    $response->assertDontSee('x-model="selectedColors"', false);
+    $response->assertDontSee('x-model="selectedDensities"', false);
+});
+
+test('the product page renders no picker when the product has no attached options', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'no-options-tee',
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->get($product->publicUrl());
+
+    $response->assertOk();
+    $response->assertDontSee('Отметьте цвет, размер и плотность', false);
+});
+
+test('an inactive color attached to a product is not offered in the picker', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'inactive-color-tee',
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Активный цвет', 'is_active' => true]));
+    $product->colors()->attach(Color::factory()->create(['name' => 'Скрытый цвет', 'is_active' => false]));
+
+    $response = $this->get($product->publicUrl());
+
+    $response->assertOk();
+    $response->assertSee('value="Активный цвет"', false);
+    $response->assertDontSee('value="Скрытый цвет"', false);
+});

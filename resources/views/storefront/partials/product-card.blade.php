@@ -14,6 +14,9 @@
     $defaultDensity = $densities->first()?->name ?: 'Уточнить с менеджером';
     $defaultSize = $product->sizes->first()?->name ?: $homeContent->get('catalog.filter_size_grid_label');
     $defaultColor = $product->colors->first()?->name ?: 'Уточнить с менеджером';
+    $activeColors = $colors->where('is_active', true)->values();
+    $activeSizes = $product->sizes->where('is_active', true)->values();
+    $activeDensities = $densities->where('is_active', true)->values();
 @endphp
 
 <article
@@ -97,9 +100,13 @@
                     availability: @js($inStock ? 'На складе' : 'Под заказ'),
                     moq: {{ $product->moq }},
                     image: @js($coverImage),
-                    density: selectedOptionLabel('density', @js($defaultDensity)),
-                    size: selectedOptionLabel('size', @js($defaultSize)),
-                    color: selectedOptionLabel('color', @js($defaultColor)),
+                    densities: [selectedOptionLabel('density', @js($defaultDensity))],
+                    sizes: [selectedOptionLabel('size', @js($defaultSize))],
+                    colors: [selectedOptionLabel('color', @js($defaultColor))],
+                    availableColors: @js($activeColors->pluck('name')),
+                    availableSizes: @js($activeSizes->pluck('name')),
+                    availableDensities: @js($activeDensities->pluck('name')),
+                    colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
                 })"
                 class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-3 text-xs font-bold text-white sm:text-sm"
             >

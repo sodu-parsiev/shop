@@ -92,11 +92,18 @@ class OrderControllerService
                 'availability_label' => $product->isInStock() ? 'На складе' : 'Под заказ',
                 'quantity' => $line['quantity'],
                 'product_moq' => $product->moq,
-                'preferred_density' => $line['density'] ?? null,
-                'preferred_size' => $line['size'] ?? null,
-                'preferred_color' => $line['color'] ?? null,
+                'preferred_density' => $this->nullableString($line['density'] ?? null),
+                'preferred_size' => $this->nullableString($line['size'] ?? null),
+                'preferred_color' => $this->nullableString($line['color'] ?? null),
             ]);
         }
+    }
+
+    private function nullableString(?string $value): ?string
+    {
+        $value = is_string($value) ? trim($value) : $value;
+
+        return $value === '' ? null : $value;
     }
 
     private function requestNumber(Order $order): string

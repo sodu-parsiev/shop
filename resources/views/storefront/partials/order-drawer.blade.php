@@ -35,7 +35,64 @@
                         <div class="min-w-0">
                             <p class="font-bold leading-tight" x-text="line.name"></p>
                             <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>
-                            <p class="mt-1 text-xs text-brand-black/40" x-text="[line.color, line.density, line.size].filter(Boolean).join(' · ')"></p>
+                            <div class="mt-2 space-y-2" x-show="line.availableColors?.length || line.availableSizes?.length || line.availableDensities?.length">
+                                <template x-if="line.availableColors?.length">
+                                    <div>
+                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Цвет</p>
+                                        <div class="mt-1 flex flex-wrap gap-1.5">
+                                            <template x-for="option in line.availableColors" :key="option">
+                                                <label
+                                                    class="inline-flex cursor-pointer items-center gap-1 border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                    :class="line.colors.includes(option) ? 'border-brand-black bg-brand-black text-white' : 'border-brand-black/15 text-brand-black/60'"
+                                                >
+                                                    <input type="checkbox" :value="option" x-model="line.colors" class="sr-only">
+                                                    <span x-show="line.colors.includes(option)" aria-hidden="true">&#10003;</span>
+                                                    <span
+                                                        class="h-3 w-3 shrink-0 rounded-full ring-1 ring-brand-black/20"
+                                                        x-show="line.colorSwatches?.[option]"
+                                                        :style="`background-color: ${line.colorSwatches?.[option]}`"
+                                                    ></span>
+                                                    <span x-text="option"></span>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="line.availableSizes?.length">
+                                    <div>
+                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Размер</p>
+                                        <div class="mt-1 flex flex-wrap gap-1.5">
+                                            <template x-for="option in line.availableSizes" :key="option">
+                                                <label
+                                                    class="inline-flex cursor-pointer items-center gap-1 border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                    :class="line.sizes.includes(option) ? 'border-brand-black bg-brand-black text-white' : 'border-brand-black/15 text-brand-black/60'"
+                                                >
+                                                    <input type="checkbox" :value="option" x-model="line.sizes" class="sr-only">
+                                                    <span x-show="line.sizes.includes(option)" aria-hidden="true">&#10003;</span>
+                                                    <span x-text="option"></span>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="line.availableDensities?.length">
+                                    <div>
+                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Плотность</p>
+                                        <div class="mt-1 flex flex-wrap gap-1.5">
+                                            <template x-for="option in line.availableDensities" :key="option">
+                                                <label
+                                                    class="inline-flex cursor-pointer items-center gap-1 border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                    :class="line.densities.includes(option) ? 'border-brand-black bg-brand-black text-white' : 'border-brand-black/15 text-brand-black/60'"
+                                                >
+                                                    <input type="checkbox" :value="option" x-model="line.densities" class="sr-only">
+                                                    <span x-show="line.densities.includes(option)" aria-hidden="true">&#10003;</span>
+                                                    <span x-text="option"></span>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                             <label class="mt-3 block text-xs font-bold tracking-wide text-brand-black/40 uppercase">
                                 Количество
                                 <input

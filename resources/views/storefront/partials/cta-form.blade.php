@@ -4,7 +4,7 @@
     $oldProducts = $oldOrderLines->isEmpty()
         ? collect()
         : \App\Models\Catalog\Product::query()
-            ->with('category')
+            ->with(['category', 'colors', 'sizes', 'densities'])
             ->whereIn('id', $oldOrderLines->pluck('product_id')->all())
             ->get()
             ->keyBy('id');
@@ -24,9 +24,13 @@
                 'image' => $product->cover_image ?: asset('brand/catalog-white-v2.jpg'),
                 'moq' => $product->moq,
                 'quantity' => (int) ($line['quantity'] ?? $product->moq),
-                'density' => $line['density'] ?? null,
-                'size' => $line['size'] ?? null,
-                'color' => $line['color'] ?? null,
+                'colors' => collect(explode(',', (string) ($line['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'sizes' => collect(explode(',', (string) ($line['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'densities' => collect(explode(',', (string) ($line['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'availableColors' => $product->colors->where('is_active', true)->pluck('name')->values()->all(),
+                'availableSizes' => $product->sizes->where('is_active', true)->pluck('name')->values()->all(),
+                'availableDensities' => $product->densities->where('is_active', true)->pluck('name')->values()->all(),
+                'colorSwatches' => $product->colors->where('is_active', true)->pluck('hex_code', 'name')->all(),
             ];
         })
         ->filter()
@@ -97,9 +101,9 @@
                         <div style="position: absolute;">
                             <input type="hidden" :name="`order_lines[${index}][product_id]`" :value="line.product_id">
                             <input type="hidden" :name="`order_lines[${index}][quantity]`" :value="line.quantity">
-                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="line.density">
-                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="line.size">
-                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="line.color">
+                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="(line.densities || []).join(', ')">
+                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="(line.sizes || []).join(', ')">
+                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="(line.colors || []).join(', ')">
                         </div>
                     </template>
 

@@ -6,6 +6,7 @@ use App\Enums\ContactMethod;
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Product;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -68,6 +69,7 @@ class StoreOrderRequest extends FormRequest
                 RateLimiter::hit($this->rateLimitKey(), 3600);
 
                 $products = Product::query()
+                    ->with(['colors', 'sizes', 'densities'])
                     ->whereIn('id', collect($lines)->pluck('product_id')->filter()->all())
                     ->where('status', ProductStatus::Active)
                     ->get()
@@ -94,9 +96,37 @@ class StoreOrderRequest extends FormRequest
                             sprintf('Минимальный объём для этого товара — %s шт.', number_format($product->moq, 0, ',', ' '))
                         );
                     }
+
+                    $this->validateAttributeChoice($validator, $index, 'color', $line['color'] ?? null, $product->colors);
+                    $this->validateAttributeChoice($validator, $index, 'size', $line['size'] ?? null, $product->sizes);
+                    $this->validateAttributeChoice($validator, $index, 'density', $line['density'] ?? null, $product->densities);
                 }
             },
         ];
+    }
+
+    /**
+     * @param  Collection<int, \App\Models\Catalog\Color|\App\Models\Catalog\Size|\App\Models\Catalog\Density>  $options
+     */
+    private function validateAttributeChoice(Validator $validator, int|string $index, string $field, ?string $value, Collection $options): void
+    {
+        $selected = collect(explode(',', (string) $value))
+            ->map(fn (string $item): string => trim($item))
+            ->filter()
+            ->values();
+
+        if ($selected->isEmpty()) {
+            return;
+        }
+
+        $allowedNames = $options->where('is_active', true)->pluck('name');
+
+        if ($selected->diff($allowedNames)->isNotEmpty()) {
+            $validator->errors()->add(
+                "order_lines.{$index}.{$field}",
+                'Выбранный вариант недоступен для этого товара.'
+            );
+        }
     }
 
     /**

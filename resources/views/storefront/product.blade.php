@@ -25,6 +25,9 @@
     $densityLabel = $product->densities->pluck('name')->implode(', ') ?: 'По модели и ТЗ';
     $sizeLabel = $product->sizes->pluck('name')->implode(', ') ?: 'По спецификации';
     $colorLabel = $product->colors->pluck('name')->implode(', ') ?: 'По ТЗ';
+    $activeColors = $product->colors->where('is_active', true)->values();
+    $activeSizes = $product->sizes->where('is_active', true)->values();
+    $activeDensities = $product->densities->where('is_active', true)->values();
 @endphp
 
 <x-layouts.storefront
@@ -38,7 +41,7 @@
         @include('storefront.partials.header')
 
         <section
-            x-data="{ activeImage: @js($gallery->first()['url']), zoomOpen: false }"
+            x-data="{ activeImage: @js($gallery->first()['url']), zoomOpen: false, selectedColors: [], selectedSizes: [], selectedDensities: [] }"
             x-init="storefrontAnalytics.track('product_view', { product_id: {{ $product->id }}, product_name: @js($product->name), category: @js($categoryLabel) })"
             class="bg-white py-10 text-brand-black lg:py-16"
         >
@@ -111,6 +114,27 @@
                             </div>
                         </dl>
 
+                        @if ($activeColors->isNotEmpty() || $activeSizes->isNotEmpty() || $activeDensities->isNotEmpty())
+                            <div class="mt-8">
+                                <p class="text-sm text-brand-black/60">
+                                    Отметьте цвет, размер и плотность, если это важно — можно выбрать несколько вариантов или оставить пусто.
+                                </p>
+                                <div class="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                    @if ($activeColors->isNotEmpty())
+                                        <x-storefront.attribute-checkbox-group label="Цвет" model="selectedColors" :options="$activeColors" />
+                                    @endif
+
+                                    @if ($activeSizes->isNotEmpty())
+                                        <x-storefront.attribute-checkbox-group label="Размер" model="selectedSizes" :options="$activeSizes" />
+                                    @endif
+
+                                    @if ($activeDensities->isNotEmpty())
+                                        <x-storefront.attribute-checkbox-group label="Плотность" model="selectedDensities" :options="$activeDensities" />
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                             <button
                                 type="button"
@@ -121,9 +145,13 @@
                                     availability: @js($availabilityLabel),
                                     moq: {{ $product->moq }},
                                     image: @js($coverImage),
-                                    density: @js($product->densities->first()?->name ?: 'Уточнить с менеджером'),
-                                    size: @js($product->sizes->first()?->name ?: 'Смешанная размерная сетка'),
-                                    color: @js($product->colors->first()?->name ?: 'Уточнить с менеджером'),
+                                    colors: selectedColors,
+                                    sizes: selectedSizes,
+                                    densities: selectedDensities,
+                                    availableColors: @js($activeColors->pluck('name')),
+                                    availableSizes: @js($activeSizes->pluck('name')),
+                                    availableDensities: @js($activeDensities->pluck('name')),
+                                    colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
                                 })"
                                 class="inline-flex items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white"
                             >

@@ -68,9 +68,6 @@ document.addEventListener('alpine:init', () => {
         drawerOpen: false,
         lines: [],
         quantity: 5000,
-        preferredDensity: 'Уточнить с менеджером',
-        preferredSize: 'Смешанная размерная сетка',
-        preferredColor: 'Уточнить с менеджером',
         addProduct(product) {
             const moq = Number(product.moq) || 5000;
             const quantity = Math.max(Number(this.quantity) || moq, moq);
@@ -84,9 +81,13 @@ document.addEventListener('alpine:init', () => {
                 image: product.image,
                 moq,
                 quantity,
-                density: product.density || this.preferredDensity,
-                size: product.size || this.preferredSize,
-                color: product.color || this.preferredColor,
+                colors: product.colors ?? [],
+                sizes: product.sizes ?? [],
+                densities: product.densities ?? [],
+                availableColors: product.availableColors ?? [],
+                availableSizes: product.availableSizes ?? [],
+                availableDensities: product.availableDensities ?? [],
+                colorSwatches: product.colorSwatches ?? {},
             };
 
             if (existing) {
@@ -217,7 +218,6 @@ document.addEventListener('alpine:init', () => {
         },
         setFilter(field, value) {
             this[field] = value || 'all';
-            this.syncRequestDefaults(field);
             this.refresh();
             this.updateUrl();
 
@@ -285,19 +285,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             return value === 'all' || Boolean(this.labels[field]?.[value]);
-        },
-        syncRequestDefaults(field) {
-            if (field === 'color') {
-                Alpine.store('orderBuilder').preferredColor = this.selectedOptionLabel('color', 'Уточнить с менеджером');
-            }
-
-            if (field === 'density') {
-                Alpine.store('orderBuilder').preferredDensity = this.selectedOptionLabel('density', 'Уточнить с менеджером');
-            }
-
-            if (field === 'size') {
-                Alpine.store('orderBuilder').preferredSize = this.selectedOptionLabel('size', 'Смешанная размерная сетка');
-            }
         },
         visibleCountLabel() {
             return `${this.visibleCount.toLocaleString('ru-RU')} из ${this.total.toLocaleString('ru-RU')} моделей`;

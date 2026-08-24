@@ -2,7 +2,10 @@
 
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
+use App\Models\Catalog\Color;
+use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\Size;
 use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -182,6 +185,12 @@ test('an order line persists the submitted density and size preference', functio
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
+    $color = Color::factory()->create(['name' => 'Белый']);
+    $size = Size::factory()->create(['name' => 'S–2XL']);
+    $density = Density::factory()->create(['name' => '240 gsm']);
+    $product->colors()->attach($color);
+    $product->sizes()->attach($size);
+    $product->densities()->attach($density);
 
     $this->post(route('orders.store'), validOrderPayload($product, [
         'order_lines' => [
@@ -202,6 +211,44 @@ test('an order line persists the submitted density and size preference', functio
     expect($order->lines->first()->preferred_color)->toBe('Белый');
 });
 
+test('an order line accepts multiple attached colors selected together', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Белый']));
+    $product->colors()->attach(Color::factory()->create(['name' => 'Красный']));
+
+    $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => 'Белый, Красный'],
+        ],
+    ]));
+
+    $order = Order::query()->with('lines')->latest('id')->first();
+
+    expect($order->lines->first()->preferred_color)->toBe('Белый, Красный');
+});
+
+test('order lines reject a multi-value submission if any value is not attached to the product', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Белый']));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => 'Белый, Красный'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.color']);
+    expect(Order::query()->count())->toBe(0);
+});
+
 test('an order line without color density or size preferences stores null', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
@@ -215,6 +262,114 @@ test('an order line without color density or size preferences stores null', func
 
     expect($order->lines->first()->preferred_density)->toBeNull();
     expect($order->lines->first()->preferred_size)->toBeNull();
+    expect($order->lines->first()->preferred_color)->toBeNull();
+});
+
+test('order lines reject a color not attached to the product', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Белый']));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => 'Красный'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.color']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('order lines reject a size not attached to the product', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->sizes()->attach(Size::factory()->create(['name' => 'M']));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'size' => 'XL'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.size']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('order lines reject a density not attached to the product', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->densities()->attach(Density::factory()->create(['name' => '180 gsm']));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'density' => '240 gsm'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.density']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('order lines reject any color value when the product has no attached colors', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => 'Белый'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.color']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('order lines reject a color that is attached but deactivated', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Белый', 'is_active' => false]));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => 'Белый'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.color']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('an empty string color preference is treated as no preference', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $product->colors()->attach(Color::factory()->create(['name' => 'Белый']));
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => $product->moq, 'color' => ''],
+        ],
+    ]));
+
+    $response->assertSessionHasNoErrors();
+    $order = Order::query()->with('lines')->latest('id')->first();
     expect($order->lines->first()->preferred_color)->toBeNull();
 });
 
