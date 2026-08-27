@@ -1,10 +1,11 @@
 @php
+    $volumeOptions = \App\Models\Catalog\ProductPriceTier::publicQuantities();
     $submissionToken = old('submission_token') ?: session()->remember('order_submission_token', fn (): string => (string) \Illuminate\Support\Str::uuid());
     $oldOrderLines = collect(old('order_lines', []))->filter(fn ($line): bool => is_array($line) && filled($line['product_id'] ?? null));
     $oldProducts = $oldOrderLines->isEmpty()
         ? collect()
         : \App\Models\Catalog\Product::query()
-            ->with(['category', 'colors', 'sizes', 'densities'])
+            ->with(['category', 'colors', 'sizes', 'densities', 'priceTiers'])
             ->whereIn('id', $oldOrderLines->pluck('product_id')->all())
             ->get()
             ->keyBy('id');
@@ -24,6 +25,8 @@
                 'image' => $product->cover_image ?: asset('brand/catalog-white-v2.jpg'),
                 'moq' => $product->moq,
                 'quantity' => (int) ($line['quantity'] ?? $product->moq),
+                'priceTiers' => $product->formattedPriceTiersByQuantity(),
+                'priceQuantities' => $product->availableOrderQuantities(),
                 'colors' => collect(explode(',', (string) ($line['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
                 'sizes' => collect(explode(',', (string) ($line['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
                 'densities' => collect(explode(',', (string) ($line['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
@@ -194,9 +197,9 @@
                             x-model="$store.volume.selected"
                             class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm focus:border-brand-pink focus:ring-0"
                         >
-                            @foreach ($homeContent->get('form.volume_options', []) as $option)
-                                <option value="{{ $option['key'] }}" {{ old('volume') === $option['key'] ? 'selected' : '' }}>
-                                    {{ $option['label'] }}
+                            @foreach ($volumeOptions as $quantity)
+                                <option value="{{ $quantity }}" {{ old('volume') === (string) $quantity ? 'selected' : '' }}>
+                                    {{ number_format($quantity, 0, ',', ' ') }} шт.
                                 </option>
                             @endforeach
                         </select>

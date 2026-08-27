@@ -4,7 +4,11 @@ namespace App\Http\Requests;
 
 use App\Enums\ContactMethod;
 use App\Enums\ProductStatus;
+use App\Models\Catalog\Color;
+use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
+use App\Models\Catalog\Size;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,7 +33,7 @@ class StoreOrderRequest extends FormRequest
             'phone' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'preferred_contact_method' => ['required', Rule::enum(ContactMethod::class)],
-            'volume' => ['required', 'in:5000_10000,10000_25000,25000_plus'],
+            'volume' => ['required', Rule::in(array_map('strval', ProductPriceTier::publicQuantities()))],
             'message' => ['nullable', 'string', 'max:5000'],
             'consent' => ['accepted'],
             'submission_token' => ['required', 'uuid'],
@@ -45,7 +49,7 @@ class StoreOrderRequest extends FormRequest
             'order_lines' => ['required', 'array', 'min:1', 'max:20'],
             'order_lines.*' => ['array'],
             'order_lines.*.product_id' => ['required', 'integer', 'distinct'],
-            'order_lines.*.quantity' => ['required', 'integer', 'min:1'],
+            'order_lines.*.quantity' => ['required', 'integer', Rule::in(ProductPriceTier::publicQuantities())],
             'order_lines.*.density' => ['nullable', 'string', 'max:255'],
             'order_lines.*.size' => ['nullable', 'string', 'max:255'],
             'order_lines.*.color' => ['nullable', 'string', 'max:255'],
@@ -72,6 +76,7 @@ class StoreOrderRequest extends FormRequest
                     ->with(['colors', 'sizes', 'densities'])
                     ->whereIn('id', collect($lines)->pluck('product_id')->filter()->all())
                     ->where('status', ProductStatus::Active)
+                    ->where('show_on_landing', true)
                     ->get()
                     ->keyBy('id');
 
@@ -106,7 +111,7 @@ class StoreOrderRequest extends FormRequest
     }
 
     /**
-     * @param  Collection<int, \App\Models\Catalog\Color|\App\Models\Catalog\Size|\App\Models\Catalog\Density>  $options
+     * @param  Collection<int, Color|Size|Density>  $options
      */
     private function validateAttributeChoice(Validator $validator, int|string $index, string $field, ?string $value, Collection $options): void
     {
@@ -149,6 +154,7 @@ class StoreOrderRequest extends FormRequest
             'order_lines.required' => 'Добавьте хотя бы один товар в заявку.',
             'order_lines.min' => 'Добавьте хотя бы один товар в заявку.',
             'order_lines.*.product_id.distinct' => 'Товар уже добавлен в заявку.',
+            'order_lines.*.quantity.in' => 'Выберите объём из прайса.',
         ];
     }
 

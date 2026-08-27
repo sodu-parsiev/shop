@@ -5,6 +5,7 @@ use App\Models\Catalog\Category;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
@@ -131,9 +132,15 @@ test('it renders admin editable seo metadata and structured data', function () {
 test('it renders order builder hooks with real catalog filters and preferences', function () {
     $product = Product::factory()->create([
         'name' => 'Базовая футболка — белая',
-        'moq' => 7000,
+        'moq' => 10,
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 10000,
+        'unit_price' => 165,
+        'currency' => 'RUB',
     ]);
     $color = Color::factory()->create(['name' => 'Белый']);
     $size = Size::factory()->create(['name' => 'S']);
@@ -146,7 +153,9 @@ test('it renders order builder hooks with real catalog filters and preferences',
 
     $response->assertSee('$store.orderBuilder.addProduct', false);
     $response->assertSee('id: '.$product->id.',', false);
-    $response->assertSee('moq: 7000', false);
+    $response->assertSee('moq: 10', false);
+    $response->assertSee('от 165 ₽/шт', false);
+    $response->assertSee('priceQuantities', false);
     $response->assertSee('name="`order_lines[${index}][product_id]`"', false);
     $response->assertSee('name="`order_lines[${index}][quantity]`"', false);
     $response->assertSee('name="`order_lines[${index}][density]`"', false);

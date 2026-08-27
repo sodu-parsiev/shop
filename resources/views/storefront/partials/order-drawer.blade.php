@@ -35,6 +35,10 @@
                         <div class="min-w-0">
                             <p class="font-bold leading-tight" x-text="line.name"></p>
                             <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>
+                            <p class="mt-1 text-xs font-bold text-brand-black/70">
+                                <span x-text="$store.orderBuilder.priceFor(line)"></span>
+                                <span class="font-normal text-brand-black/45"> · чистый текстиль</span>
+                            </p>
                             <div class="mt-2 space-y-2" x-show="line.availableColors?.length || line.availableSizes?.length || line.availableDensities?.length">
                                 <template x-if="line.availableColors?.length">
                                     <div>
@@ -95,14 +99,15 @@
                             </div>
                             <label class="mt-3 block text-xs font-bold tracking-wide text-brand-black/40 uppercase">
                                 Количество
-                                <input
-                                    type="number"
-                                    step="1000"
-                                    :min="line.moq"
-                                    :value="line.quantity"
+                                <select
+                                    x-model.number="line.quantity"
                                     @change="$store.orderBuilder.updateLineQuantity(line.product_id, $event.target.value)"
                                     class="mt-1 w-full border border-brand-black/15 px-3 py-2 text-sm font-bold"
                                 >
+                                    <template x-for="quantity in line.priceQuantities" :key="quantity">
+                                        <option :value="quantity" x-text="`${quantity.toLocaleString('ru-RU')} шт.`"></option>
+                                    </template>
+                                </select>
                             </label>
                         </div>
                         <button type="button" class="h-11 w-11 text-2xl" :aria-label="`Удалить ${line.name}`" @click="$store.orderBuilder.remove(line.product_id)">&times;</button>

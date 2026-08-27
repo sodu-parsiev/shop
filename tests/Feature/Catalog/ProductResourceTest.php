@@ -7,6 +7,7 @@ use App\Filament\Resources\Catalog\Products\Pages\ListProducts;
 use App\Models\Catalog\Category;
 use App\Models\Catalog\CustomizationService;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Str;
@@ -66,6 +67,47 @@ test('it can create a product with a category and customization services', funct
             'customization_service_id' => $service->id,
         ]);
     }
+});
+
+test('it can create a product with price tiers', function () {
+    $category = Category::factory()->create();
+
+    Livewire::test(CreateProduct::class)
+        ->fillForm([
+            'name' => 'Priced Product',
+            'sku' => 'SKU-PRICED',
+            'category_id' => $category->id,
+            'priceTiers' => [
+                [
+                    'quantity' => 10000,
+                    'unit_price' => 165,
+                    'currency' => ProductPriceTier::DEFAULT_CURRENCY,
+                ],
+                [
+                    'quantity' => 10,
+                    'unit_price' => 190,
+                    'currency' => ProductPriceTier::DEFAULT_CURRENCY,
+                ],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $product = Product::where('sku', 'SKU-PRICED')->firstOrFail();
+
+    $this->assertDatabaseHas('product_price_tiers', [
+        'product_id' => $product->id,
+        'quantity' => 10000,
+        'unit_price' => 165,
+        'currency' => ProductPriceTier::DEFAULT_CURRENCY,
+    ]);
+
+    $this->assertDatabaseHas('product_price_tiers', [
+        'product_id' => $product->id,
+        'quantity' => 10,
+        'unit_price' => 190,
+        'currency' => ProductPriceTier::DEFAULT_CURRENCY,
+    ]);
 });
 
 test('it requires a category when creating a product', function () {

@@ -317,7 +317,7 @@ class ManageHomePageContent extends Page
                                 Repeater::make('form.volume_options')
                                     ->label('Варианты объёма')
                                     ->schema([
-                                        TextInput::make('key')->label('Ключ (5000_10000 и т.п.)'),
+                                        TextInput::make('key')->label('Ключ (10, 100, 500 и т.п.)'),
                                         TextInput::make('label')->label('Текст'),
                                     ])
                                     ->columns(2)
@@ -337,6 +337,7 @@ class ManageHomePageContent extends Page
                                 TextInput::make('footer.privacy')->label('Документ: политика конфиденциальности'),
                                 TextInput::make('footer.consent')->label('Документ: согласие на обработку'),
                                 TextInput::make('footer.requisites')->label('Документ: реквизиты'),
+                                TextInput::make('footer.size_guide')->label('Документ: как определить размер'),
                                 TextInput::make('footer.contacts_heading')->label('Заголовок: контакты'),
                                 TextInput::make('footer.copyright')->label('Копирайт'),
                                 TextInput::make('footer.made_for')->label('Подпись внизу'),

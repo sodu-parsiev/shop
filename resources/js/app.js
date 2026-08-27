@@ -2,6 +2,7 @@ import Alpine from 'alpinejs';
 import './animations';
 
 const ATTRIBUTION_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+const DEFAULT_ORDER_QUANTITIES = [10, 100, 500, 1000, 5000, 10000];
 
 window.storefrontAnalytics = window.storefrontAnalytics || {
     track(event, payload = {}) {
@@ -60,17 +61,41 @@ function parseJsonArray(value) {
     }
 }
 
+function sortedUniqueNumbers(values) {
+    return [...new Set((values || []).map(Number).filter((value) => Number.isFinite(value) && value > 0))]
+        .sort((a, b) => a - b);
+}
+
+function orderQuantitiesFor(product) {
+    const quantities = sortedUniqueNumbers(product.priceQuantities);
+
+    return quantities.length > 0 ? quantities : DEFAULT_ORDER_QUANTITIES;
+}
+
+function normalizeOrderQuantity(value, allowedQuantities = DEFAULT_ORDER_QUANTITIES, minimum = 10) {
+    const quantities = sortedUniqueNumbers(allowedQuantities).filter((quantity) => quantity >= minimum);
+    const fallback = quantities[0] || minimum;
+    const requested = Number(value) || fallback;
+
+    if (quantities.includes(requested)) {
+        return requested;
+    }
+
+    return quantities.find((quantity) => quantity >= requested) || quantities[quantities.length - 1] || fallback;
+}
+
 document.addEventListener('alpine:init', () => {
-    Alpine.store('volume', { selected: '5000_10000' });
+    Alpine.store('volume', { selected: '10' });
     Alpine.store('attribution', currentAttribution());
 
     Alpine.store('orderBuilder', {
         drawerOpen: false,
         lines: [],
-        quantity: 5000,
+        quantity: 10,
         addProduct(product) {
-            const moq = Number(product.moq) || 5000;
-            const quantity = Math.max(Number(this.quantity) || moq, moq);
+            const priceQuantities = orderQuantitiesFor(product);
+            const moq = Number(product.moq) || priceQuantities[0] || 10;
+            const quantity = normalizeOrderQuantity(this.quantity, priceQuantities, moq);
             const productId = Number(product.id);
             const existing = this.lines.find((line) => line.product_id === productId);
             const line = {
@@ -81,6 +106,8 @@ document.addEventListener('alpine:init', () => {
                 image: product.image,
                 moq,
                 quantity,
+                priceTiers: product.priceTiers ?? {},
+                priceQuantities,
                 colors: product.colors ?? [],
                 sizes: product.sizes ?? [],
                 densities: product.densities ?? [],
@@ -120,11 +147,11 @@ document.addEventListener('alpine:init', () => {
             });
         },
         setPreset(value, volumeKey) {
-            this.quantity = Number(value);
-            Alpine.store('volume').selected = volumeKey;
+            this.quantity = normalizeOrderQuantity(value);
+            Alpine.store('volume').selected = String(volumeKey);
         },
         setQuantity(value) {
-            this.quantity = Math.max(5000, Number(value) || 5000);
+            this.quantity = normalizeOrderQuantity(value);
             Alpine.store('volume').selected = this.volumeKeyFor(this.quantity);
         },
         updateLineQuantity(productId, value) {
@@ -134,18 +161,13 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            line.quantity = Math.max(Number(value) || line.moq, line.moq);
+            line.quantity = normalizeOrderQuantity(value, line.priceQuantities, line.moq);
+        },
+        priceFor(line) {
+            return line.priceTiers?.[String(line.quantity)] || 'По запросу';
         },
         volumeKeyFor(quantity) {
-            if (quantity >= 25000) {
-                return '25000_plus';
-            }
-
-            if (quantity >= 10000) {
-                return '10000_25000';
-            }
-
-            return '5000_10000';
+            return String(normalizeOrderQuantity(quantity));
         },
     });
 

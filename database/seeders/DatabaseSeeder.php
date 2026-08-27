@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             FaqSeeder::class,
             HomePageContentSeeder::class,
             LegalPagesSeeder::class,
+            ContentPagesSeeder::class,
             StorefrontMockDesignSeeder::class,
         ]);
     }

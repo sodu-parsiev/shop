@@ -32,8 +32,8 @@ class ProductFactory extends Factory
             'composition' => fake()->sentence(),
             'fit' => fake()->randomElement(['Regular Fit', 'Slim Fit', 'Oversized']),
             'size_table' => [
-                ['size' => 'S', 'chest' => '50', 'length' => '68'],
-                ['size' => 'M', 'chest' => '52', 'length' => '70'],
+                ['size' => 'S', 'chest' => '50', 'length' => '68', 'sleeve' => '20'],
+                ['size' => 'M', 'chest' => '52', 'length' => '70', 'sleeve' => '21'],
             ],
             'moq' => fake()->numberBetween(1, 50),
             'stock_conditions' => fake()->optional()->sentence(),

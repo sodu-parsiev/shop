@@ -30,7 +30,7 @@ class HomeControllerService
     public function getHomePageData(): array
     {
         $products = Product::query()
-            ->with(['category', 'colors', 'densities', 'sizes', 'images'])
+            ->with(['category', 'colors', 'densities', 'sizes', 'images', 'priceTiers'])
             ->where('show_on_landing', true)
             ->where('status', ProductStatus::Active)
             ->whereHas('category', fn ($query) => $query->where('is_active', true))

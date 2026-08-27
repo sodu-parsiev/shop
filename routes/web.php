@@ -13,6 +13,7 @@ Route::get('/catalog/{product:slug}', ProductController::class)->name('products.
 Route::get('/privacy', LegalPageController::class)->defaults('slug', 'privacy')->name('legal.privacy');
 Route::get('/consent', LegalPageController::class)->defaults('slug', 'consent')->name('legal.consent');
 Route::get('/requisites', LegalPageController::class)->defaults('slug', 'requisites')->name('legal.requisites');
+Route::get('/size-guide', LegalPageController::class)->defaults('slug', 'size-guide')->name('legal.size-guide');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');

@@ -5,6 +5,7 @@ use App\Models\Catalog\Color;
 use App\Models\Catalog\CustomizationService;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 
 test('a category has many products', function () {
@@ -55,4 +56,13 @@ test('a customization service belongs to many products', function () {
     expect($service->products)->toHaveCount(1)
         ->and($service->products->first()->is($product))->toBeTrue()
         ->and($product->customizationServices->first()->is($service))->toBeTrue();
+});
+
+test('a product has many price tiers', function () {
+    $product = Product::factory()->create();
+    $tier = ProductPriceTier::factory()->create(['product_id' => $product->id]);
+
+    expect($product->priceTiers)->toHaveCount(1)
+        ->and($product->priceTiers->first()->is($tier))->toBeTrue()
+        ->and($tier->product->is($product))->toBeTrue();
 });

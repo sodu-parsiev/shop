@@ -3,9 +3,7 @@
     $colors = $product->colors;
     $densities = $product->densities;
     $sizeCount = $product->sizes->count();
-    $densityLabel = $inStock
-        ? 'По текущей складской партии'
-        : ($densities->pluck('name')->implode(' / ') ?: 'По модели и ТЗ');
+    $densityLabel = $densities->pluck('name')->implode(' / ') ?: 'По модели и ТЗ';
     $sizeLabel = $inStock
         ? 'Размерный ряд и остатки — по запросу'
         : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерная сетка по спецификации');
@@ -17,6 +15,7 @@
     $activeColors = $colors->where('is_active', true)->values();
     $activeSizes = $product->sizes->where('is_active', true)->values();
     $activeDensities = $densities->where('is_active', true)->values();
+    $priceNote = $product->hasPriceTiers() ? 'чистый текстиль, без нанесения' : 'уточнит менеджер';
 @endphp
 
 <article
@@ -87,8 +86,8 @@
         <div class="mt-auto flex items-end justify-between gap-3 pt-2">
             <div>
                 <p class="text-xs text-brand-black/50">{{ $homeContent->get('catalog.price_label') }}</p>
-                <p class="text-2xl font-normal leading-none">{{ $homeContent->get('catalog.price_value') }}</p>
-                <p class="text-xs text-brand-black/40">{{ $homeContent->get('catalog.price_note_small') }}</p>
+                <p class="text-2xl font-normal leading-none">{{ $product->startingPriceLabel() }}</p>
+                <p class="text-xs text-brand-black/40">{{ $priceNote }}</p>
                 <a href="{{ $product->publicUrl() }}" class="mt-3 inline-block text-xs font-bold text-brand-pink">Подробнее</a>
             </div>
             <button
@@ -100,6 +99,8 @@
                     availability: @js($inStock ? 'На складе' : 'Под заказ'),
                     moq: {{ $product->moq }},
                     image: @js($coverImage),
+                    priceTiers: @js($product->formattedPriceTiersByQuantity()),
+                    priceQuantities: @js($product->availableOrderQuantities()),
                     densities: [selectedOptionLabel('density', @js($defaultDensity))],
                     sizes: [selectedOptionLabel('size', @js($defaultSize))],
                     colors: [selectedOptionLabel('color', @js($defaultColor))],

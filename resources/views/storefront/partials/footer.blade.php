@@ -22,6 +22,7 @@
                     <li><a href="{{ route('legal.privacy') }}" class="hover:text-white">{{ $homeContent->get('footer.privacy') }}</a></li>
                     <li><a href="{{ route('legal.consent') }}" class="hover:text-white">{{ $homeContent->get('footer.consent') }}</a></li>
                     <li><a href="{{ route('legal.requisites') }}" class="hover:text-white">{{ $homeContent->get('footer.requisites') }}</a></li>
+                    <li><a href="{{ route('legal.size-guide') }}" class="hover:text-white">{{ $homeContent->get('footer.size_guide') }}</a></li>
                 </ul>
             </div>
 

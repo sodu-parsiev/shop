@@ -28,6 +28,7 @@
     $activeColors = $product->colors->where('is_active', true)->values();
     $activeSizes = $product->sizes->where('is_active', true)->values();
     $activeDensities = $product->densities->where('is_active', true)->values();
+    $priceNote = $product->hasPriceTiers() ? 'чистый текстиль, без нанесения' : 'уточнит менеджер';
 @endphp
 
 <x-layouts.storefront
@@ -93,6 +94,10 @@
                                 <dd class="font-bold">{{ number_format($product->moq, 0, ',', ' ') }} шт.</dd>
                             </div>
                             <div class="grid gap-2 py-4 sm:grid-cols-[160px_1fr]">
+                                <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">Цена</dt>
+                                <dd class="font-bold">{{ $product->startingPriceLabel() }} <span class="font-normal text-brand-black/50">({{ $priceNote }})</span></dd>
+                            </div>
+                            <div class="grid gap-2 py-4 sm:grid-cols-[160px_1fr]">
                                 <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">Состав</dt>
                                 <dd class="font-bold">{{ $product->composition ?: 'По спецификации' }}</dd>
                             </div>
@@ -145,6 +150,8 @@
                                     availability: @js($availabilityLabel),
                                     moq: {{ $product->moq }},
                                     image: @js($coverImage),
+                                    priceTiers: @js($product->formattedPriceTiersByQuantity()),
+                                    priceQuantities: @js($product->availableOrderQuantities()),
                                     colors: selectedColors,
                                     sizes: selectedSizes,
                                     densities: selectedDensities,
@@ -174,14 +181,18 @@
 
                 @if (filled($product->size_table))
                     <div class="mt-12 border-t border-brand-black/10 pt-10">
-                        <h2 class="text-3xl font-normal">Размерная таблица</h2>
+                        <div class="flex flex-wrap items-baseline justify-between gap-3">
+                            <h2 class="text-3xl font-normal">Размерная таблица</h2>
+                            <a href="{{ route('legal.size-guide') }}" class="text-sm underline text-brand-black/60 hover:text-brand-black">Как снять мерки и читать таблицу</a>
+                        </div>
                         <div class="mt-5 overflow-x-auto">
                             <table class="min-w-full border-y border-brand-black/10 text-left text-sm">
                                 <thead class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">
                                     <tr>
                                         <th class="py-3 pr-4">Размер</th>
-                                        <th class="py-3 pr-4">Ширина</th>
-                                        <th class="py-3 pr-4">Длина</th>
+                                        <th class="py-3 pr-4">Ширина, см</th>
+                                        <th class="py-3 pr-4">Длина, см</th>
+                                        <th class="py-3 pr-4">Рукав, см</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-brand-black/10">
@@ -190,6 +201,7 @@
                                             <td class="py-3 pr-4 font-bold">{{ $row['size'] ?? '' }}</td>
                                             <td class="py-3 pr-4">{{ $row['chest'] ?? '' }}</td>
                                             <td class="py-3 pr-4">{{ $row['length'] ?? '' }}</td>
+                                            <td class="py-3 pr-4">{{ $row['sleeve'] ?? '' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

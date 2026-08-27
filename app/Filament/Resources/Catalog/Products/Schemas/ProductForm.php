@@ -6,6 +6,7 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -82,8 +83,11 @@ class ProductForm
                                         TextInput::make('length')
                                             ->label(__('Length'))
                                             ->required(),
+                                        TextInput::make('sleeve')
+                                            ->label(__('Sleeve'))
+                                            ->required(),
                                     ])
-                                    ->columns(3)
+                                    ->columns(4)
                                     ->defaultItems(0)
                                     ->columnSpanFull(),
                             ])
@@ -156,6 +160,34 @@ class ProductForm
                                     ->dehydrateStateUsing(fn ($state, Get $get) => $get('availability_status') === AvailabilityStatus::InStock->value ? $state : null),
                                 Textarea::make('stock_conditions')
                                     ->label(__('Stock / conditions'))
+                                    ->columnSpanFull(),
+                                Repeater::make('priceTiers')
+                                    ->label(__('Price tiers'))
+                                    ->relationship('priceTiers')
+                                    ->orderColumn('sort_order')
+                                    ->reorderable()
+                                    ->defaultItems(0)
+                                    ->addActionLabel(__('Add price tier'))
+                                    ->schema([
+                                        TextInput::make('quantity')
+                                            ->label(__('Quantity'))
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->required(),
+                                        TextInput::make('unit_price')
+                                            ->label(__('Unit price'))
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->required(),
+                                        Select::make('currency')
+                                            ->label(__('Currency'))
+                                            ->options([
+                                                ProductPriceTier::DEFAULT_CURRENCY => ProductPriceTier::DEFAULT_CURRENCY,
+                                            ])
+                                            ->default(ProductPriceTier::DEFAULT_CURRENCY)
+                                            ->required(),
+                                    ])
+                                    ->columns(3)
                                     ->columnSpanFull(),
                             ])
                             ->columns(2),

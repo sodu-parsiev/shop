@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -96,10 +97,85 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function priceTiers(): HasMany
+    {
+        return $this->hasMany(ProductPriceTier::class)
+            ->orderBy('sort_order')
+            ->orderByDesc('quantity');
+    }
+
     public function isInStock(): bool
     {
         return $this->availability_status === AvailabilityStatus::InStock
             && ($this->stock_quantity ?? 0) > 0;
+    }
+
+    public function lowestPriceTier(): ?ProductPriceTier
+    {
+        return $this->loadedPriceTiers()
+            ->sortBy(fn (ProductPriceTier $tier): float => (float) $tier->unit_price)
+            ->first();
+    }
+
+    public function priceTierForQuantity(int $quantity): ?ProductPriceTier
+    {
+        return $this->loadedPriceTiers()->firstWhere('quantity', $quantity);
+    }
+
+    public function startingPriceLabel(): string
+    {
+        $tier = $this->lowestPriceTier();
+
+        return $tier ? 'от '.$tier->formattedUnitPrice() : 'По запросу';
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function availableOrderQuantities(): array
+    {
+        $quantities = $this->loadedPriceTiers()
+            ->pluck('quantity')
+            ->map(fn (int|string $quantity): int => (int) $quantity)
+            ->filter(fn (int $quantity): bool => $quantity >= $this->moq)
+            ->sort()
+            ->values();
+
+        if ($quantities->isNotEmpty()) {
+            return $quantities->all();
+        }
+
+        return collect(ProductPriceTier::publicQuantities())
+            ->filter(fn (int $quantity): bool => $quantity >= $this->moq)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function formattedPriceTiersByQuantity(): array
+    {
+        return $this->loadedPriceTiers()
+            ->mapWithKeys(fn (ProductPriceTier $tier): array => [
+                (string) $tier->quantity => $tier->formattedUnitPrice(),
+            ])
+            ->all();
+    }
+
+    public function hasPriceTiers(): bool
+    {
+        return $this->loadedPriceTiers()->isNotEmpty();
+    }
+
+    /**
+     * @return Collection<int, ProductPriceTier>
+     */
+    private function loadedPriceTiers(): Collection
+    {
+        return $this->relationLoaded('priceTiers')
+            ? $this->priceTiers
+            : $this->priceTiers()->get();
     }
 
     public function publicUrl(): string

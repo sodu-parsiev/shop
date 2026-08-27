@@ -15,9 +15,9 @@ class ProductControllerService
      */
     public function getProductPageData(Product $product): array
     {
-        abort_unless($product->status === ProductStatus::Active, 404);
+        abort_unless($product->status === ProductStatus::Active && $product->show_on_landing, 404);
 
-        $product->load(['category', 'colors', 'densities', 'sizes', 'images', 'customizationServices']);
+        $product->load(['category', 'colors', 'densities', 'sizes', 'images', 'customizationServices', 'priceTiers']);
 
         $homeContent = HomePageContent::query()->firstOrCreate(['id' => 1], ['content' => []]);
         $description = $this->descriptionFor($product);
@@ -143,6 +143,7 @@ class ProductControllerService
             ['name' => 'Размеры', 'value' => $product->sizes->pluck('name')->implode(', ')],
             ['name' => 'Цвета', 'value' => $product->colors->pluck('name')->implode(', ')],
             ['name' => 'Минимальная партия', 'value' => number_format($product->moq, 0, ',', ' ').' шт.'],
+            ['name' => 'Цена чистого текстиля', 'value' => $product->startingPriceLabel()],
         ])
             ->filter(fn (array $property): bool => filled($property['value']))
             ->map(fn (array $property): array => [

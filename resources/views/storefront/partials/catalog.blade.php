@@ -5,6 +5,7 @@
         'density' => $densities->pluck('name', 'id')->all(),
         'size' => $sizes->pluck('name', 'id')->all(),
     ];
+    $orderQuantities = \App\Models\Catalog\ProductPriceTier::publicQuantities();
 @endphp
 
 <section id="catalog" x-data='catalogFilter(@json(['labels' => $filterLabels, 'total' => $products->count()], JSON_UNESCAPED_UNICODE))' class="border-b border-brand-black/10 bg-brand-black py-16 text-white lg:py-28">
@@ -101,14 +102,15 @@
             <div class="p-4">
                 <label class="text-xs font-bold tracking-wide text-white/40 uppercase">{{ $homeContent->get('catalog.filter_qty_label') }}</label>
                 <div class="mt-2 flex items-center gap-2">
-                    <input
-                        type="number"
+                    <select
                         x-model.number="$store.orderBuilder.quantity"
                         @change="$store.orderBuilder.setQuantity($event.target.value)"
-                        min="5000"
-                        step="1000"
                         class="w-full border-0 bg-transparent px-0 py-1 text-sm font-bold text-white ring-0 focus:ring-0"
                     >
+                        @foreach ($orderQuantities as $quantity)
+                            <option value="{{ $quantity }}" class="text-brand-black">{{ number_format($quantity, 0, ',', ' ') }}</option>
+                        @endforeach
+                    </select>
                     <span class="text-sm text-white/40">{{ $homeContent->get('catalog.qty_unit') }}</span>
                 </div>
             </div>
@@ -116,24 +118,14 @@
 
         <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap gap-2">
-                <button
-                    type="button"
-                    @click="$store.orderBuilder.setPreset(5000, '5000_10000')"
-                    :class="$store.orderBuilder.quantity === 5000 ? 'bg-brand-pink text-white' : 'bg-white/5 text-white ring-1 ring-white/15'"
-                    class="px-5 py-3 text-sm font-bold"
-                >5 000 {{ $homeContent->get('catalog.qty_unit') }}</button>
-                <button
-                    type="button"
-                    @click="$store.orderBuilder.setPreset(10000, '10000_25000')"
-                    :class="$store.orderBuilder.quantity === 10000 ? 'bg-brand-pink text-white' : 'bg-white/5 text-white ring-1 ring-white/15'"
-                    class="px-5 py-3 text-sm font-bold"
-                >10 000 {{ $homeContent->get('catalog.qty_unit') }}</button>
-                <button
-                    type="button"
-                    @click="$store.orderBuilder.setPreset(25000, '25000_plus')"
-                    :class="$store.orderBuilder.quantity === 25000 ? 'bg-brand-pink text-white' : 'bg-white/5 text-white ring-1 ring-white/15'"
-                    class="px-5 py-3 text-sm font-bold"
-                >25 000 {{ $homeContent->get('catalog.qty_unit') }}</button>
+                @foreach ($orderQuantities as $quantity)
+                    <button
+                        type="button"
+                        @click="$store.orderBuilder.setPreset({{ $quantity }}, '{{ $quantity }}')"
+                        :class="$store.orderBuilder.quantity === {{ $quantity }} ? 'bg-brand-pink text-white' : 'bg-white/5 text-white ring-1 ring-white/15'"
+                        class="px-5 py-3 text-sm font-bold"
+                    >{{ number_format($quantity, 0, ',', ' ') }} {{ $homeContent->get('catalog.qty_unit') }}</button>
+                @endforeach
             </div>
 
             <p class="text-xs text-white/40">{{ $homeContent->get('catalog.price_note') }}</p>

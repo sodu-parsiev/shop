@@ -14,9 +14,12 @@ class OrderControllerService
      * @var array<string, string>
      */
     private const VOLUME_LABELS = [
-        '5000_10000' => '5 000–10 000 шт.',
-        '10000_25000' => '10 000–25 000 шт.',
-        '25000_plus' => 'Более 25 000 шт.',
+        '10' => '10 шт.',
+        '100' => '100 шт.',
+        '500' => '500 шт.',
+        '1000' => '1 000 шт.',
+        '5000' => '5 000 шт.',
+        '10000' => '10 000 шт.',
     ];
 
     public function createFromRequest(StoreOrderRequest $request): Order
@@ -30,7 +33,7 @@ class OrderControllerService
             return $existingOrder->load('lines');
         }
 
-        $volumeLabel = self::VOLUME_LABELS[$data['volume']];
+        $volumeLabel = self::VOLUME_LABELS[(string) $data['volume']];
         $comment = $data['message'] ?? null;
         $ipAddress = $request->ip();
 
@@ -76,7 +79,7 @@ class OrderControllerService
         }
 
         $products = Product::query()
-            ->with('category')
+            ->with(['category', 'priceTiers'])
             ->whereIn('id', collect($lines)->pluck('product_id')->all())
             ->get()
             ->keyBy('id');
@@ -84,6 +87,7 @@ class OrderControllerService
         foreach ($lines as $line) {
             /** @var Product $product */
             $product = $products->get($line['product_id']);
+            $priceTier = $product->priceTierForQuantity((int) $line['quantity']);
 
             $order->lines()->create([
                 'product_id' => $product->id,
@@ -92,6 +96,12 @@ class OrderControllerService
                 'availability_label' => $product->isInStock() ? 'На складе' : 'Под заказ',
                 'quantity' => $line['quantity'],
                 'product_moq' => $product->moq,
+                'unit_price' => $priceTier?->unit_price,
+                'currency' => $priceTier?->currency,
+                'price_quantity_tier' => $priceTier?->quantity,
+                'price_note' => $priceTier
+                    ? 'Чистый текстиль, без нанесения'
+                    : 'Цена по запросу',
                 'preferred_density' => $this->nullableString($line['density'] ?? null),
                 'preferred_size' => $this->nullableString($line['size'] ?? null),
                 'preferred_color' => $this->nullableString($line['color'] ?? null),

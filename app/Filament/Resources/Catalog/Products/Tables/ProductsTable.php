@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProductsTable
@@ -23,6 +24,7 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('priceTiers'))
             ->columns([
                 TextColumn::make('name')
                     ->label(__('Name'))
@@ -40,6 +42,9 @@ class ProductsTable
                 TextColumn::make('availability_status')
                     ->label(__('Availability'))
                     ->badge(),
+                TextColumn::make('starting_price')
+                    ->label(__('From price'))
+                    ->state(fn (Product $record): string => $record->startingPriceLabel()),
                 IconColumn::make('featured')
                     ->label(__('Featured'))
                     ->boolean(),

@@ -70,19 +70,20 @@ class Order extends Model
                 $line->product_name,
                 number_format($line->quantity, 0, ',', ' '),
                 number_format($line->product_moq, 0, ',', ' '),
-                $this->linePreferences($line),
+                $this->lineDetails($line),
             ))
             ->implode("\n");
     }
 
-    private function linePreferences(OrderLine $line): string
+    private function lineDetails(OrderLine $line): string
     {
-        $preferences = collect([
+        $details = collect([
+            $line->formattedUnitPrice(),
             $line->preferred_color,
             $line->preferred_density,
             $line->preferred_size,
         ])->filter()->implode(', ');
 
-        return $preferences ? " — {$preferences}" : '';
+        return $details ? " — {$details}" : '';
     }
 }

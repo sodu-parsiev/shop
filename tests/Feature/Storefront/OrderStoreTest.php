@@ -5,6 +5,7 @@ use App\Enums\ProductStatus;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Order;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +19,7 @@ function validOrderPayload(Product $product, array $overrides = []): array
         'phone' => '+7 999 123-45-67',
         'email' => 'buyer@example.com',
         'preferred_contact_method' => 'phone',
-        'volume' => '10000_25000',
+        'volume' => '5000',
         'message' => 'Нужна консультация по маркировке.',
         'consent' => '1',
         'submission_token' => (string) Str::uuid(),
@@ -37,6 +38,12 @@ test('a valid submission creates an order with request number, contact fields, a
         'moq' => 5000,
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 5000,
+        'unit_price' => 170,
+        'currency' => 'RUB',
     ]);
 
     $response = $this->post(route('orders.store'), validOrderPayload($product));
@@ -57,13 +64,17 @@ test('a valid submission creates an order with request number, contact fields, a
     expect($order->request_number)->toStartWith('SH-');
     expect($order->consent_accepted_at)->not->toBeNull();
     expect($order->submission_token)->not->toBeNull();
-    expect($order->message)->toContain('10 000–25 000 шт.');
+    expect($order->message)->toContain('5 000 шт.');
     expect($order->message)->toContain('Нужна консультация по маркировке.');
     expect($order->lines)->toHaveCount(1);
     expect($order->lines->first()->product_id)->toBe($product->id);
     expect($order->lines->first()->product_name)->toBe('Базовая футболка — белая');
     expect($order->lines->first()->quantity)->toBe(5000);
     expect($order->lines->first()->product_moq)->toBe(5000);
+    expect($order->lines->first()->unit_price)->toBe('170.00');
+    expect($order->lines->first()->currency)->toBe('RUB');
+    expect($order->lines->first()->price_quantity_tier)->toBe(5000);
+    expect($order->lines->first()->price_note)->toBe('Чистый текстиль, без нанесения');
 });
 
 test('volume without a comment composes a message with just the volume label', function () {
@@ -75,12 +86,18 @@ test('volume without a comment composes a message with just the volume label', f
 
     $this->post(route('orders.store'), validOrderPayload($product, [
         'message' => null,
-        'volume' => '5000_10000',
+        'volume' => '10',
+        'order_lines' => [
+            [
+                'product_id' => $product->id,
+                'quantity' => 5000,
+            ],
+        ],
     ]));
 
     $order = Order::query()->latest('id')->first();
 
-    expect($order->message)->toBe('5 000–10 000 шт.');
+    expect($order->message)->toBe('10 шт.');
 });
 
 test('missing required fields fail validation and create no order', function () {
@@ -132,16 +149,63 @@ test('order line quantity must meet the selected product moq', function () {
     expect(Order::query()->count())->toBe(0);
 });
 
-test('order lines accept active products even when they are hidden from the landing page', function () {
+test('order lines reject active products hidden from the public catalog', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
         'show_on_landing' => false,
         'status' => ProductStatus::Active,
     ]);
 
-    $this->post(route('orders.store'), validOrderPayload($product));
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
 
-    expect(Order::query()->count())->toBe(1);
+    $response->assertSessionHasErrors(['order_lines.0.product_id']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('order line quantity must be one of the public price tiers', function () {
+    $product = Product::factory()->create([
+        'moq' => 10,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'volume' => '50',
+        'order_lines' => [
+            [
+                'product_id' => $product->id,
+                'quantity' => 50,
+            ],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['volume', 'order_lines.0.quantity']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('an order line for an unpriced public product stores no price snapshot', function () {
+    $product = Product::factory()->create([
+        'moq' => 10,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $this->post(route('orders.store'), validOrderPayload($product, [
+        'volume' => '10',
+        'order_lines' => [
+            [
+                'product_id' => $product->id,
+                'quantity' => 10,
+            ],
+        ],
+    ]));
+
+    $line = Order::query()->with('lines')->latest('id')->firstOrFail()->lines->first();
+
+    expect($line->unit_price)->toBeNull();
+    expect($line->currency)->toBeNull();
+    expect($line->price_quantity_tier)->toBeNull();
+    expect($line->price_note)->toBe('Цена по запросу');
 });
 
 test('order lines reject inactive products', function () {
@@ -376,6 +440,7 @@ test('an empty string color preference is treated as no preference', function ()
 test('utm and source fields are persisted with the order', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
+        'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
 
@@ -405,6 +470,7 @@ test('utm and source fields are persisted with the order', function () {
 test('a duplicate submission token returns the existing order without creating another one', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
+        'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
     $token = (string) Str::uuid();
@@ -422,6 +488,7 @@ test('a duplicate submission token returns the existing order without creating a
 test('honeypot field blocks spam submissions', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
+        'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
 
