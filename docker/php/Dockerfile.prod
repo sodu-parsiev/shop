@@ -72,5 +72,10 @@ COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 COPY --from=assets --chown=www-data:www-data /app/public/build ./public/build
 
+# nginx is a separate container with no access to this image's filesystem,
+# so the entrypoint copies this seed into the shared public/ volume on every
+# start (public/ itself gets volume-mounted, hiding what's baked in here).
+RUN cp -a /var/www/html/public /var/www/html/public-seed
+
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]

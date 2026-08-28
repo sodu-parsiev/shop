@@ -13,6 +13,13 @@ mkdir -p \
     bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
+# public/ is also a named volume (shared with nginx, which has no other way
+# to reach static files) — refresh it from the image's seed copy on every
+# start so a new deploy's assets actually replace the old ones.
+rm -rf public/*
+cp -a public-seed/. public/
+chown -R www-data:www-data public
+
 su-exec www-data php artisan storage:link --force
 su-exec www-data php artisan package:discover --ansi
 su-exec www-data php artisan filament:upgrade
