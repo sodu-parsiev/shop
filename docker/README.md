@@ -71,8 +71,23 @@ production and vice versa:
 Deployment is driven by GitHub Actions over SSH — see
 `.github/workflows/deploy.yml` for the flow and the repo secrets it expects
 (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`). To deploy or roll back
-manually from the VPS:
+manually from the VPS itself:
 
 ```
 /storage/www/app/docker/scripts/deploy.sh <git-sha>
 ```
+
+The VPS's network path is intermittently unreachable for minutes at a time
+(confirmed independently of load — the box itself stays idle/healthy through
+it), which can make both GitHub Actions runners and a one-shot SSH command
+fail through no fault of the deploy itself. `docker/scripts/trigger-deploy.sh`
+runs from your own machine instead, with the same idempotent retry loop
+`deploy.yml` uses, so you can watch it ride out a bad window:
+
+```
+docker/scripts/trigger-deploy.sh              # push current HEAD and deploy it
+docker/scripts/trigger-deploy.sh <git-sha>     # deploy/rollback to a specific commit
+```
+
+It expects the `github_actions_deploy` private key in the repo root (or
+`DEPLOY_SSH_KEY` pointing elsewhere).
