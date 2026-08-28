@@ -16,7 +16,9 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts
 FROM node:20-alpine AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# npm ci is occasionally flaky on small/low-memory hosts ("Exit handler
+# never called!") — retry once before failing the build.
+RUN npm ci --no-audit --no-fund || npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 
