@@ -35,6 +35,13 @@ RUN apk add --no-cache \
         bash \
         curl \
         su-exec \
+        icu-libs \
+        libzip \
+        libpng \
+        freetype \
+        libjpeg-turbo \
+        oniguruma \
+    && apk add --no-cache --virtual .build-deps \
         icu-dev \
         libzip-dev \
         libpng-dev \
@@ -52,7 +59,7 @@ RUN apk add --no-cache \
         zip \
         intl \
         opcache \
-    && apk del --no-cache icu-dev libzip-dev libpng-dev freetype-dev libjpeg-turbo-dev oniguruma-dev
+    && apk del --no-cache .build-deps
 
 COPY docker/php/php.prod.ini /usr/local/etc/php/conf.d/99-prod.ini
 COPY docker/php/fpm-prod.conf /usr/local/etc/php-fpm.d/zz-prod.conf

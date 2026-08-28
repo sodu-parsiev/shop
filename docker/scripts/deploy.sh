@@ -29,7 +29,19 @@ for i in $(seq 1 15); do
 done
 
 echo "==> Running Laravel deployment commands"
-$COMPOSE exec -T app php artisan migrate --force
+migrated=false
+for i in $(seq 1 10); do
+    if $COMPOSE exec -T app php artisan migrate --force; then
+        migrated=true
+        break
+    fi
+    echo "migrate attempt ${i} failed, retrying..."
+    sleep 3
+done
+if [ "$migrated" != true ]; then
+    echo "migrate did not succeed after 10 attempts"
+    exit 1
+fi
 $COMPOSE exec -T app php artisan optimize
 
 echo "==> Deployment complete, running health check"
