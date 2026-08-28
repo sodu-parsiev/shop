@@ -38,14 +38,29 @@ services:
     volumes:
       - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
       - app-public:/var/www/html/public:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
     ports:
       - "80:80"
+      - "443:443"
     networks:
       - internal
     depends_on:
       app:
         condition: service_healthy
     logging: *default-logging
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    logging: *default-logging
+    # No `command`/`ports` — invoked on demand via
+    # `docker compose run --rm certbot <certbot args>` for both the initial
+    # issuance and renewal (docker/scripts/renew-cert.sh).
+    entrypoint: /bin/sh
+    command: ["-c", "trap exit TERM; while :; do sleep 6h; done"]
 
   mysql:
     image: mysql:8.0
@@ -79,3 +94,5 @@ volumes:
   mysql-data:
   app-storage:
   app-public:
+  certbot-conf:
+  certbot-webroot:
