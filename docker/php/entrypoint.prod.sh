@@ -15,6 +15,7 @@ chown -R www-data:www-data storage bootstrap/cache
 
 su-exec www-data php artisan storage:link --force
 su-exec www-data php artisan package:discover --ansi
+su-exec www-data php artisan filament:upgrade
 su-exec www-data php artisan config:cache
 su-exec www-data php artisan route:cache
 su-exec www-data php artisan view:cache

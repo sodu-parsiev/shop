@@ -44,9 +44,9 @@ RUN apk add --no-cache \
         opcache \
     && apk del --no-cache icu-dev libzip-dev libpng-dev freetype-dev libjpeg-turbo-dev oniguruma-dev
 
-COPY php.prod.ini /usr/local/etc/php/conf.d/99-prod.ini
-COPY fpm-prod.conf /usr/local/etc/php-fpm.d/zz-prod.conf
-COPY entrypoint.prod.sh /usr/local/bin/entrypoint.sh
+COPY docker/php/php.prod.ini /usr/local/etc/php/conf.d/99-prod.ini
+COPY docker/php/fpm-prod.conf /usr/local/etc/php-fpm.d/zz-prod.conf
+COPY docker/php/entrypoint.prod.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /var/www/html
