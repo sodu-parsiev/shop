@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM composer:2 AS vendor
+FROM composer:2@sha256:4d71c3c2109c61d5415544264b59ad4087e4c5b7244481723664138fd36d5040 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install \
@@ -13,7 +13,7 @@ RUN composer install \
 COPY . .
 RUN composer dump-autoload --no-dev --optimize --no-scripts
 
-FROM node:20-alpine AS assets
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
 # npm ci is occasionally flaky on small/low-memory hosts ("Exit handler
@@ -29,7 +29,7 @@ RUN for i in 1 2 3; do \
 COPY . .
 RUN npm run build
 
-FROM php:8.4-fpm-alpine
+FROM php:8.4-fpm-alpine@sha256:6cb5e4ffa03a7c1b01bb5b120ab3684ef76b75aa5ca417e343936db3f71f419f
 
 RUN apk add --no-cache \
         bash \
