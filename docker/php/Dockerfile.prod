@@ -17,8 +17,15 @@ FROM node:20-alpine AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
 # npm ci is occasionally flaky on small/low-memory hosts ("Exit handler
-# never called!") — retry once before failing the build.
-RUN npm ci --no-audit --no-fund || npm ci --no-audit --no-fund
+# never called!") — npm exits 0 even though the install is incomplete, so
+# check for the actual vite binary rather than trusting the exit code.
+RUN for i in 1 2 3; do \
+        rm -rf node_modules; \
+        npm ci --no-audit --no-fund; \
+        test -f node_modules/.bin/vite && break; \
+        echo "npm ci attempt $i produced an incomplete install, retrying..."; \
+    done; \
+    test -f node_modules/.bin/vite
 COPY . .
 RUN npm run build
 
