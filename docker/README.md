@@ -64,25 +64,18 @@ production and vice versa:
 - `docker/docker-compose.prod.yml` — `nginx` (published on `:80`) + `app` +
   `mysql` (both internal-only), named volumes for MySQL data and Laravel
   `storage/`.
-- `docker/scripts/deploy.sh` / `docker/scripts/healthcheck.sh` — build, apply,
-  migrate, and verify a deployment; run on the VPS by
-  `.github/workflows/deploy.yml` on every push to `main`.
+- `docker/scripts/deploy.sh` / `docker/scripts/healthcheck.sh` — run on the
+  VPS itself; build, apply, migrate, and verify a deployment.
+- `docker/scripts/trigger-deploy.sh` — **run this from your own machine to
+  deploy.**
 
-Deployment is driven by GitHub Actions over SSH — see
-`.github/workflows/deploy.yml` for the flow and the repo secrets it expects
-(`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`). To deploy or roll back
-manually from the VPS itself:
-
-```
-/storage/www/app/docker/scripts/deploy.sh <git-sha>
-```
-
-The VPS's network path is intermittently unreachable for minutes at a time
-(confirmed independently of load — the box itself stays idle/healthy through
-it), which can make both GitHub Actions runners and a one-shot SSH command
-fail through no fault of the deploy itself. `docker/scripts/trigger-deploy.sh`
-runs from your own machine instead, with the same idempotent retry loop
-`deploy.yml` uses, so you can watch it ride out a bad window:
+Deployment is triggered manually from a developer machine, not CI — the
+VPS's network path is intermittently unreachable for minutes at a time
+(confirmed independently of load; the box itself stays idle/healthy through
+it), which made an unattended GitHub Actions runner an unreliable place to
+sit through a retry loop. `trigger-deploy.sh` runs the same idempotent
+build → apply → migrate → smoke-test sequence with a 10-attempt retry loop
+you can watch and let ride out a bad window:
 
 ```
 docker/scripts/trigger-deploy.sh              # push current HEAD and deploy it
@@ -90,4 +83,9 @@ docker/scripts/trigger-deploy.sh <git-sha>     # deploy/rollback to a specific c
 ```
 
 It expects the `github_actions_deploy` private key in the repo root (or
-`DEPLOY_SSH_KEY` pointing elsewhere).
+`DEPLOY_SSH_KEY` pointing elsewhere). To deploy or roll back directly from
+the VPS itself instead:
+
+```
+/storage/www/app/docker/scripts/deploy.sh <git-sha>
+```
