@@ -13,16 +13,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          umask 077
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          script: |
-            set -euo pipefail
-            /storage/www/app/docker/scripts/deploy.sh "${{ github.sha }}"
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            echo "::group::SSH attempt ${attempt}"
+            if ssh -o BatchMode=yes -o ConnectTimeout=20 \
+                -i ~/.ssh/deploy_key \
+                "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+                "/storage/www/app/docker/scripts/deploy.sh '${{ github.sha }}'"; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Attempt ${attempt} failed, retrying in 15s..."
+            sleep 15
+          done
+          echo "All SSH attempts failed"
+          exit 1
 
       - name: External smoke test
         run: |
