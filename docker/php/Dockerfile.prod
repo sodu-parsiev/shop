@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1
+
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+        --no-dev \
+        --no-scripts \
+        --no-interaction \
+        --prefer-dist \
+        --no-autoloader
+COPY . .
+RUN composer dump-autoload --no-dev --optimize --no-scripts
+
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM php:8.4-fpm-alpine
+
+RUN apk add --no-cache \
+        bash \
+        curl \
+        su-exec \
+        icu-dev \
+        libzip-dev \
+        libpng-dev \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        oniguruma-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        intl \
+        opcache \
+    && apk del --no-cache icu-dev libzip-dev libpng-dev freetype-dev libjpeg-turbo-dev oniguruma-dev
+
+COPY php.prod.ini /usr/local/etc/php/conf.d/99-prod.ini
+COPY fpm-prod.conf /usr/local/etc/php-fpm.d/zz-prod.conf
+COPY entrypoint.prod.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /var/www/html
+
+COPY --chown=www-data:www-data . .
+COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
+COPY --from=assets --chown=www-data:www-data /app/public/build ./public/build
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["php-fpm"]
