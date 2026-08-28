@@ -19,14 +19,13 @@ jobs:
           umask 077
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy to VPS
         run: |
           set -euo pipefail
           for attempt in 1 2 3 4 5; do
             echo "::group::SSH attempt ${attempt}"
-            if ssh -o BatchMode=yes -o ConnectTimeout=20 \
+            if ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new \
                 -i ~/.ssh/deploy_key \
                 "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
                 "/storage/www/app/docker/scripts/deploy.sh '${{ github.sha }}'"; then
