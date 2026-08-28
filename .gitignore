@@ -13,6 +13,8 @@
 /.vscode
 /.zed
 /auth.json
+/github_actions_deploy
+/github_actions_deploy.pub
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json
