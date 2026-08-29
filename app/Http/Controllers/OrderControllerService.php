@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Catalog\Product;
 use App\Models\Order;
+use App\Services\TelegramOrderNotifier;
 use Illuminate\Support\Facades\DB;
 
 class OrderControllerService
@@ -21,6 +22,8 @@ class OrderControllerService
         '5000' => '5 000 шт.',
         '10000' => '10 000 шт.',
     ];
+
+    public function __construct(private readonly TelegramOrderNotifier $telegramNotifier) {}
 
     public function createFromRequest(StoreOrderRequest $request): Order
     {
@@ -39,7 +42,7 @@ class OrderControllerService
 
         $message = $comment ? "{$volumeLabel}\n\n{$comment}" : $volumeLabel;
 
-        return DB::transaction(function () use ($data, $message, $ipAddress): Order {
+        $order = DB::transaction(function () use ($data, $message, $ipAddress): Order {
             $order = Order::create([
                 'customer_name' => $data['customer_name'],
                 'company' => $data['company'] ?? null,
@@ -67,6 +70,10 @@ class OrderControllerService
 
             return $order->load('lines');
         });
+
+        $this->telegramNotifier->notifyOrderCreated($order);
+
+        return $order;
     }
 
     /**

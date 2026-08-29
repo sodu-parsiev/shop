@@ -8,6 +8,7 @@ use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Order;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -498,4 +499,85 @@ test('honeypot field blocks spam submissions', function () {
 
     $response->assertSessionHasErrors(['website']);
     expect(Order::query()->count())->toBe(0);
+});
+
+test('a valid submission sends a formatted Telegram notification when telegram is configured', function () {
+    config(['services.telegram.bot_token' => 'test-token', 'services.telegram.chat_id' => '-100200300']);
+    Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+    $product = Product::factory()->create([
+        'name' => 'Базовая футболка — белая',
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 5000,
+        'unit_price' => 170,
+        'currency' => 'RUB',
+    ]);
+
+    $this->post(route('orders.store'), validOrderPayload($product));
+
+    $order = Order::query()->latest('id')->firstOrFail();
+
+    Http::assertSent(function ($request) use ($order) {
+        return $request->url() === 'https://api.telegram.org/bottest-token/sendMessage'
+            && $request['chat_id'] === '-100200300'
+            && str_contains($request['text'], $order->request_number)
+            && str_contains($request['text'], 'Иван Иванов')
+            && str_contains($request['text'], '+7 999 123-45-67')
+            && str_contains($request['text'], 'Базовая футболка — белая')
+            && str_contains($request['text'], '850 000 ₽');
+    });
+});
+
+test('a duplicate submission token does not send a second Telegram notification', function () {
+    config(['services.telegram.bot_token' => 'test-token', 'services.telegram.chat_id' => '-100200300']);
+    Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $payload = validOrderPayload($product, ['submission_token' => (string) Str::uuid()]);
+
+    $this->post(route('orders.store'), $payload);
+    $this->post(route('orders.store'), $payload);
+
+    Http::assertSentCount(1);
+});
+
+test('no Telegram request is made when telegram is not configured', function () {
+    config(['services.telegram.bot_token' => null, 'services.telegram.chat_id' => null]);
+    Http::fake();
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
+
+    $response->assertSessionHas('orderSubmitted', true);
+    Http::assertNothingSent();
+});
+
+test('order submission still succeeds when the Telegram API call fails', function () {
+    config(['services.telegram.bot_token' => 'test-token', 'services.telegram.chat_id' => '-100200300']);
+    Http::fake(['api.telegram.org/*' => Http::response('', 500)]);
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
+
+    $response->assertSessionHas('orderSubmitted', true);
+    expect(Order::query()->count())->toBe(1);
 });
