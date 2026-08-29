@@ -6,7 +6,7 @@
 set -euo pipefail
 
 APP_DIR="/storage/www/app"
-DOMAIN="217-149-29-64.sslip.io"
+DOMAIN="194-87-221-164.sslip.io"
 COMPOSE="docker compose -f docker/docker-compose.prod.yml --project-directory ${APP_DIR}"
 
 cd "$APP_DIR"

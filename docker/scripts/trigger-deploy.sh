@@ -15,7 +15,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-DEPLOY_HOST="${DEPLOY_HOST:-217.149.29.64}"
+DEPLOY_HOST="${DEPLOY_HOST:-194.87.221.164}"
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
 DEPLOY_SSH_KEY="${DEPLOY_SSH_KEY:-$REPO_ROOT/github_actions_deploy}"
 
