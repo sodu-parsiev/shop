@@ -80,12 +80,12 @@ test('it can create a product with price tiers', function () {
             'priceTiers' => [
                 [
                     'quantity' => 10000,
-                    'unit_price' => 165,
+                    'unit_price' => 2.06,
                     'currency' => ProductPriceTier::DEFAULT_CURRENCY,
                 ],
                 [
                     'quantity' => 10,
-                    'unit_price' => 190,
+                    'unit_price' => 2.38,
                     'currency' => ProductPriceTier::DEFAULT_CURRENCY,
                 ],
             ],
@@ -98,14 +98,14 @@ test('it can create a product with price tiers', function () {
     $this->assertDatabaseHas('product_price_tiers', [
         'product_id' => $product->id,
         'quantity' => 10000,
-        'unit_price' => 165,
+        'unit_price' => 2.06,
         'currency' => ProductPriceTier::DEFAULT_CURRENCY,
     ]);
 
     $this->assertDatabaseHas('product_price_tiers', [
         'product_id' => $product->id,
         'quantity' => 10,
-        'unit_price' => 190,
+        'unit_price' => 2.38,
         'currency' => ProductPriceTier::DEFAULT_CURRENCY,
     ]);
 });

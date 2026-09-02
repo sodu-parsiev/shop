@@ -43,8 +43,8 @@ class ProductsTable
                     ->label(__('Availability'))
                     ->badge(),
                 TextColumn::make('starting_price')
-                    ->label(__('From price'))
-                    ->state(fn (Product $record): string => $record->startingPriceLabel()),
+                    ->label(__('From price').' (USD)')
+                    ->state(fn (Product $record): string => $record->startingStoredPriceLabel()),
                 IconColumn::make('featured')
                     ->label(__('Featured'))
                     ->boolean(),

@@ -162,7 +162,7 @@ class ProductForm
                                     ->label(__('Stock / conditions'))
                                     ->columnSpanFull(),
                                 Repeater::make('priceTiers')
-                                    ->label(__('Price tiers'))
+                                    ->label(__('Price tiers').' (USD)')
                                     ->relationship('priceTiers')
                                     ->orderColumn('sort_order')
                                     ->reorderable()
@@ -175,7 +175,7 @@ class ProductForm
                                             ->minValue(1)
                                             ->required(),
                                         TextInput::make('unit_price')
-                                            ->label(__('Unit price'))
+                                            ->label(__('Unit price').' (USD)')
                                             ->numeric()
                                             ->minValue(0)
                                             ->required(),

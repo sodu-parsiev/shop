@@ -125,8 +125,16 @@ class Product extends Model
     public function startingPriceLabel(): string
     {
         $tier = $this->lowestPriceTier();
+        $label = $tier?->formattedUnitPrice();
 
-        return $tier ? 'от '.$tier->formattedUnitPrice() : 'По запросу';
+        return $label ? 'от '.$label : 'По запросу';
+    }
+
+    public function startingStoredPriceLabel(): string
+    {
+        $tier = $this->lowestPriceTier();
+
+        return $tier ? 'от '.$tier->formattedStoredUnitPrice() : 'По запросу';
     }
 
     /**
@@ -157,9 +165,11 @@ class Product extends Model
     public function formattedPriceTiersByQuantity(): array
     {
         return $this->loadedPriceTiers()
-            ->mapWithKeys(fn (ProductPriceTier $tier): array => [
-                (string) $tier->quantity => $tier->formattedUnitPrice(),
-            ])
+            ->mapWithKeys(function (ProductPriceTier $tier): array {
+                $label = $tier->formattedUnitPrice();
+
+                return $label ? [(string) $tier->quantity => $label] : [];
+            })
             ->all();
     }
 

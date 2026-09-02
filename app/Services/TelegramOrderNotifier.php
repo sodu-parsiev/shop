@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Enums\ContactMethod;
-use App\Models\Catalog\ProductPriceTier;
 use App\Models\Order;
 use App\Models\OrderLine;
+use App\Services\Currency\PriceFormatter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +13,8 @@ use Throwable;
 
 class TelegramOrderNotifier
 {
+    public function __construct(private readonly PriceFormatter $priceFormatter) {}
+
     public function notifyOrderCreated(Order $order): void
     {
         $botToken = config('services.telegram.bot_token');
@@ -101,9 +103,8 @@ class TelegramOrderNotifier
             return 'по запросу';
         }
 
-        $total = (float) $line->unit_price * $line->quantity;
-
-        return number_format($total, 0, ',', ' ').' '.ProductPriceTier::currencySymbol($line->currency);
+        return $this->priceFormatter->formatLineTotal($line->unit_price, $line->quantity, $line->currency)
+            ?? 'по запросу';
     }
 
     /**
@@ -111,24 +112,20 @@ class TelegramOrderNotifier
      */
     private function formatTotal(Collection $lines): string
     {
-        $priced = $lines->filter(fn (OrderLine $line): bool => $line->unit_price !== null && $line->currency !== null);
+        $totals = $lines
+            ->map(fn (OrderLine $line): ?float => $line->unit_price !== null && $line->currency !== null
+                ? $this->priceFormatter->lineTotalAmount($line->unit_price, $line->quantity, $line->currency)
+                : null)
+            ->filter(fn (?float $amount): bool => $amount !== null);
 
-        if ($priced->isEmpty()) {
+        if ($totals->isEmpty()) {
             return 'цена по запросу';
         }
 
-        $sumByCurrency = $priced
-            ->groupBy('currency')
-            ->map(fn (Collection $group, string $currency): string => number_format(
-                $group->sum(fn (OrderLine $line): float => (float) $line->unit_price * $line->quantity),
-                0,
-                ',',
-                ' '
-            ).' '.ProductPriceTier::currencySymbol($currency))
-            ->implode(' + ');
+        $sum = $this->priceFormatter->formatRubAmount($totals->sum());
 
-        return $priced->count() < $lines->count()
-            ? "{$sumByCurrency} + позиции с ценой по запросу"
-            : $sumByCurrency;
+        return $totals->count() < $lines->count()
+            ? "{$sum} + позиции с ценой по запросу"
+            : $sum;
     }
 }

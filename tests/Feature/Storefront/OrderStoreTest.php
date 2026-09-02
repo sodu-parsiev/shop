@@ -8,6 +8,9 @@ use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Order;
+use App\Models\OrderLine;
+use App\Services\Currency\CentralBankCurrencyRateService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -43,8 +46,8 @@ test('a valid submission creates an order with request number, contact fields, a
     ProductPriceTier::factory()->create([
         'product_id' => $product->id,
         'quantity' => 5000,
-        'unit_price' => 170,
-        'currency' => 'RUB',
+        'unit_price' => 2.12,
+        'currency' => 'USD',
     ]);
 
     $response = $this->post(route('orders.store'), validOrderPayload($product));
@@ -72,8 +75,8 @@ test('a valid submission creates an order with request number, contact fields, a
     expect($order->lines->first()->product_name)->toBe('Базовая футболка — белая');
     expect($order->lines->first()->quantity)->toBe(5000);
     expect($order->lines->first()->product_moq)->toBe(5000);
-    expect($order->lines->first()->unit_price)->toBe('170.00');
-    expect($order->lines->first()->currency)->toBe('RUB');
+    expect($order->lines->first()->unit_price)->toBe('2.12');
+    expect($order->lines->first()->currency)->toBe('USD');
     expect($order->lines->first()->price_quantity_tier)->toBe(5000);
     expect($order->lines->first()->price_note)->toBe('Чистый текстиль, без нанесения');
 });
@@ -468,6 +471,20 @@ test('utm and source fields are persisted with the order', function () {
     expect($order->utm_term)->toBe('tee');
 });
 
+test('legacy RUB order line snapshots still format as RUB', function () {
+    $order = Order::factory()
+        ->has(OrderLine::factory()->state([
+            'product_name' => 'Историческая футболка',
+            'quantity' => 5000,
+            'product_moq' => 5000,
+            'unit_price' => 170,
+            'currency' => 'RUB',
+        ]), 'lines')
+        ->create();
+
+    expect($order->line_summary)->toContain('170 ₽/шт');
+});
+
 test('a duplicate submission token returns the existing order without creating another one', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
@@ -503,6 +520,7 @@ test('honeypot field blocks spam submissions', function () {
 
 test('a valid submission sends a formatted Telegram notification when telegram is configured', function () {
     config(['services.telegram.bot_token' => 'test-token', 'services.telegram.chat_id' => '-100200300']);
+    Cache::put(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY, 80, now()->addDay());
     Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
 
     $product = Product::factory()->create([
@@ -514,8 +532,8 @@ test('a valid submission sends a formatted Telegram notification when telegram i
     ProductPriceTier::factory()->create([
         'product_id' => $product->id,
         'quantity' => 5000,
-        'unit_price' => 170,
-        'currency' => 'RUB',
+        'unit_price' => 2.12,
+        'currency' => 'USD',
     ]);
 
     $this->post(route('orders.store'), validOrderPayload($product));

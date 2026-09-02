@@ -26,8 +26,8 @@ test('catalog seeder creates the real price list products with tiers and density
     $this->assertDatabaseHas('product_price_tiers', [
         'product_id' => $product->id,
         'quantity' => 5000,
-        'unit_price' => 170,
-        'currency' => 'RUB',
+        'unit_price' => 2.13,
+        'currency' => 'USD',
     ]);
 
     expect(Density::query()->where('name', '140-150 гр')->exists())->toBeTrue();

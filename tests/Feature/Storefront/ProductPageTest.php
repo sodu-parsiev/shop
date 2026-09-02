@@ -9,8 +9,12 @@ use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Content\HomePageContent;
+use App\Services\Currency\CentralBankCurrencyRateService;
+use Illuminate\Support\Facades\Cache;
 
 test('an active product has a public detail page with gallery specs and product schema', function () {
+    Cache::put(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY, 80, now()->addDay());
+
     HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
     $product = Product::factory()->create([
         'name' => 'Футболка Test',
@@ -31,8 +35,8 @@ test('an active product has a public detail page with gallery specs and product 
     ProductPriceTier::factory()->create([
         'product_id' => $product->id,
         'quantity' => 5000,
-        'unit_price' => 170,
-        'currency' => 'RUB',
+        'unit_price' => 2.12,
+        'currency' => 'USD',
     ]);
     $color = Color::factory()->create(['name' => 'Белый']);
     $density = Density::factory()->create(['name' => '180 gsm', 'gsm' => 180]);
@@ -61,6 +65,28 @@ test('an active product has a public detail page with gallery specs and product 
     $response->assertSee('Product', false);
     $response->assertSee('BreadcrumbList', false);
     $response->assertDontSee('"Offer"', false);
+});
+
+test('a priced product shows request price when the USD RUB rate is not cached', function () {
+    Cache::forget(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY);
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'uncached-rate-tee',
+        'status' => ProductStatus::Active,
+        'show_on_landing' => true,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 5000,
+        'unit_price' => 2.12,
+        'currency' => 'USD',
+    ]);
+
+    $response = $this->get($product->publicUrl());
+
+    $response->assertOk();
+    $response->assertSee('По запросу');
+    $response->assertDontSee('170 ₽/шт', false);
 });
 
 test('inactive products are not publicly visible', function () {

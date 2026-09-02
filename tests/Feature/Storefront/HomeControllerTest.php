@@ -9,6 +9,8 @@ use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
+use App\Services\Currency\CentralBankCurrencyRateService;
+use Illuminate\Support\Facades\Cache;
 
 test('it returns a successful response', function () {
     $this->get('/')->assertStatus(200);
@@ -130,6 +132,8 @@ test('it renders admin editable seo metadata and structured data', function () {
 });
 
 test('it renders order builder hooks with real catalog filters and preferences', function () {
+    Cache::put(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY, 80, now()->addDay());
+
     $product = Product::factory()->create([
         'name' => 'Базовая футболка — белая',
         'moq' => 10,
@@ -139,8 +143,8 @@ test('it renders order builder hooks with real catalog filters and preferences',
     ProductPriceTier::factory()->create([
         'product_id' => $product->id,
         'quantity' => 10000,
-        'unit_price' => 165,
-        'currency' => 'RUB',
+        'unit_price' => 2.06,
+        'currency' => 'USD',
     ]);
     $color = Color::factory()->create(['name' => 'Белый']);
     $size = Size::factory()->create(['name' => 'S']);

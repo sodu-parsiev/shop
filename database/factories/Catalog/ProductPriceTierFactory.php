@@ -21,7 +21,7 @@ class ProductPriceTierFactory extends Factory
         return [
             'product_id' => Product::factory(),
             'quantity' => fake()->randomElement(ProductPriceTier::publicQuantities()),
-            'unit_price' => fake()->numberBetween(100, 1000),
+            'unit_price' => fake()->randomFloat(2, 1, 15),
             'currency' => ProductPriceTier::DEFAULT_CURRENCY,
             'sort_order' => fake()->numberBetween(0, 100),
         ];

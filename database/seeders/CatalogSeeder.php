@@ -16,6 +16,8 @@ use Illuminate\Support\Collection;
 
 class CatalogSeeder extends Seeder
 {
+    private const SOURCE_RUB_TO_USD_RATE = 80;
+
     /**
      * @var array<int, string>
      */
@@ -309,7 +311,7 @@ class CatalogSeeder extends Seeder
                     'currency' => ProductPriceTier::DEFAULT_CURRENCY,
                 ],
                 [
-                    'unit_price' => $prices[$quantity],
+                    'unit_price' => $this->sourceRubPriceToUsd($prices[$quantity]),
                     'sort_order' => $sortOrder,
                 ],
             );
@@ -319,6 +321,11 @@ class CatalogSeeder extends Seeder
             ->where('currency', ProductPriceTier::DEFAULT_CURRENCY)
             ->whereNotIn('quantity', $quantities)
             ->delete();
+    }
+
+    private function sourceRubPriceToUsd(int $price): string
+    {
+        return number_format($price / self::SOURCE_RUB_TO_USD_RATE, 2, '.', '');
     }
 
     /**

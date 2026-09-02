@@ -2,6 +2,7 @@
 
 namespace App\Models\Catalog;
 
+use App\Services\Currency\PriceFormatter;
 use Database\Factories\Catalog\ProductPriceTierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ class ProductPriceTier extends Model
     /** @use HasFactory<ProductPriceTierFactory> */
     use HasFactory;
 
-    public const DEFAULT_CURRENCY = 'RUB';
+    public const DEFAULT_CURRENCY = 'USD';
 
     /**
      * @var array<int, int>
@@ -44,27 +45,29 @@ class ProductPriceTier extends Model
         return self::PUBLIC_QUANTITIES;
     }
 
-    public static function formatUnitPrice(int|float|string $amount, string $currency): string
+    public static function formatUnitPrice(int|float|string $amount, string $currency): ?string
     {
-        $amount = (float) $amount;
-        $formattedAmount = floor($amount) === $amount
-            ? number_format($amount, 0, ',', ' ')
-            : number_format($amount, 2, ',', ' ');
+        return app(PriceFormatter::class)->formatUnitPrice($amount, $currency);
+    }
 
-        return $formattedAmount.' '.self::currencySymbol($currency).'/шт';
+    public static function formatStoredUnitPrice(int|float|string $amount, string $currency): string
+    {
+        return app(PriceFormatter::class)->formatStoredUnitPrice($amount, $currency);
     }
 
     public static function currencySymbol(string $currency): string
     {
-        return match (strtoupper($currency)) {
-            'RUB' => '₽',
-            default => strtoupper($currency),
-        };
+        return app(PriceFormatter::class)->currencySymbol($currency);
     }
 
-    public function formattedUnitPrice(): string
+    public function formattedUnitPrice(): ?string
     {
         return self::formatUnitPrice($this->unit_price, $this->currency);
+    }
+
+    public function formattedStoredUnitPrice(): string
+    {
+        return self::formatStoredUnitPrice($this->unit_price, $this->currency);
     }
 
     public function product(): BelongsTo
