@@ -63,7 +63,7 @@ class StorefrontMockDesignSeeder extends Seeder
                 'hero' => [
                     'headline_main' => 'Бланковый текстиль крупным оптом —',
                     'headline_accent' => 'со склада и под заказ',
-                    'cta_secondary' => 'Запросить расчёт',
+                    'cta_secondary' => 'Выбрать изделие',
                     'hero_badge_value' => '10–10 000',
                     'hero_badge_label' => 'шт. по прайсу',
                     'top_ticker' => 'ЧИСТЫЙ ТЕКСТИЛЬ БЕЗ НАНЕСЕНИЯ • ТИРАЖИ ОТ 10 ДО 10 000 ШТ.',

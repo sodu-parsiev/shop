@@ -102,22 +102,20 @@ class ManageHomePageContent extends Page
                                 TextInput::make('hero.headline_accent')->label('Заголовок (акцент, розовый)'),
                                 Textarea::make('hero.subcopy')->label('Подзаголовок')->columnSpanFull(),
                                 Textarea::make('hero.callout')->label('Плашка-уточнение')->columnSpanFull(),
-                                TextInput::make('hero.cta_primary')->label('Кнопка 1'),
-                                TextInput::make('hero.cta_secondary')->label('Кнопка 2'),
+                                TextInput::make('hero.cta_primary')->label('Кнопка 1 (основная)'),
+                                TextInput::make('hero.cta_secondary')->label('Кнопка 2 (дополнительная)'),
                                 TextInput::make('hero.hero_badge_value')->label('Бейдж на фото: значение'),
                                 TextInput::make('hero.hero_badge_label')->label('Бейдж на фото: подпись'),
                                 TextInput::make('hero.top_ticker')->label('Бегущая строка (верхняя, над шапкой)')->columnSpanFull(),
                                 TextInput::make('hero.bottom_ticker')->label('Бегущая строка (нижняя, под hero)')->columnSpanFull(),
                                 Repeater::make('hero.stats')
-                                    ->label('Статистика')
+                                    ->label('Короткие факты (плашка под кнопками)')
                                     ->schema([
-                                        TextInput::make('value')->label('Значение'),
-                                        TextInput::make('label')->label('Подпись'),
+                                        TextInput::make('label')->label('Текст'),
                                     ])
-                                    ->columns(2)
                                     ->columnSpanFull()
                                     ->collapsed()
-                                    ->itemLabel(fn (array $state): ?string => $state['value'] ?? null),
+                                    ->itemLabel(fn (array $state): ?string => $state['label'] ?? null),
                             ])
                             ->columns(2),
 

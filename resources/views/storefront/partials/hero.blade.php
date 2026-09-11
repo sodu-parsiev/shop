@@ -20,18 +20,21 @@
             </div>
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="#catalog" class="inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
+                <a href="#contacts" class="inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
                     {{ $homeContent->get('hero.cta_primary') }}
                     <span aria-hidden="true">&#8599;&#65038;</span>
                 </a>
-                <a href="#contacts" class="inline-flex items-center justify-between gap-8 border border-brand-black px-6 py-4 text-sm font-bold">
+                <a href="#catalog" class="inline-flex items-center justify-between gap-8 border border-brand-black px-6 py-4 text-sm font-bold">
                     {{ $homeContent->get('hero.cta_secondary') }}
                 </a>
             </div>
 
-            <div class="mt-6 grid grid-cols-1 divide-y divide-brand-black/10 border-y border-brand-black/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-3 border-y border-brand-black/10 py-4 sm:grid-cols-2">
                 @foreach ($homeContent->get('hero.stats', []) as $stat)
-                    <x-storefront.stat :value="$stat['value']" :label="$stat['label']" class="py-4 sm:px-6 sm:first:pl-0" />
+                    <div class="flex items-center gap-2 text-sm font-bold">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-pink" aria-hidden="true"></span>
+                        {{ $stat['label'] }}
+                    </div>
                 @endforeach
             </div>
         </div>
