@@ -10,7 +10,6 @@ use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -124,14 +123,12 @@ class ManageHomePageContent extends Page
                             ->schema([
                                 TextInput::make('why.eyebrow')->label('Надпись рядом с номером секции'),
                                 TextInput::make('why.heading')->label('Заголовок'),
-                                TextInput::make('why.subheading')->label('Подзаголовок'),
+                                Textarea::make('why.intro')->label('Вводный текст')->columnSpanFull(),
                                 Repeater::make('why.cards')
-                                    ->label('Карточки')
+                                    ->label('Преимущества')
                                     ->schema([
-                                        TextInput::make('number')->label('Номер'),
                                         TextInput::make('title')->label('Заголовок'),
                                         Textarea::make('description')->label('Описание'),
-                                        Toggle::make('highlighted')->label('Выделена (тёмный фон)'),
                                     ])
                                     ->columns(2)
                                     ->columnSpanFull()
