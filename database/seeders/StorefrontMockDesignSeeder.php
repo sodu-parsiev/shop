@@ -61,8 +61,8 @@ class StorefrontMockDesignSeeder extends Seeder
                     'apply_button' => 'Заявка',
                 ],
                 'hero' => [
-                    'headline_main' => 'База, на которой',
-                    'headline_accent' => 'строятся бренды',
+                    'headline_main' => 'Бланковый текстиль крупным оптом —',
+                    'headline_accent' => 'со склада и под заказ',
                     'cta_secondary' => 'Запросить расчёт',
                     'hero_badge_value' => '10–10 000',
                     'hero_badge_label' => 'шт. по прайсу',

@@ -3,7 +3,6 @@
         <div>
             <div class="flex flex-wrap gap-2">
                 <x-storefront.pill-badge tone="outline">{{ $homeContent->get('hero.tag_production') }}</x-storefront.pill-badge>
-                <x-storefront.pill-badge tone="outline">{{ $homeContent->get('hero.tag_b2b') }}</x-storefront.pill-badge>
             </div>
 
             <h1 class="mt-6 max-w-[620px] text-[54px] leading-[0.88] font-black sm:text-[76px] lg:text-[96px]">

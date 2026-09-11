@@ -97,8 +97,7 @@ class ManageHomePageContent extends Page
                             ->icon(Heroicon::OutlinedPhoto)
                             ->schema([
                                 $this->hint('Первый экран главной страницы — самое заметное место на сайте.'),
-                                TextInput::make('hero.tag_production')->label('Тег: производство'),
-                                TextInput::make('hero.tag_b2b')->label('Тег: B2B'),
+                                TextInput::make('hero.tag_production')->label('Надзаголовок'),
                                 TextInput::make('hero.headline_main')->label('Заголовок'),
                                 TextInput::make('hero.headline_accent')->label('Заголовок (акцент, розовый)'),
                                 Textarea::make('hero.subcopy')->label('Подзаголовок')->columnSpanFull(),
