@@ -19,7 +19,7 @@
             </h2>
 
             <p class="mt-5 max-w-xl text-sm leading-relaxed text-brand-black/60">
-                Мы разместили производство ближе к хлопковым полям, сократили цепочку и сохранили контроль качества. Это позволяет планировать крупные партии без лишних посредников.
+                {{ $homeContent->get('process.intro') }}
             </p>
 
             <div data-animate="stagger" class="mt-8 flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-brand-black/10 pt-6">
@@ -33,6 +33,11 @@
                     </div>
                 @endforeach
             </div>
+
+            <a href="#contacts" class="mt-8 inline-flex items-center gap-2 border-b border-brand-black pb-1 text-sm font-bold">
+                {{ $homeContent->get('process.cta') }}
+                <span aria-hidden="true">&#8599;&#65038;</span>
+            </a>
         </div>
     </div>
 </section>

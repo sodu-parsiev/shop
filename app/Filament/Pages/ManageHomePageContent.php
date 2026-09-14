@@ -214,6 +214,8 @@ class ManageHomePageContent extends Page
                                 TextInput::make('process.eyebrow')->label('Надпись рядом с номером секции'),
                                 TextInput::make('process.heading')->label('Заголовок'),
                                 TextInput::make('process.subheading')->label('Подзаголовок'),
+                                Textarea::make('process.intro')->label('Интро')->columnSpanFull(),
+                                TextInput::make('process.cta')->label('Кнопка'),
                                 Repeater::make('process.stages')
                                     ->label('Этапы')
                                     ->schema([
