@@ -31,6 +31,9 @@ class CatalogSeeder extends Seeder
         'basic-tee-155-165',
         'basic-tee-175-185',
         'oversize-tee-220-240',
+        'women-tee-180',
+        'sweatshirt-two-thread-220-240',
+        'hoodie-two-thread-220-240',
     ];
 
     /**
@@ -60,7 +63,7 @@ class CatalogSeeder extends Seeder
         $densities = $this->syncDensities();
         $services = $this->syncCustomizationServices();
 
-        $this->syncColors();
+        $colors = $this->syncColors();
         $sizes = $this->syncSizes();
         $this->hideLegacyProducts();
 
@@ -94,7 +97,7 @@ class CatalogSeeder extends Seeder
             );
 
             $product->customizationServices()->sync($services->pluck('id'));
-            $product->colors()->sync([]);
+            $product->colors()->sync($colors->only($row['color_names'])->pluck('id'));
             $this->syncProductSizes($product, $sizes, $row['size_names']);
 
             if (isset($row['densities'])) {
@@ -159,7 +162,6 @@ class CatalogSeeder extends Seeder
             '160 гр' => 160,
             '180 гр' => 180,
             '220 гр' => 230,
-            '220-240 гр' => 230,
             '320 гр' => 320,
         ])->mapWithKeys(function (int $gsm, string $name): array {
             $density = Density::query()->updateOrCreate(
@@ -175,12 +177,31 @@ class CatalogSeeder extends Seeder
         });
     }
 
-    private function syncColors(): void
+    /**
+     * @return Collection<string, Color>
+     */
+    private function syncColors(): Collection
     {
         Color::query()->firstOrCreate(
             ['name' => 'Цвет по ТЗ'],
             ['hex_code' => null, 'sort_order' => 0, 'is_active' => true],
         );
+
+        return collect([
+            'Белый' => '#FFFFFF',
+            'Чёрный' => '#000000',
+        ])->mapWithKeys(function (string $hex, string $name): array {
+            $color = Color::query()->updateOrCreate(
+                ['name' => $name],
+                [
+                    'hex_code' => $hex,
+                    'sort_order' => $name === 'Белый' ? 1 : 2,
+                    'is_active' => true,
+                ],
+            );
+
+            return [$name => $color];
+        });
     }
 
     /**
@@ -380,17 +401,14 @@ class CatalogSeeder extends Seeder
                 ['density' => '140-150 гр', 'prices' => [10000 => 165, 5000 => 170, 1000 => 175, 500 => 180, 100 => 185, 10 => 190]],
                 ['density' => '160 гр', 'prices' => [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210]],
                 ['density' => '180 гр', 'prices' => [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230]],
-            ], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
+            ], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable(), colorNames: ['Белый', 'Чёрный']),
             $this->variantRow('oversize-tee-180', 'SH-TEE-OVR-180', 'Оверсайз футболка', 'Футболки', 'Oversized', [
                 ['density' => '180 гр', 'prices' => [10000 => 265, 5000 => 270, 1000 => 275, 500 => 280, 100 => 285, 10 => 290]],
                 ['density' => '220 гр', 'prices' => [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340]],
-            ], '/brand/products/oversize-tee-180.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
-            $this->row('kids-tee-175-185', 'SH-KIDS-TEE-180', 'Детские 180 гр', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable()),
-            $this->row('women-tee-180', 'SH-WOMEN-TEE-180', 'Женские 180 гр', 'Женская одежда', '180 гр', 'Regular Fit', [10000 => 200, 5000 => 205, 1000 => 210, 500 => 215, 100 => 220, 10 => 225], '/brand/products/women-tee-180.jpg'),
-            $this->row('longsleeve-140-150', 'SH-LONG-145', 'Лонгслив 180 гр', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-140-150.jpg'),
-            $this->row('sweatshirt-two-thread-220-240', 'SH-SWEAT-2T-230', 'Свитшот 2х нитка 220-240 гр', 'Свитшоты', '220-240 гр', 'Regular Fit', [10000 => 390, 5000 => 395, 1000 => 400, 500 => 405, 100 => 410, 10 => 415], '/brand/products/sweatshirt-two-thread-220-240.jpg'),
-            $this->row('hoodie-two-thread-220-240', 'SH-HOODIE-2T-230', 'Худи 2х нитка 320 гр', 'Худи', '320 гр', 'Regular Fit', [10000 => 520, 5000 => 525, 1000 => 530, 500 => 535, 100 => 540, 10 => 545], '/brand/products/hoodie-two-thread-220-240.jpg'),
-            $this->row('hoodie-three-thread-260-280', 'SH-HOODIE-3T-270', 'Худи 3х нитка 320 гр', 'Худи', '320 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-three-thread-260-280.jpg'),
+            ], '/brand/products/oversize-tee-180.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable(), colorNames: ['Белый', 'Чёрный']),
+            $this->row('kids-tee-175-185', 'SH-KIDS-TEE-180', 'Детские 180 гр', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable(), colorNames: ['Белый', 'Чёрный']),
+            $this->row('longsleeve-140-150', 'SH-LONG-145', 'Лонгслив 180 гр', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-140-150.jpg', colorNames: ['Белый', 'Чёрный']),
+            $this->row('hoodie-three-thread-260-280', 'SH-HOODIE-3T-270', 'Худи', 'Худи', '320 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-three-thread-260-280.jpg', colorNames: ['Чёрный']),
             $this->row('baseball-cap', 'SH-CAP-BASE', 'Бейсболка', 'Аксессуары', null, null, [10000 => 115, 5000 => 120, 1000 => 125, 500 => 130, 100 => 135, 10 => 140], '/brand/products/baseball-cap.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
             $this->row('shopper', 'SH-SHOPPER', 'Шоппер', 'Аксессуары', null, null, null, '/brand/products/shopper.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
         ];
@@ -413,6 +431,7 @@ class CatalogSeeder extends Seeder
         string $stockConditions = 'склад/заказ',
         array $sizeNames = [],
         array $sizeTable = [],
+        array $colorNames = [],
     ): array {
         $shortDescription = $density
             ? "{$name}: бланковый текстиль, плотность {$density}."
@@ -433,6 +452,7 @@ class CatalogSeeder extends Seeder
             'prices' => $prices,
             'size_names' => $sizeNames,
             'size_table' => $sizeTable,
+            'color_names' => $colorNames,
         ];
     }
 
@@ -452,6 +472,7 @@ class CatalogSeeder extends Seeder
         string $stockConditions = 'склад/заказ',
         array $sizeNames = [],
         array $sizeTable = [],
+        array $colorNames = [],
     ): array {
         $densityLabel = implode(', ', array_column($densities, 'density'));
         $shortDescription = "{$name}: бланковый текстиль, плотности {$densityLabel}.";
@@ -470,6 +491,7 @@ class CatalogSeeder extends Seeder
             'cover_image' => $coverImage,
             'size_names' => $sizeNames,
             'size_table' => $sizeTable,
+            'color_names' => $colorNames,
         ];
     }
 }

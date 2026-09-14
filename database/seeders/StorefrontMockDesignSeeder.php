@@ -70,7 +70,7 @@ class StorefrontMockDesignSeeder extends Seeder
                     'bottom_ticker' => 'БЕЗ ПОСРЕДНИКОВ ✦ КОНТРОЛЬ КАЧЕСТВА ✦ ЦЕНА ПО ПРАЙСУ ✦ ИНДИВИДУАЛЬНЫЙ РАСЧЁТ НАНЕСЕНИЯ',
                 ],
                 'catalog' => [
-                    'count_label' => '14 моделей',
+                    'count_label' => '7 моделей',
                     'price_note' => 'Цены указаны за бланковый текстиль.',
                     'kicker' => 'Текстиль',
                     'price_label' => 'Цена за штуку',

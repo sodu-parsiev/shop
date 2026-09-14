@@ -76,7 +76,7 @@ class HomePageContentSeeder extends Seeder
                 'heading' => 'Бланковый текстиль',
                 'heading_accent' => 'в наличии',
                 'subcopy' => 'Базовые модели для брендов, мерча и нанесения. Минимальный заказ — от 100 изделий.',
-                'count_label' => '14 моделей',
+                'count_label' => '7 моделей',
                 'availability_all_label' => 'Все модели',
                 'availability_stock_label' => 'На складе',
                 'availability_order_label' => 'Под заказ',

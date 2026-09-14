@@ -13,7 +13,7 @@ test('catalog seeder creates the real price list products with tiers and density
     expect(Product::query()
         ->where('status', ProductStatus::Active)
         ->where('show_on_landing', true)
-        ->count())->toBe(10);
+        ->count())->toBe(7);
 
     $product = Product::query()
         ->with(['densities', 'priceTiers'])
@@ -78,7 +78,6 @@ test('catalog seeder consolidates densities per the assortment update', function
     $densityBySlug = [
         'kids-tee-175-185' => ['180 гр'],
         'longsleeve-140-150' => ['180 гр'],
-        'hoodie-two-thread-220-240' => ['320 гр'],
         'hoodie-three-thread-260-280' => ['320 гр'],
     ];
 
@@ -90,9 +89,36 @@ test('catalog seeder consolidates densities per the assortment update', function
     }
 
     expect(Density::query()->pluck('name')->sort()->values()->all())
-        ->toBe(['140-150 гр', '160 гр', '180 гр', '220 гр', '220-240 гр', '320 гр']);
+        ->toBe(['140-150 гр', '160 гр', '180 гр', '220 гр', '320 гр']);
 
     expect(Product::query()->where('slug', 'oversize-tee-200-210')->exists())->toBeFalse();
+});
+
+test('catalog seeder trims the catalog to the final assortment', function () {
+    $this->seed(CatalogSeeder::class);
+
+    foreach (['women-tee-180', 'sweatshirt-two-thread-220-240', 'hoodie-two-thread-220-240'] as $slug) {
+        expect(Product::query()->where('slug', $slug)->exists())->toBeFalse();
+    }
+
+    $hoodie = Product::query()->with(['colors', 'priceTiers'])->where('slug', 'hoodie-three-thread-260-280')->firstOrFail();
+    expect($hoodie->name)->toBe('Худи');
+    expect($hoodie->colors->pluck('name')->all())->toBe(['Чёрный']);
+    expect($hoodie->priceTierForQuantity(100)->unit_price)->toBe('11.94');
+
+    $basicTee = Product::query()->with('colors')->where('slug', 'basic-tee-140-150')->firstOrFail();
+    expect($basicTee->colors->pluck('name')->all())->toBe(['Белый', 'Чёрный']);
+    expect($basicTee->colors->pluck('hex_code')->all())->toBe(['#FFFFFF', '#000000']);
+
+    foreach (['oversize-tee-180', 'kids-tee-175-185', 'longsleeve-140-150'] as $slug) {
+        $product = Product::query()->with('colors')->where('slug', $slug)->firstOrFail();
+
+        expect($product->colors->pluck('name')->all())->toBe(['Белый', 'Чёрный']);
+    }
+
+    foreach (['baseball-cap', 'shopper'] as $slug) {
+        expect(Product::query()->with('colors')->where('slug', $slug)->firstOrFail()->colors)->toHaveCount(0);
+    }
 });
 
 test('catalog seeder merges density-only tee families into single variant products', function () {
@@ -116,6 +142,9 @@ test('catalog seeder merges density-only tee families into single variant produc
     expect(Redirect::where('source_path', '/catalog/basic-tee-155-165')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
     expect(Redirect::where('source_path', '/catalog/basic-tee-175-185')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
     expect(Redirect::where('source_path', '/catalog/oversize-tee-220-240')->value('target_url'))->toBe('/catalog/oversize-tee-180');
+    expect(Redirect::where('source_path', '/catalog/hoodie-two-thread-220-240')->value('target_url'))->toBe('/catalog/hoodie-three-thread-260-280');
+    expect(Redirect::where('source_path', '/catalog/women-tee-180')->value('target_url'))->toBe('/#catalog');
+    expect(Redirect::where('source_path', '/catalog/sweatshirt-two-thread-220-240')->value('target_url'))->toBe('/#catalog');
 });
 
 test('catalog seeder offers kids size 170 without a matching measurement row', function () {
