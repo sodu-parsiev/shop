@@ -99,3 +99,22 @@ test('the merge migration is a no-op when the survivor slug does not exist', fun
     expect(Product::query()->count())->toBe(0);
     expect(Redirect::query()->count())->toBe(0);
 });
+
+test('the display-text follow-up migration updates the survivors to the merged-product wording', function () {
+    seedPreMergeTeeFamilies();
+
+    $merge = include database_path('migrations/2026_09_14_000001_merge_basic_and_oversize_tee_density_variants.php');
+    $merge->up();
+
+    $textFix = include database_path('migrations/2026_09_14_000002_update_merged_tee_family_display_text.php');
+    $textFix->up();
+
+    $basicTee = Product::query()->where('slug', 'basic-tee-140-150')->firstOrFail();
+    expect($basicTee->name)->toBe('Базовая футболка');
+    expect($basicTee->h1)->toBe('Базовая футболка оптом');
+    expect($basicTee->meta_title)->toBe('Базовая футболка — бланковый текстиль оптом');
+
+    $oversizeTee = Product::query()->where('slug', 'oversize-tee-180')->firstOrFail();
+    expect($oversizeTee->name)->toBe('Оверсайз футболка');
+    expect($oversizeTee->meta_title)->toBe('Оверсайз футболка — бланковый текстиль оптом');
+});
