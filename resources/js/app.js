@@ -107,6 +107,9 @@ document.addEventListener('alpine:init', () => {
                 moq,
                 quantity,
                 priceTiers: product.priceTiers ?? {},
+                priceTiersByDensity: product.priceTiersByDensity ?? {},
+                densityId: product.densityId ?? null,
+                densityOptions: product.densityOptions ?? [],
                 priceQuantities,
                 colors: product.colors ?? [],
                 sizes: product.sizes ?? [],
@@ -163,7 +166,27 @@ document.addEventListener('alpine:init', () => {
 
             line.quantity = normalizeOrderQuantity(value, line.priceQuantities, line.moq);
         },
+        updateLineDensity(productId, densityId) {
+            const line = this.lines.find((item) => item.product_id === Number(productId));
+
+            if (!line) {
+                return;
+            }
+
+            const option = line.densityOptions.find((opt) => Number(opt.id) === Number(densityId));
+
+            if (!option) {
+                return;
+            }
+
+            line.densityId = option.id;
+            line.densities = [option.name];
+        },
         priceFor(line) {
+            if (line.densityId && line.priceTiersByDensity?.[String(line.densityId)]) {
+                return line.priceTiersByDensity[String(line.densityId)]?.[String(line.quantity)] || 'По запросу';
+            }
+
             return line.priceTiers?.[String(line.quantity)] || 'По запросу';
         },
         volumeKeyFor(quantity) {

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'product_id',
+    'density_id',
     'quantity',
     'unit_price',
     'currency',
@@ -73,5 +74,10 @@ class ProductPriceTier extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function density(): BelongsTo
+    {
+        return $this->belongsTo(Density::class);
     }
 }

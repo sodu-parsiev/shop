@@ -387,6 +387,78 @@ test('order lines reject a density not attached to the product', function () {
     expect(Order::query()->count())->toBe(0);
 });
 
+function createVariantProduct(): Product
+{
+    $product = Product::factory()->create([
+        'moq' => 100,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $light = Density::factory()->create(['name' => '140 gsm']);
+    $heavy = Density::factory()->create(['name' => '180 gsm']);
+    $product->densities()->attach([$light->id, $heavy->id]);
+
+    ProductPriceTier::factory()->create(['product_id' => $product->id, 'density_id' => $light->id, 'quantity' => 500, 'unit_price' => 2.00]);
+    ProductPriceTier::factory()->create(['product_id' => $product->id, 'density_id' => $heavy->id, 'quantity' => 500, 'unit_price' => 2.50]);
+
+    return $product;
+}
+
+test('a density-priced order line stores the price for the exact selected density and quantity', function () {
+    $product = createVariantProduct();
+
+    $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 500, 'density' => '180 gsm'],
+        ],
+    ]));
+
+    $line = Order::query()->with('lines')->latest('id')->firstOrFail()->lines->first();
+
+    expect($line->preferred_density)->toBe('180 gsm');
+    expect($line->unit_price)->toBe('2.50');
+    expect($line->price_quantity_tier)->toBe(500);
+});
+
+test('a density-priced order line requires exactly one density to be selected', function () {
+    $product = createVariantProduct();
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 500],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.density']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('a density-priced order line rejects more than one density selected together', function () {
+    $product = createVariantProduct();
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 500, 'density' => '140 gsm, 180 gsm'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.density']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('a density-priced order line rejects a density with no price tier for the submitted quantity', function () {
+    $product = createVariantProduct();
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 1000, 'density' => '180 gsm'],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.density']);
+    expect(Order::query()->count())->toBe(0);
+});
+
 test('order lines reject any color value when the product has no attached colors', function () {
     $product = Product::factory()->create([
         'moq' => 5000,

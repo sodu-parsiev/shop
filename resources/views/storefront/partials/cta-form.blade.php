@@ -26,7 +26,12 @@
                 'moq' => $product->moq,
                 'quantity' => (int) ($line['quantity'] ?? $product->moq),
                 'priceTiers' => $product->formattedPriceTiersByQuantity(),
+                'priceTiersByDensity' => $product->priceTiersByDensity(),
                 'priceQuantities' => $product->availableOrderQuantities(),
+                'densityOptions' => $product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()->all(),
+                'densityId' => $product->isDensityPriced()
+                    ? ($product->densities->firstWhere('name', trim((string) ($line['density'] ?? '')))?->id ?? $product->cheapestDensityId())
+                    : null,
                 'colors' => collect(explode(',', (string) ($line['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
                 'sizes' => collect(explode(',', (string) ($line['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
                 'densities' => collect(explode(',', (string) ($line['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),

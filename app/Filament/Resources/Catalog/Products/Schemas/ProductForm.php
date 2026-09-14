@@ -168,6 +168,17 @@ class ProductForm
                                     ->reorderable()
                                     ->defaultItems(0)
                                     ->addActionLabel(__('Add price tier'))
+                                    ->itemLabel(function (array $state): ?string {
+                                        $density = filled($state['density_id'] ?? null)
+                                            ? Density::find($state['density_id'])?->name
+                                            : null;
+
+                                        return collect([
+                                            $density,
+                                            filled($state['quantity'] ?? null) ? "{$state['quantity']} шт." : null,
+                                            filled($state['unit_price'] ?? null) ? "\${$state['unit_price']}" : null,
+                                        ])->filter()->implode(' · ') ?: null;
+                                    })
                                     ->schema([
                                         TextInput::make('quantity')
                                             ->label(__('Quantity'))
@@ -186,8 +197,14 @@ class ProductForm
                                             ])
                                             ->default(ProductPriceTier::DEFAULT_CURRENCY)
                                             ->required(),
+                                        Select::make('density_id')
+                                            ->label(__('Density'))
+                                            ->relationship('density', 'name', fn ($query) => $query->orderBy('gsm'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->helperText(__('Leave empty for products without density variants.')),
                                     ])
-                                    ->columns(3)
+                                    ->columns(4)
                                     ->columnSpanFull(),
                             ])
                             ->columns(2),

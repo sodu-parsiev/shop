@@ -104,10 +104,41 @@ class StoreOrderRequest extends FormRequest
 
                     $this->validateAttributeChoice($validator, $index, 'color', $line['color'] ?? null, $product->colors);
                     $this->validateAttributeChoice($validator, $index, 'size', $line['size'] ?? null, $product->sizes);
-                    $this->validateAttributeChoice($validator, $index, 'density', $line['density'] ?? null, $product->densities);
+
+                    if ($product->isDensityPriced()) {
+                        $this->validateDensityPriced($validator, $index, $line, $product, $quantity);
+                    } else {
+                        $this->validateAttributeChoice($validator, $index, 'density', $line['density'] ?? null, $product->densities);
+                    }
                 }
             },
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $line
+     */
+    private function validateDensityPriced(Validator $validator, int|string $index, array $line, Product $product, int $quantity): void
+    {
+        $value = trim((string) ($line['density'] ?? ''));
+
+        if ($value === '' || str_contains($value, ',')) {
+            $validator->errors()->add("order_lines.{$index}.density", 'Выберите одну плотность для этого товара.');
+
+            return;
+        }
+
+        $density = $product->densities->where('is_active', true)->firstWhere('name', $value);
+
+        if (! $density) {
+            $validator->errors()->add("order_lines.{$index}.density", 'Выбранная плотность недоступна для этого товара.');
+
+            return;
+        }
+
+        if ($product->priceTierForQuantity($quantity, $density->id) === null) {
+            $validator->errors()->add("order_lines.{$index}.density", 'Для выбранной плотности нет цены на этот объём.');
+        }
     }
 
     /**

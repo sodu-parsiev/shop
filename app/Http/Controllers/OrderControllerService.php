@@ -86,7 +86,7 @@ class OrderControllerService
         }
 
         $products = Product::query()
-            ->with(['category', 'priceTiers'])
+            ->with(['category', 'priceTiers', 'densities'])
             ->whereIn('id', collect($lines)->pluck('product_id')->all())
             ->get()
             ->keyBy('id');
@@ -94,7 +94,11 @@ class OrderControllerService
         foreach ($lines as $line) {
             /** @var Product $product */
             $product = $products->get($line['product_id']);
-            $priceTier = $product->priceTierForQuantity((int) $line['quantity']);
+            $densityName = $this->nullableString($line['density'] ?? null);
+            $densityId = $product->isDensityPriced()
+                ? $product->densities->firstWhere('name', $densityName)?->id
+                : null;
+            $priceTier = $product->priceTierForQuantity((int) $line['quantity'], $densityId);
 
             $order->lines()->create([
                 'product_id' => $product->id,
@@ -109,7 +113,7 @@ class OrderControllerService
                 'price_note' => $priceTier
                     ? 'Бланковый текстиль'
                     : 'Цена по запросу',
-                'preferred_density' => $this->nullableString($line['density'] ?? null),
+                'preferred_density' => $densityName,
                 'preferred_size' => $this->nullableString($line['size'] ?? null),
                 'preferred_color' => $this->nullableString($line['color'] ?? null),
             ]);

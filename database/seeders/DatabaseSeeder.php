@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             AdminUserSeeder::class,
             CatalogSeeder::class,
+            CatalogRedirectSeeder::class,
             FaqSeeder::class,
             HomePageContentSeeder::class,
             LegalPagesSeeder::class,

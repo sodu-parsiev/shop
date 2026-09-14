@@ -28,6 +28,9 @@ class CatalogSeeder extends Seeder
         'heavy-oversize-tee',
         'full-cycle-custom-production',
         'oversize-tee-200-210',
+        'basic-tee-155-165',
+        'basic-tee-175-185',
+        'oversize-tee-220-240',
     ];
 
     /**
@@ -93,12 +96,34 @@ class CatalogSeeder extends Seeder
             $product->customizationServices()->sync($services->pluck('id'));
             $product->colors()->sync([]);
             $this->syncProductSizes($product, $sizes, $row['size_names']);
-            $product->densities()->sync(
-                $row['density'] ? [$densities->get($row['density'])->id] : []
-            );
 
-            $this->syncPriceTiers($product, $row['prices']);
+            if (isset($row['densities'])) {
+                $this->syncVariantDensitiesAndPrices($product, $densities, $row['densities']);
+            } else {
+                $product->densities()->sync(
+                    $row['density'] ? [$densities->get($row['density'])->id] : []
+                );
+                $this->syncPriceTiers($product, $row['prices']);
+            }
         }
+    }
+
+    /**
+     * @param  array<int, array{density: string, prices: array<int, int>}>  $variants
+     */
+    private function syncVariantDensitiesAndPrices(Product $product, Collection $densities, array $variants): void
+    {
+        $densityIds = collect($variants)->map(fn (array $variant) => $densities->get($variant['density'])->id);
+        $product->densities()->sync($densityIds);
+
+        foreach ($variants as $blockIndex => $variant) {
+            $this->syncPriceTiers($product, $variant['prices'], $densities->get($variant['density'])->id, $blockIndex * 10);
+        }
+
+        $product->priceTiers()
+            ->where('currency', ProductPriceTier::DEFAULT_CURRENCY)
+            ->whereNotIn('density_id', $densityIds->all())
+            ->delete();
     }
 
     /**
@@ -293,10 +318,10 @@ class CatalogSeeder extends Seeder
     /**
      * @param  array<int, int>|null  $prices
      */
-    private function syncPriceTiers(Product $product, ?array $prices): void
+    private function syncPriceTiers(Product $product, ?array $prices, ?int $densityId = null, int $sortOrderOffset = 0): void
     {
         if ($prices === null) {
-            $product->priceTiers()->delete();
+            $product->priceTiers()->where('density_id', $densityId)->delete();
 
             return;
         }
@@ -307,18 +332,20 @@ class CatalogSeeder extends Seeder
             ProductPriceTier::query()->updateOrCreate(
                 [
                     'product_id' => $product->id,
+                    'density_id' => $densityId,
                     'quantity' => $quantity,
                     'currency' => ProductPriceTier::DEFAULT_CURRENCY,
                 ],
                 [
                     'unit_price' => $this->sourceRubPriceToUsd($prices[$quantity]),
-                    'sort_order' => $sortOrder,
+                    'sort_order' => $sortOrderOffset + $sortOrder,
                 ],
             );
         }
 
         $product->priceTiers()
             ->where('currency', ProductPriceTier::DEFAULT_CURRENCY)
+            ->where('density_id', $densityId)
             ->whereNotIn('quantity', $quantities)
             ->delete();
     }
@@ -349,11 +376,15 @@ class CatalogSeeder extends Seeder
     private function productRows(): array
     {
         return [
-            $this->row('basic-tee-140-150', 'SH-TEE-145', 'Базовая футболка 140-150 гр', 'Футболки', '140-150 гр', 'Regular Fit', [10000 => 165, 5000 => 170, 1000 => 175, 500 => 180, 100 => 185, 10 => 190], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
-            $this->row('basic-tee-155-165', 'SH-TEE-160', 'Базовая футболка 160 гр', 'Футболки', '160 гр', 'Regular Fit', [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210], '/brand/products/basic-tee-155-165.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
-            $this->row('basic-tee-175-185', 'SH-TEE-180', 'Базовая футболка 180 гр', 'Футболки', '180 гр', 'Regular Fit', [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230], '/brand/products/basic-tee-175-185.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
-            $this->row('oversize-tee-180', 'SH-TEE-OVR-180', 'Оверсайз футболка 180 гр', 'Футболки', '180 гр', 'Oversized', [10000 => 265, 5000 => 270, 1000 => 275, 500 => 280, 100 => 285, 10 => 290], '/brand/products/oversize-tee-180.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
-            $this->row('oversize-tee-220-240', 'SH-TEE-OVR-230', 'Оверсайз футболка 220 гр', 'Футболки', '220 гр', 'Oversized', [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340], '/brand/products/oversize-tee-220-240.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
+            $this->variantRow('basic-tee-140-150', 'SH-TEE-145', 'Базовая футболка', 'Футболки', 'Regular Fit', [
+                ['density' => '140-150 гр', 'prices' => [10000 => 165, 5000 => 170, 1000 => 175, 500 => 180, 100 => 185, 10 => 190]],
+                ['density' => '160 гр', 'prices' => [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210]],
+                ['density' => '180 гр', 'prices' => [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230]],
+            ], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
+            $this->variantRow('oversize-tee-180', 'SH-TEE-OVR-180', 'Оверсайз футболка', 'Футболки', 'Oversized', [
+                ['density' => '180 гр', 'prices' => [10000 => 265, 5000 => 270, 1000 => 275, 500 => 280, 100 => 285, 10 => 290]],
+                ['density' => '220 гр', 'prices' => [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340]],
+            ], '/brand/products/oversize-tee-180.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
             $this->row('kids-tee-175-185', 'SH-KIDS-TEE-180', 'Детские 180 гр', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable()),
             $this->row('women-tee-180', 'SH-WOMEN-TEE-180', 'Женские 180 гр', 'Женская одежда', '180 гр', 'Regular Fit', [10000 => 200, 5000 => 205, 1000 => 210, 500 => 215, 100 => 220, 10 => 225], '/brand/products/women-tee-180.jpg'),
             $this->row('longsleeve-140-150', 'SH-LONG-145', 'Лонгслив 180 гр', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-140-150.jpg'),
@@ -400,6 +431,43 @@ class CatalogSeeder extends Seeder
             'description' => $shortDescription.' Цена «на заказ» актуальна для изменения цвета изделия или вшивных ярлыков; изменения фасона, ткани, фурнитуры и материалов для ярлыков рассчитывает менеджер.',
             'cover_image' => $coverImage,
             'prices' => $prices,
+            'size_names' => $sizeNames,
+            'size_table' => $sizeTable,
+        ];
+    }
+
+    /**
+     * @param  array<int, array{density: string, prices: array<int, int>}>  $densities
+     * @return array<string, mixed>
+     */
+    private function variantRow(
+        string $slug,
+        string $sku,
+        string $name,
+        string $category,
+        ?string $fit,
+        array $densities,
+        string $coverImage,
+        AvailabilityStatus $availabilityStatus = AvailabilityStatus::InStock,
+        string $stockConditions = 'склад/заказ',
+        array $sizeNames = [],
+        array $sizeTable = [],
+    ): array {
+        $densityLabel = implode(', ', array_column($densities, 'density'));
+        $shortDescription = "{$name}: бланковый текстиль, плотности {$densityLabel}.";
+
+        return [
+            'slug' => $slug,
+            'sku' => $sku,
+            'name' => $name,
+            'category' => $category,
+            'densities' => $densities,
+            'fit' => $fit,
+            'stock_conditions' => $stockConditions,
+            'availability_status' => $availabilityStatus,
+            'short_description' => $shortDescription,
+            'description' => $shortDescription.' Цена «на заказ» актуальна для изменения цвета изделия или вшивных ярлыков; изменения фасона, ткани, фурнитуры и материалов для ярлыков рассчитывает менеджер.',
+            'cover_image' => $coverImage,
             'size_names' => $sizeNames,
             'size_table' => $sizeTable,
         ];

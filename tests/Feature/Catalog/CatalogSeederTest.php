@@ -3,6 +3,8 @@
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Content\Redirect;
+use Database\Seeders\CatalogRedirectSeeder;
 use Database\Seeders\CatalogSeeder;
 
 test('catalog seeder creates the real price list products with tiers and density axes', function () {
@@ -11,20 +13,24 @@ test('catalog seeder creates the real price list products with tiers and density
     expect(Product::query()
         ->where('status', ProductStatus::Active)
         ->where('show_on_landing', true)
-        ->count())->toBe(13);
+        ->count())->toBe(10);
 
     $product = Product::query()
         ->with(['densities', 'priceTiers'])
         ->where('slug', 'basic-tee-140-150')
         ->firstOrFail();
 
-    expect($product->name)->toBe('Базовая футболка 140-150 гр');
+    expect($product->name)->toBe('Базовая футболка');
     expect($product->moq)->toBe(100);
-    expect($product->densities->pluck('name')->all())->toBe(['140-150 гр']);
-    expect($product->priceTiers)->toHaveCount(4);
+    expect($product->densities->pluck('name')->all())->toBe(['140-150 гр', '160 гр', '180 гр']);
+    expect($product->priceTiers)->toHaveCount(12);
+    expect($product->isDensityPriced())->toBeTrue();
+
+    $density140 = Density::query()->where('name', '140-150 гр')->firstOrFail();
 
     $this->assertDatabaseHas('product_price_tiers', [
         'product_id' => $product->id,
+        'density_id' => $density140->id,
         'quantity' => 5000,
         'unit_price' => 2.13,
         'currency' => 'USD',
@@ -70,10 +76,7 @@ test('catalog seeder consolidates densities per the assortment update', function
     $this->seed(CatalogSeeder::class);
 
     $densityBySlug = [
-        'basic-tee-155-165' => ['160 гр'],
-        'basic-tee-175-185' => ['180 гр'],
         'kids-tee-175-185' => ['180 гр'],
-        'oversize-tee-220-240' => ['220 гр'],
         'longsleeve-140-150' => ['180 гр'],
         'hoodie-two-thread-220-240' => ['320 гр'],
         'hoodie-three-thread-260-280' => ['320 гр'],
@@ -83,12 +86,36 @@ test('catalog seeder consolidates densities per the assortment update', function
         $product = Product::query()->with('densities')->where('slug', $slug)->firstOrFail();
 
         expect($product->densities->pluck('name')->all())->toBe($expectedDensities);
+        expect($product->isDensityPriced())->toBeFalse();
     }
 
     expect(Density::query()->pluck('name')->sort()->values()->all())
         ->toBe(['140-150 гр', '160 гр', '180 гр', '220 гр', '220-240 гр', '320 гр']);
 
     expect(Product::query()->where('slug', 'oversize-tee-200-210')->exists())->toBeFalse();
+});
+
+test('catalog seeder merges density-only tee families into single variant products', function () {
+    $this->seed([CatalogSeeder::class, CatalogRedirectSeeder::class]);
+
+    foreach (['basic-tee-155-165', 'basic-tee-175-185', 'oversize-tee-220-240'] as $slug) {
+        expect(Product::query()->where('slug', $slug)->exists())->toBeFalse();
+    }
+
+    $basicTee = Product::query()->with(['densities', 'priceTiers'])->where('slug', 'basic-tee-140-150')->firstOrFail();
+    expect($basicTee->densities->pluck('name')->all())->toBe(['140-150 гр', '160 гр', '180 гр']);
+    expect($basicTee->priceTierForQuantity(1000, Density::where('name', '140-150 гр')->value('id'))->unit_price)->toBe('2.19');
+    expect($basicTee->priceTierForQuantity(1000, Density::where('name', '160 гр')->value('id'))->unit_price)->toBe('2.44');
+    expect($basicTee->priceTierForQuantity(1000, Density::where('name', '180 гр')->value('id'))->unit_price)->toBe('2.69');
+
+    $oversizeTee = Product::query()->with(['densities', 'priceTiers'])->where('slug', 'oversize-tee-180')->firstOrFail();
+    expect($oversizeTee->densities->pluck('name')->all())->toBe(['180 гр', '220 гр']);
+    expect($oversizeTee->priceTierForQuantity(100, Density::where('name', '180 гр')->value('id'))->unit_price)->toBe('3.56');
+    expect($oversizeTee->priceTierForQuantity(100, Density::where('name', '220 гр')->value('id'))->unit_price)->toBe('4.19');
+
+    expect(Redirect::where('source_path', '/catalog/basic-tee-155-165')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
+    expect(Redirect::where('source_path', '/catalog/basic-tee-175-185')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
+    expect(Redirect::where('source_path', '/catalog/oversize-tee-220-240')->value('target_url'))->toBe('/catalog/oversize-tee-180');
 });
 
 test('catalog seeder offers kids size 170 without a matching measurement row', function () {

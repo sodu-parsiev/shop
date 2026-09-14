@@ -16,6 +16,10 @@
     $activeSizes = $product->sizes->where('is_active', true)->values();
     $activeDensities = $densities->where('is_active', true)->values();
     $priceNote = $product->hasPriceTiers() ? 'бланковый текстиль' : 'уточнит менеджер';
+    $isVariant = $product->isDensityPriced();
+    $startingLabelsByDensity = $isVariant
+        ? $product->densities->mapWithKeys(fn ($d) => [$d->id => 'от '.$product->lowestPriceTier($d->id)?->formattedUnitPrice()])
+        : collect();
 @endphp
 
 <article
@@ -26,6 +30,9 @@
     data-sizes='@json($product->sizes->pluck('id')->map(fn ($id) => (string) $id)->values())'
     data-product-card
     x-show="matches($el)"
+    @if ($isVariant)
+        x-data="{ densityId: {{ $product->cheapestDensityId() }}, densityNames: @js($product->densities->pluck('name', 'id')), priceLabelsByDensity: @js($startingLabelsByDensity) }"
+    @endif
     class="flex flex-col overflow-hidden bg-white text-brand-black"
 >
     <div class="relative aspect-[4/5] w-full overflow-hidden bg-brand-cream">
@@ -83,10 +90,14 @@
             </div>
         @endif
 
+        @if ($isVariant)
+            <x-storefront.density-variant-select :product="$product" model="densityId" />
+        @endif
+
         <div class="mt-auto flex items-end justify-between gap-3 pt-2">
             <div>
                 <p class="text-xs text-brand-black/50">{{ $homeContent->get('catalog.price_label') }}</p>
-                <p class="text-2xl font-normal leading-none">{{ $product->startingPriceLabel() }}</p>
+                <p class="text-2xl font-normal leading-none" @if ($isVariant) x-text="priceLabelsByDensity[densityId]" @endif>{{ $product->startingPriceLabel() }}</p>
                 <p class="text-xs text-brand-black/40">{{ $priceNote }}</p>
                 <a href="{{ $product->publicUrl() }}" class="mt-3 inline-block text-xs font-bold text-brand-pink">Подробнее</a>
             </div>
@@ -100,8 +111,11 @@
                     moq: {{ $product->moq }},
                     image: @js($coverImage),
                     priceTiers: @js($product->formattedPriceTiersByQuantity()),
+                    priceTiersByDensity: @js($product->priceTiersByDensity()),
                     priceQuantities: @js($product->availableOrderQuantities()),
-                    densities: [selectedOptionLabel('density', @js($defaultDensity))],
+                    densityId: {{ $isVariant ? 'densityId' : 'null' }},
+                    densityOptions: @js($product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()),
+                    densities: [{{ $isVariant ? 'densityNames[densityId]' : "selectedOptionLabel('density', @js($defaultDensity))" }}],
                     sizes: [selectedOptionLabel('size', @js($defaultSize))],
                     colors: [selectedOptionLabel('color', @js($defaultColor))],
                     availableColors: @js($activeColors->pluck('name')),

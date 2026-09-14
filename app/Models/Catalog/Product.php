@@ -110,16 +110,30 @@ class Product extends Model
             && ($this->stock_quantity ?? 0) > 0;
     }
 
-    public function lowestPriceTier(): ?ProductPriceTier
+    public function isDensityPriced(): bool
     {
-        return $this->loadedPriceTiers()
+        return $this->loadedPriceTiers()->contains(fn (ProductPriceTier $tier): bool => $tier->density_id !== null);
+    }
+
+    public function cheapestDensityId(): ?int
+    {
+        return $this->isDensityPriced() ? $this->lowestPriceTier()?->density_id : null;
+    }
+
+    public function lowestPriceTier(?int $densityId = null): ?ProductPriceTier
+    {
+        return $this->tiersForDensity($densityId)
             ->sortBy(fn (ProductPriceTier $tier): float => (float) $tier->unit_price)
             ->first();
     }
 
-    public function priceTierForQuantity(int $quantity): ?ProductPriceTier
+    public function priceTierForQuantity(int $quantity, ?int $densityId = null): ?ProductPriceTier
     {
-        return $this->loadedPriceTiers()->firstWhere('quantity', $quantity);
+        if ($this->isDensityPriced() && $densityId === null) {
+            return null;
+        }
+
+        return $this->tiersForDensity($densityId)->firstWhere('quantity', $quantity);
     }
 
     public function startingPriceLabel(): string
@@ -140,11 +154,14 @@ class Product extends Model
     /**
      * @return array<int, int>
      */
-    public function availableOrderQuantities(): array
+    public function availableOrderQuantities(?int $densityId = null): array
     {
-        $quantities = $this->loadedPriceTiers()
+        $densityId ??= $this->cheapestDensityId();
+
+        $quantities = $this->tiersForDensity($densityId)
             ->pluck('quantity')
             ->map(fn (int|string $quantity): int => (int) $quantity)
+            ->unique()
             ->filter(fn (int $quantity): bool => $quantity >= $this->moq)
             ->sort()
             ->values();
@@ -162,14 +179,34 @@ class Product extends Model
     /**
      * @return array<string, string>
      */
-    public function formattedPriceTiersByQuantity(): array
+    public function formattedPriceTiersByQuantity(?int $densityId = null): array
     {
-        return $this->loadedPriceTiers()
+        $densityId ??= $this->cheapestDensityId();
+
+        return $this->tiersForDensity($densityId)
             ->mapWithKeys(function (ProductPriceTier $tier): array {
                 $label = $tier->formattedUnitPrice();
 
                 return $label ? [(string) $tier->quantity => $label] : [];
             })
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    public function priceTiersByDensity(): array
+    {
+        return $this->loadedPriceTiers()
+            ->whereNotNull('density_id')
+            ->groupBy('density_id')
+            ->map(fn (Collection $tiers): array => $tiers
+                ->mapWithKeys(function (ProductPriceTier $tier): array {
+                    $label = $tier->formattedUnitPrice();
+
+                    return $label ? [(string) $tier->quantity => $label] : [];
+                })
+                ->all())
             ->all();
     }
 
@@ -186,6 +223,20 @@ class Product extends Model
         return $this->relationLoaded('priceTiers')
             ? $this->priceTiers
             : $this->priceTiers()->get();
+    }
+
+    /**
+     * @return Collection<int, ProductPriceTier>
+     */
+    private function tiersForDensity(?int $densityId): Collection
+    {
+        if ($densityId !== null) {
+            return $this->loadedPriceTiers()->where('density_id', $densityId)->values();
+        }
+
+        return $this->isDensityPriced()
+            ? $this->loadedPriceTiers()
+            : $this->loadedPriceTiers()->whereNull('density_id')->values();
     }
 
     public function publicUrl(): string

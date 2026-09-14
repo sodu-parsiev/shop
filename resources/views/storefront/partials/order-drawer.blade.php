@@ -79,7 +79,7 @@
                                         </div>
                                     </div>
                                 </template>
-                                <template x-if="line.availableDensities?.length">
+                                <template x-if="!line.densityId && line.availableDensities?.length">
                                     <div>
                                         <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Плотность</p>
                                         <div class="mt-1 flex flex-wrap gap-1.5">
@@ -94,6 +94,20 @@
                                                 </label>
                                             </template>
                                         </div>
+                                    </div>
+                                </template>
+                                <template x-if="line.densityId">
+                                    <div>
+                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Плотность</p>
+                                        <select
+                                            x-model.number="line.densityId"
+                                            @change="$store.orderBuilder.updateLineDensity(line.product_id, $event.target.value)"
+                                            class="mt-1 w-full border border-brand-black/15 px-2 py-1.5 text-xs font-bold"
+                                        >
+                                            <template x-for="option in line.densityOptions" :key="option.id">
+                                                <option :value="option.id" x-text="option.name"></option>
+                                            </template>
+                                        </select>
                                     </div>
                                 </template>
                             </div>

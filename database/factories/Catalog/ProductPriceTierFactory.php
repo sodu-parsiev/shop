@@ -20,6 +20,7 @@ class ProductPriceTierFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
+            'density_id' => null,
             'quantity' => fake()->randomElement(ProductPriceTier::publicQuantities()),
             'unit_price' => fake()->randomFloat(2, 1, 15),
             'currency' => ProductPriceTier::DEFAULT_CURRENCY,
