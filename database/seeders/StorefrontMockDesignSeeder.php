@@ -78,8 +78,8 @@ class StorefrontMockDesignSeeder extends Seeder
                     'price_note_small' => 'бланковый текстиль',
                 ],
                 'sellers' => [
-                    'heading' => 'Не просто поставщик.',
-                    'subheading' => 'Производственная база.',
+                    'heading' => 'Изготовим партию',
+                    'subheading' => 'под ваш бренд и требования',
                     'caption' => 'КОНТРОЛЬ ПОЛОТНА ВРУЧНУЮ',
                 ],
                 'portal_callout' => [

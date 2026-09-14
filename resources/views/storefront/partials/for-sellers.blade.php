@@ -9,7 +9,7 @@
             </h2>
 
             <p class="mt-5 max-w-md text-sm text-white/80">
-                Помогаем подготовить крупную партию к выходу на площадку: согласуем размерную матрицу, упаковку, этикетки и маркировку.
+                {{ $homeContent->get('sellers.intro') }}
             </p>
 
             <a href="#contacts" class="mt-8 inline-flex items-center gap-2 border-b border-white pb-1 text-sm font-bold">

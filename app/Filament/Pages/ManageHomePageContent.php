@@ -188,12 +188,13 @@ class ManageHomePageContent extends Page
                             ])
                             ->columns(2),
 
-                        Tab::make('03 · Для продавцов маркетплейсов')
+                        Tab::make('03 · Производственная база')
                             ->icon(Heroicon::OutlinedBuildingStorefront)
                             ->schema([
                                 TextInput::make('sellers.eyebrow')->label('Надпись рядом с номером секции'),
                                 TextInput::make('sellers.heading')->label('Заголовок'),
                                 TextInput::make('sellers.subheading')->label('Подзаголовок'),
+                                Textarea::make('sellers.intro')->label('Интро')->columnSpanFull(),
                                 TextInput::make('sellers.cta')->label('Кнопка'),
                                 TextInput::make('sellers.caption')->label('Подпись внизу'),
                                 Repeater::make('sellers.items')
