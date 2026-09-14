@@ -6,7 +6,7 @@
     $densityLabel = $densities->pluck('name')->implode(' / ') ?: 'По модели и ТЗ';
     $sizeLabel = $inStock
         ? 'Размерный ряд и остатки — по запросу'
-        : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерная сетка по спецификации');
+        : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерный ряд уточняет менеджер');
     $coverImage = $product->cover_image ?: asset('brand/catalog-white-v2.jpg');
     $categoryLabel = $product->category?->name ?? $homeContent->get('catalog.kicker');
     $defaultDensity = $densities->first()?->name ?: 'Уточнить с менеджером';

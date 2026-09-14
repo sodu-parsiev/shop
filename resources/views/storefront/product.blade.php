@@ -23,7 +23,7 @@
     $categoryLabel = $product->category?->name ?? 'Каталог';
     $availabilityLabel = $product->isInStock() ? 'На складе' : 'Под заказ';
     $densityLabel = $product->densities->pluck('name')->implode(', ') ?: 'По модели и ТЗ';
-    $sizeLabel = $product->sizes->pluck('name')->implode(', ') ?: 'По спецификации';
+    $sizeLabel = $product->sizes->pluck('name')->implode(', ') ?: 'Уточняет менеджер';
     $colorLabel = $product->colors->pluck('name')->implode(', ') ?: 'По ТЗ';
     $activeColors = $product->colors->where('is_active', true)->values();
     $activeSizes = $product->sizes->where('is_active', true)->values();
@@ -112,7 +112,7 @@
                             </div>
                             <div class="grid gap-2 py-4 sm:grid-cols-[160px_1fr]">
                                 <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">Состав</dt>
-                                <dd class="font-bold">{{ $product->composition ?: 'По спецификации' }}</dd>
+                                <dd class="font-bold">{{ $product->composition ?: 'Уточняет менеджер' }}</dd>
                             </div>
                             <div class="grid gap-2 py-4 sm:grid-cols-[160px_1fr]">
                                 <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">Плотность</dt>
@@ -184,7 +184,7 @@
                                 })"
                                 class="inline-flex items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white"
                             >
-                                {{ $product->isInStock() ? 'Запросить остатки' : 'Рассчитать пошив' }}
+                                {{ $product->isInStock() ? $homeContent->get('catalog.cta_stock') : $homeContent->get('catalog.cta_made_to_order') }}
                                 <span aria-hidden="true">&#8599;&#65038;</span>
                             </button>
                             <a href="#contacts" class="inline-flex items-center justify-center border border-brand-black px-6 py-4 text-sm font-bold">

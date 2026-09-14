@@ -64,9 +64,9 @@ class StorefrontMockDesignSeeder extends Seeder
                     'headline_main' => 'Бланковый текстиль крупным оптом —',
                     'headline_accent' => 'со склада и под заказ',
                     'cta_secondary' => 'Выбрать изделие',
-                    'hero_badge_value' => '100–5 000',
-                    'hero_badge_label' => 'шт. по прайсу',
-                    'top_ticker' => 'БЛАНКОВЫЙ ТЕКСТИЛЬ • ТИРАЖИ ОТ 100 ДО 5 000 ШТ.',
+                    'hero_badge_value' => 'от 100',
+                    'hero_badge_label' => 'шт. без ограничений',
+                    'top_ticker' => 'БЛАНКОВЫЙ ТЕКСТИЛЬ • ТИРАЖИ ОТ 100 ШТ. БЕЗ ВЕРХНЕГО ОГРАНИЧЕНИЯ',
                     'bottom_ticker' => 'БЕЗ ПОСРЕДНИКОВ ✦ КОНТРОЛЬ КАЧЕСТВА ✦ ЦЕНА ПО ПРАЙСУ ✦ ИНДИВИДУАЛЬНЫЙ РАСЧЁТ НАНЕСЕНИЯ',
                 ],
                 'catalog' => [

@@ -15,12 +15,10 @@ class OrderControllerService
      * @var array<string, string>
      */
     private const VOLUME_LABELS = [
-        '10' => '10 шт.',
         '100' => '100 шт.',
         '500' => '500 шт.',
         '1000' => '1 000 шт.',
         '5000' => '5 000 шт.',
-        '10000' => '10 000 шт.',
     ];
 
     public function __construct(private readonly TelegramOrderNotifier $telegramNotifier) {}
