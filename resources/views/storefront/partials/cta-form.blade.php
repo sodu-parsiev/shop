@@ -54,8 +54,7 @@
                 <x-storefront.section-label number="06">{{ $homeContent->get('cta_section.eyebrow') }}</x-storefront.section-label>
 
                 <h2 class="mt-6 max-w-[620px] text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[82px]">
-                    {{ $homeContent->get('cta_section.heading_main') }}
-                    <span class="text-brand-pink">{{ $homeContent->get('cta_section.heading_accent') }}</span>
+                    {{ $homeContent->get('cta_section.heading') }}
                 </h2>
                 <p class="mt-6 max-w-xl text-base leading-relaxed text-brand-black/65">{{ $homeContent->get('cta_section.subcopy') }}</p>
             </div>
@@ -244,6 +243,8 @@
                         <span x-text="submitting ? 'Отправляем...' : @js($homeContent->get('form.submit'))">{{ $homeContent->get('form.submit') }}</span>
                         <span aria-hidden="true">&#8599;&#65038;</span>
                     </button>
+
+                    <p class="text-xs text-brand-black/50 sm:col-span-2">{{ $homeContent->get('cta_section.trust_line') }}</p>
 
                     @php
                         $lineError = collect($errors->getMessages())->first(

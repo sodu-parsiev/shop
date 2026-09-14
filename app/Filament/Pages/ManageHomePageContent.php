@@ -273,9 +273,9 @@ class ManageHomePageContent extends Page
                             ->icon(Heroicon::OutlinedMegaphone)
                             ->schema([
                                 TextInput::make('cta_section.eyebrow')->label('Надпись рядом с номером секции'),
-                                TextInput::make('cta_section.heading_main')->label('Заголовок'),
-                                TextInput::make('cta_section.heading_accent')->label('Заголовок (акцент, розовый)'),
+                                TextInput::make('cta_section.heading')->label('Заголовок'),
                                 Textarea::make('cta_section.subcopy')->label('Подзаголовок')->columnSpanFull(),
+                                TextInput::make('cta_section.trust_line')->label('Строка доверия'),
                                 TextInput::make('cta_section.email_label')->label('Подпись поля Email'),
                                 TextInput::make('cta_section.email')->label('Email'),
                                 TextInput::make('cta_section.address_label')->label('Подпись поля Адрес'),
