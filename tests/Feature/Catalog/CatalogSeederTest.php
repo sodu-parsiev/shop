@@ -11,7 +11,7 @@ test('catalog seeder creates the real price list products with tiers and density
     expect(Product::query()
         ->where('status', ProductStatus::Active)
         ->where('show_on_landing', true)
-        ->count())->toBe(14);
+        ->count())->toBe(13);
 
     $product = Product::query()
         ->with(['densities', 'priceTiers'])
@@ -19,7 +19,7 @@ test('catalog seeder creates the real price list products with tiers and density
         ->firstOrFail();
 
     expect($product->name)->toBe('Базовая футболка 140-150 гр');
-    expect($product->moq)->toBe(10);
+    expect($product->moq)->toBe(100);
     expect($product->densities->pluck('name')->all())->toBe(['140-150 гр']);
     expect($product->priceTiers)->toHaveCount(4);
 
@@ -64,6 +64,31 @@ test('catalog seeder populates the basic tee size chart and size picker', functi
         'length' => '72.5',
         'sleeve' => '22.5',
     ]);
+});
+
+test('catalog seeder consolidates densities per the assortment update', function () {
+    $this->seed(CatalogSeeder::class);
+
+    $densityBySlug = [
+        'basic-tee-155-165' => ['160 гр'],
+        'basic-tee-175-185' => ['180 гр'],
+        'kids-tee-175-185' => ['180 гр'],
+        'oversize-tee-220-240' => ['220 гр'],
+        'longsleeve-140-150' => ['180 гр'],
+        'hoodie-two-thread-220-240' => ['320 гр'],
+        'hoodie-three-thread-260-280' => ['320 гр'],
+    ];
+
+    foreach ($densityBySlug as $slug => $expectedDensities) {
+        $product = Product::query()->with('densities')->where('slug', $slug)->firstOrFail();
+
+        expect($product->densities->pluck('name')->all())->toBe($expectedDensities);
+    }
+
+    expect(Density::query()->pluck('name')->sort()->values()->all())
+        ->toBe(['140-150 гр', '160 гр', '180 гр', '220 гр', '220-240 гр', '320 гр']);
+
+    expect(Product::query()->where('slug', 'oversize-tee-200-210')->exists())->toBeFalse();
 });
 
 test('catalog seeder offers kids size 170 without a matching measurement row', function () {

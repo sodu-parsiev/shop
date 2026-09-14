@@ -27,6 +27,7 @@ class CatalogSeeder extends Seeder
         'brand-color-tee',
         'heavy-oversize-tee',
         'full-cycle-custom-production',
+        'oversize-tee-200-210',
     ];
 
     /**
@@ -73,7 +74,7 @@ class CatalogSeeder extends Seeder
                     'composition' => 'По спецификации партии',
                     'fit' => $row['fit'],
                     'size_table' => $row['size_table'],
-                    'moq' => 10,
+                    'moq' => 100,
                     'stock_conditions' => $row['stock_conditions'],
                     'availability_status' => $row['availability_status'],
                     'stock_quantity' => $row['availability_status'] === AvailabilityStatus::InStock ? 1 : null,
@@ -130,12 +131,11 @@ class CatalogSeeder extends Seeder
     {
         return collect([
             '140-150 гр' => 145,
-            '155-165 гр' => 160,
-            '175-185 гр' => 180,
+            '160 гр' => 160,
             '180 гр' => 180,
-            '200-210 гр' => 205,
+            '220 гр' => 230,
             '220-240 гр' => 230,
-            '260-280 гр' => 270,
+            '320 гр' => 320,
         ])->mapWithKeys(function (int $gsm, string $name): array {
             $density = Density::query()->updateOrCreate(
                 ['name' => $name],
@@ -350,17 +350,16 @@ class CatalogSeeder extends Seeder
     {
         return [
             $this->row('basic-tee-140-150', 'SH-TEE-145', 'Базовая футболка 140-150 гр', 'Футболки', '140-150 гр', 'Regular Fit', [10000 => 165, 5000 => 170, 1000 => 175, 500 => 180, 100 => 185, 10 => 190], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
-            $this->row('basic-tee-155-165', 'SH-TEE-160', 'Базовая футболка 155-165 гр', 'Футболки', '155-165 гр', 'Regular Fit', [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210], '/brand/products/basic-tee-155-165.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
-            $this->row('basic-tee-175-185', 'SH-TEE-180', 'Базовая футболка 175-185 гр', 'Футболки', '175-185 гр', 'Regular Fit', [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230], '/brand/products/basic-tee-175-185.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
+            $this->row('basic-tee-155-165', 'SH-TEE-160', 'Базовая футболка 160 гр', 'Футболки', '160 гр', 'Regular Fit', [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210], '/brand/products/basic-tee-155-165.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
+            $this->row('basic-tee-175-185', 'SH-TEE-180', 'Базовая футболка 180 гр', 'Футболки', '180 гр', 'Regular Fit', [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230], '/brand/products/basic-tee-175-185.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable()),
             $this->row('oversize-tee-180', 'SH-TEE-OVR-180', 'Оверсайз футболка 180 гр', 'Футболки', '180 гр', 'Oversized', [10000 => 265, 5000 => 270, 1000 => 275, 500 => 280, 100 => 285, 10 => 290], '/brand/products/oversize-tee-180.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
-            $this->row('oversize-tee-200-210', 'SH-TEE-OVR-205', 'Оверсайз футболка 200-210 гр', 'Футболки', '200-210 гр', 'Oversized', [10000 => 290, 5000 => 295, 1000 => 300, 500 => 305, 100 => 310, 10 => 315], '/brand/products/oversize-tee-200-210.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
-            $this->row('oversize-tee-220-240', 'SH-TEE-OVR-230', 'Оверсайз футболка 220-240 гр', 'Футболки', '220-240 гр', 'Oversized', [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340], '/brand/products/oversize-tee-220-240.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
-            $this->row('kids-tee-175-185', 'SH-KIDS-TEE-180', 'Детские 175-185 гр', 'Детская одежда', '175-185 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable()),
+            $this->row('oversize-tee-220-240', 'SH-TEE-OVR-230', 'Оверсайз футболка 220 гр', 'Футболки', '220 гр', 'Oversized', [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340], '/brand/products/oversize-tee-220-240.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable()),
+            $this->row('kids-tee-175-185', 'SH-KIDS-TEE-180', 'Детские 180 гр', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable()),
             $this->row('women-tee-180', 'SH-WOMEN-TEE-180', 'Женские 180 гр', 'Женская одежда', '180 гр', 'Regular Fit', [10000 => 200, 5000 => 205, 1000 => 210, 500 => 215, 100 => 220, 10 => 225], '/brand/products/women-tee-180.jpg'),
-            $this->row('longsleeve-140-150', 'SH-LONG-145', 'Лонгслив 140-150 гр', 'Лонгсливы', '140-150 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-140-150.jpg'),
+            $this->row('longsleeve-140-150', 'SH-LONG-145', 'Лонгслив 180 гр', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-140-150.jpg'),
             $this->row('sweatshirt-two-thread-220-240', 'SH-SWEAT-2T-230', 'Свитшот 2х нитка 220-240 гр', 'Свитшоты', '220-240 гр', 'Regular Fit', [10000 => 390, 5000 => 395, 1000 => 400, 500 => 405, 100 => 410, 10 => 415], '/brand/products/sweatshirt-two-thread-220-240.jpg'),
-            $this->row('hoodie-two-thread-220-240', 'SH-HOODIE-2T-230', 'Худи 2х нитка 220-240 гр', 'Худи', '220-240 гр', 'Regular Fit', [10000 => 520, 5000 => 525, 1000 => 530, 500 => 535, 100 => 540, 10 => 545], '/brand/products/hoodie-two-thread-220-240.jpg'),
-            $this->row('hoodie-three-thread-260-280', 'SH-HOODIE-3T-270', 'Худи 3х нитка 260-280 гр', 'Худи', '260-280 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-three-thread-260-280.jpg'),
+            $this->row('hoodie-two-thread-220-240', 'SH-HOODIE-2T-230', 'Худи 2х нитка 320 гр', 'Худи', '320 гр', 'Regular Fit', [10000 => 520, 5000 => 525, 1000 => 530, 500 => 535, 100 => 540, 10 => 545], '/brand/products/hoodie-two-thread-220-240.jpg'),
+            $this->row('hoodie-three-thread-260-280', 'SH-HOODIE-3T-270', 'Худи 3х нитка 320 гр', 'Худи', '320 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-three-thread-260-280.jpg'),
             $this->row('baseball-cap', 'SH-CAP-BASE', 'Бейсболка', 'Аксессуары', null, null, [10000 => 115, 5000 => 120, 1000 => 125, 500 => 130, 100 => 135, 10 => 140], '/brand/products/baseball-cap.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
             $this->row('shopper', 'SH-SHOPPER', 'Шоппер', 'Аксессуары', null, null, null, '/brand/products/shopper.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
         ];
