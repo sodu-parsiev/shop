@@ -103,6 +103,32 @@ test('the trim migration is idempotent', function () {
     expect(Redirect::where('source_path', '/catalog/women-tee-180')->count())->toBe(1);
 });
 
+test('the rename migration strips density from kids tee and longsleeve names', function () {
+    $category = Category::factory()->create(['name' => 'Лонгсливы']);
+
+    foreach ([['kids-tee-175-185', 'Детские 180 гр'], ['longsleeve-140-150', 'Лонгслив 180 гр']] as [$slug, $name]) {
+        Product::factory()->create([
+            'slug' => $slug,
+            'name' => $name,
+            'category_id' => $category->id,
+            'status' => ProductStatus::Active,
+            'show_on_landing' => true,
+        ]);
+    }
+
+    $migration = include database_path('migrations/2026_09_14_000004_remove_density_from_product_names.php');
+    $migration->up();
+
+    $kids = Product::query()->where('slug', 'kids-tee-175-185')->firstOrFail();
+    expect($kids->name)->toBe('Детская футболка');
+    expect($kids->h1)->toBe('Детская футболка оптом');
+    expect($kids->meta_title)->toBe('Детская футболка — бланковый текстиль оптом');
+
+    $longsleeve = Product::query()->where('slug', 'longsleeve-140-150')->firstOrFail();
+    expect($longsleeve->name)->toBe('Лонгслив');
+    expect($longsleeve->short_description)->toBe('Лонгслив: бланковый текстиль, плотность 180 гр.');
+});
+
 test('the trim migration is a no-op on a fresh install', function () {
     $migration = include database_path('migrations/2026_09_14_000003_trim_catalog_to_final_assortment.php');
 

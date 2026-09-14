@@ -116,6 +116,10 @@ test('catalog seeder trims the catalog to the final assortment', function () {
         expect($product->colors->pluck('name')->all())->toBe(['Белый', 'Чёрный']);
     }
 
+    expect(Product::query()->where('slug', 'kids-tee-175-185')->value('name'))->toBe('Детская футболка');
+    expect(Product::query()->where('slug', 'longsleeve-140-150')->value('name'))->toBe('Лонгслив');
+    expect(Product::query()->where('name', 'like', '%гр%')->count())->toBe(0);
+
     foreach (['baseball-cap', 'shopper'] as $slug) {
         expect(Product::query()->with('colors')->where('slug', $slug)->firstOrFail()->colors)->toHaveCount(0);
     }
