@@ -51,7 +51,7 @@
     <div class="storefront-shell grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)] lg:gap-16">
         <div class="flex flex-col justify-between">
             <div>
-                <x-storefront.section-label number="07">{{ $homeContent->get('cta_section.eyebrow') }}</x-storefront.section-label>
+                <x-storefront.section-label number="06">{{ $homeContent->get('cta_section.eyebrow') }}</x-storefront.section-label>
 
                 <h2 class="mt-6 max-w-[620px] text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[82px]">
                     {{ $homeContent->get('cta_section.heading_main') }}

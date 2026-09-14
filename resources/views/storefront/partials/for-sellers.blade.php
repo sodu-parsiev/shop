@@ -12,6 +12,10 @@
                 {{ $homeContent->get('sellers.intro') }}
             </p>
 
+            <p class="mt-3 max-w-md text-xs text-white/60">
+                {{ $homeContent->get('sellers.customization_note') }}
+            </p>
+
             <a href="#contacts" class="mt-8 inline-flex items-center gap-2 border-b border-white pb-1 text-sm font-bold">
                 {{ $homeContent->get('sellers.cta') }}
                 <span aria-hidden="true">&#8599;&#65038;</span>

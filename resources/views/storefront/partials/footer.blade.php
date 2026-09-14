@@ -11,7 +11,6 @@
                 <ul class="mt-3 space-y-2 text-sm">
                     <li><a href="{{ route('home') }}#catalog" class="hover:text-white">{{ $homeContent->get('nav.catalog') }}</a></li>
                     <li><a href="{{ route('home') }}#production" class="hover:text-white">{{ $homeContent->get('nav.production') }}</a></li>
-                    <li><a href="{{ route('home') }}#customization" class="hover:text-white">{{ $homeContent->get('nav.customization') }}</a></li>
                     <li><a href="{{ route('home') }}#terms" class="hover:text-white">{{ $homeContent->get('nav.terms') }}</a></li>
                 </ul>
             </div>

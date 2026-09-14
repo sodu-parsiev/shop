@@ -11,7 +11,6 @@
         <nav class="hidden items-center gap-8 text-sm font-bold md:flex">
             <a href="{{ route('home') }}#catalog" class="hover:text-brand-pink">{{ $homeContent->get('nav.catalog') }}</a>
             <a href="{{ route('home') }}#production" class="hover:text-brand-pink">{{ $homeContent->get('nav.production') }}</a>
-            <a href="{{ route('home') }}#customization" class="hover:text-brand-pink">{{ $homeContent->get('nav.customization') }}</a>
             <a href="{{ route('home') }}#terms" class="hover:text-brand-pink">{{ $homeContent->get('nav.terms') }}</a>
             <a href="{{ $contactHref }}" class="hover:text-brand-pink">{{ $homeContent->get('nav.contacts') }}</a>
         </nav>
@@ -47,7 +46,6 @@
         >
             <a href="{{ route('home') }}#catalog" @click="open = false">{{ $homeContent->get('nav.catalog') }}</a>
             <a href="{{ route('home') }}#production" @click="open = false">{{ $homeContent->get('nav.production') }}</a>
-            <a href="{{ route('home') }}#customization" @click="open = false">{{ $homeContent->get('nav.customization') }}</a>
             <a href="{{ route('home') }}#terms" @click="open = false">{{ $homeContent->get('nav.terms') }}</a>
             <a href="{{ $contactHref }}" @click="open = false">{{ $homeContent->get('nav.contacts') }}</a>
         </div>

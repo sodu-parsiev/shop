@@ -7,7 +7,6 @@
         @include('storefront.partials.catalog')
         @include('storefront.partials.for-sellers')
         @include('storefront.partials.production')
-        @include('storefront.partials.customization')
         @include('storefront.partials.terms-faq')
         @include('storefront.partials.cta-form')
     </main>

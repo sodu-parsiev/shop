@@ -195,6 +195,7 @@ class ManageHomePageContent extends Page
                                 TextInput::make('sellers.heading')->label('Заголовок'),
                                 TextInput::make('sellers.subheading')->label('Подзаголовок'),
                                 Textarea::make('sellers.intro')->label('Интро')->columnSpanFull(),
+                                Textarea::make('sellers.customization_note')->label('Заметка о нанесении')->columnSpanFull(),
                                 TextInput::make('sellers.cta')->label('Кнопка'),
                                 TextInput::make('sellers.caption')->label('Подпись внизу'),
                                 Repeater::make('sellers.items')
@@ -228,17 +229,7 @@ class ManageHomePageContent extends Page
                                     ->itemLabel(fn (array $state): ?string => $state['title'] ?? null),
                             ]),
 
-                        Tab::make('05 · Печать и кастомизация')
-                            ->icon(Heroicon::OutlinedPrinter)
-                            ->schema([
-                                TextInput::make('customization_section.eyebrow')->label('Надпись рядом с номером секции'),
-                                TextInput::make('customization_section.heading')->label('Заголовок'),
-                                TextInput::make('customization_section.heading_accent')->label('Заголовок (акцент)'),
-                                TextInput::make('customization_section.cta')->label('Кнопка на выделенной карточке'),
-                            ])
-                            ->columns(2),
-
-                        Tab::make('06 · Условия сотрудничества')
+                        Tab::make('05 · Условия сотрудничества')
                             ->icon(Heroicon::OutlinedCheckBadge)
                             ->schema([
                                 TextInput::make('terms.eyebrow')->label('Надпись рядом с номером секции'),
@@ -278,7 +269,7 @@ class ManageHomePageContent extends Page
                             ])
                             ->columns(2),
 
-                        Tab::make('07 · Начать сотрудничество')
+                        Tab::make('06 · Начать сотрудничество')
                             ->icon(Heroicon::OutlinedMegaphone)
                             ->schema([
                                 TextInput::make('cta_section.eyebrow')->label('Надпись рядом с номером секции'),

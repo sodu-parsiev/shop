@@ -1,7 +1,7 @@
 <section id="terms" class="border-b border-brand-black/10">
     <div class="bg-brand-black py-16 text-white lg:py-28">
         <div class="storefront-shell">
-            <x-storefront.section-label number="06">{{ $homeContent->get('terms.eyebrow') }}</x-storefront.section-label>
+            <x-storefront.section-label number="05">{{ $homeContent->get('terms.eyebrow') }}</x-storefront.section-label>
 
             <h2 class="mt-6 max-w-[960px] text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[78px]">
                 {{ $homeContent->get('terms.heading_main') }}
