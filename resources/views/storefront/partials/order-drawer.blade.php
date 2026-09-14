@@ -37,7 +37,7 @@
                             <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>
                             <p class="mt-1 text-xs font-bold text-brand-black/70">
                                 <span x-text="$store.orderBuilder.priceFor(line)"></span>
-                                <span class="font-normal text-brand-black/45"> · чистый текстиль</span>
+                                <span class="font-normal text-brand-black/45"> · бланковый текстиль</span>
                             </p>
                             <div class="mt-2 space-y-2" x-show="line.availableColors?.length || line.availableSizes?.length || line.availableDensities?.length">
                                 <template x-if="line.availableColors?.length">

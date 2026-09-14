@@ -21,7 +21,7 @@ test('catalog seeder creates the real price list products with tiers and density
     expect($product->name)->toBe('Базовая футболка 140-150 гр');
     expect($product->moq)->toBe(10);
     expect($product->densities->pluck('name')->all())->toBe(['140-150 гр']);
-    expect($product->priceTiers)->toHaveCount(6);
+    expect($product->priceTiers)->toHaveCount(4);
 
     $this->assertDatabaseHas('product_price_tiers', [
         'product_id' => $product->id,

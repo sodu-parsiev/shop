@@ -15,7 +15,7 @@
     $activeColors = $colors->where('is_active', true)->values();
     $activeSizes = $product->sizes->where('is_active', true)->values();
     $activeDensities = $densities->where('is_active', true)->values();
-    $priceNote = $product->hasPriceTiers() ? 'чистый текстиль, без нанесения' : 'уточнит менеджер';
+    $priceNote = $product->hasPriceTiers() ? 'бланковый текстиль' : 'уточнит менеджер';
 @endphp
 
 <article

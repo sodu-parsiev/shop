@@ -2,7 +2,7 @@ import Alpine from 'alpinejs';
 import './animations';
 
 const ATTRIBUTION_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
-const DEFAULT_ORDER_QUANTITIES = [10, 100, 500, 1000, 5000, 10000];
+const DEFAULT_ORDER_QUANTITIES = [100, 500, 1000, 5000];
 
 window.storefrontAnalytics = window.storefrontAnalytics || {
     track(event, payload = {}) {
@@ -72,7 +72,7 @@ function orderQuantitiesFor(product) {
     return quantities.length > 0 ? quantities : DEFAULT_ORDER_QUANTITIES;
 }
 
-function normalizeOrderQuantity(value, allowedQuantities = DEFAULT_ORDER_QUANTITIES, minimum = 10) {
+function normalizeOrderQuantity(value, allowedQuantities = DEFAULT_ORDER_QUANTITIES, minimum = 100) {
     const quantities = sortedUniqueNumbers(allowedQuantities).filter((quantity) => quantity >= minimum);
     const fallback = quantities[0] || minimum;
     const requested = Number(value) || fallback;
@@ -85,16 +85,16 @@ function normalizeOrderQuantity(value, allowedQuantities = DEFAULT_ORDER_QUANTIT
 }
 
 document.addEventListener('alpine:init', () => {
-    Alpine.store('volume', { selected: '10' });
+    Alpine.store('volume', { selected: '100' });
     Alpine.store('attribution', currentAttribution());
 
     Alpine.store('orderBuilder', {
         drawerOpen: false,
         lines: [],
-        quantity: 10,
+        quantity: 100,
         addProduct(product) {
             const priceQuantities = orderQuantitiesFor(product);
-            const moq = Number(product.moq) || priceQuantities[0] || 10;
+            const moq = Number(product.moq) || priceQuantities[0] || 100;
             const quantity = normalizeOrderQuantity(this.quantity, priceQuantities, moq);
             const productId = Number(product.id);
             const existing = this.lines.find((line) => line.product_id === productId);

@@ -26,7 +26,7 @@ class ProductPriceTier extends Model
     /**
      * @var array<int, int>
      */
-    private const PUBLIC_QUANTITIES = [10, 100, 500, 1000, 5000, 10000];
+    private const PUBLIC_QUANTITIES = [100, 500, 1000, 5000];
 
     protected function casts(): array
     {

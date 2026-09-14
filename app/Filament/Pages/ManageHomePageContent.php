@@ -143,6 +143,7 @@ class ManageHomePageContent extends Page
                                 TextInput::make('catalog.eyebrow')->label('Надпись рядом с номером секции'),
                                 TextInput::make('catalog.heading')->label('Заголовок'),
                                 TextInput::make('catalog.heading_accent')->label('Заголовок (акцент)'),
+                                Textarea::make('catalog.subcopy')->label('Подзаголовок')->columnSpanFull(),
                                 TextInput::make('catalog.count_label')->label('Подпись количества моделей'),
                                 TextInput::make('catalog.availability_all_label')->label('Фильтр наличия: «Все модели»'),
                                 TextInput::make('catalog.availability_stock_label')->label('Фильтр наличия: «На складе»'),

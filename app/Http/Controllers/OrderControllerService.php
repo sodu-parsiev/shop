@@ -107,7 +107,7 @@ class OrderControllerService
                 'currency' => $priceTier?->currency,
                 'price_quantity_tier' => $priceTier?->quantity,
                 'price_note' => $priceTier
-                    ? 'Чистый текстиль, без нанесения'
+                    ? 'Бланковый текстиль'
                     : 'Цена по запросу',
                 'preferred_density' => $this->nullableString($line['density'] ?? null),
                 'preferred_size' => $this->nullableString($line['size'] ?? null),

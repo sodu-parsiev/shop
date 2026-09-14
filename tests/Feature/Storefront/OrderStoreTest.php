@@ -78,7 +78,7 @@ test('a valid submission creates an order with request number, contact fields, a
     expect($order->lines->first()->unit_price)->toBe('2.12');
     expect($order->lines->first()->currency)->toBe('USD');
     expect($order->lines->first()->price_quantity_tier)->toBe(5000);
-    expect($order->lines->first()->price_note)->toBe('Чистый текстиль, без нанесения');
+    expect($order->lines->first()->price_note)->toBe('Бланковый текстиль');
 });
 
 test('volume without a comment composes a message with just the volume label', function () {
@@ -90,7 +90,7 @@ test('volume without a comment composes a message with just the volume label', f
 
     $this->post(route('orders.store'), validOrderPayload($product, [
         'message' => null,
-        'volume' => '10',
+        'volume' => '100',
         'order_lines' => [
             [
                 'product_id' => $product->id,
@@ -101,7 +101,7 @@ test('volume without a comment composes a message with just the volume label', f
 
     $order = Order::query()->latest('id')->first();
 
-    expect($order->message)->toBe('10 шт.');
+    expect($order->message)->toBe('100 шт.');
 });
 
 test('missing required fields fail validation and create no order', function () {
@@ -189,17 +189,17 @@ test('order line quantity must be one of the public price tiers', function () {
 
 test('an order line for an unpriced public product stores no price snapshot', function () {
     $product = Product::factory()->create([
-        'moq' => 10,
+        'moq' => 100,
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
 
     $this->post(route('orders.store'), validOrderPayload($product, [
-        'volume' => '10',
+        'volume' => '100',
         'order_lines' => [
             [
                 'product_id' => $product->id,
-                'quantity' => 10,
+                'quantity' => 100,
             ],
         ],
     ]));

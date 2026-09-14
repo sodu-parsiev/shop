@@ -81,8 +81,8 @@ class CatalogSeeder extends Seeder
                     'featured' => $sortOrder < 6,
                     'show_on_landing' => true,
                     'sort_order' => $sortOrder,
-                    'meta_title' => $row['name'].' — чистый текстиль оптом',
-                    'meta_description' => $row['short_description'].' Цены указаны за чистый текстиль без нанесения.',
+                    'meta_title' => $row['name'].' — бланковый текстиль оптом',
+                    'meta_description' => $row['short_description'].' Цены указаны за бланковый текстиль.',
                     'canonical_url' => null,
                     'og_image' => null,
                     'cover_image' => $row['cover_image'],
@@ -385,8 +385,8 @@ class CatalogSeeder extends Seeder
         array $sizeTable = [],
     ): array {
         $shortDescription = $density
-            ? "{$name}: чистый текстиль без нанесения, плотность {$density}."
-            : "{$name}: чистый текстиль без нанесения.";
+            ? "{$name}: бланковый текстиль, плотность {$density}."
+            : "{$name}: бланковый текстиль.";
 
         return [
             'slug' => $slug,

@@ -17,6 +17,9 @@
                     {{ $homeContent->get('catalog.heading') }}
                     <span class="text-brand-pink">{{ $homeContent->get('catalog.heading_accent') }}</span>
                 </h2>
+                <p class="mt-4 max-w-[640px] text-base leading-relaxed text-white/70 sm:text-lg">
+                    {{ $homeContent->get('catalog.subcopy') }}
+                </p>
             </div>
             <p class="text-sm font-bold tracking-wide uppercase text-white/40" x-text="visibleCountLabel()">{{ $homeContent->get('catalog.count_label') }}</p>
         </div>

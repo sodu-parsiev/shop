@@ -30,7 +30,7 @@ class OrderLineFactory extends Factory
             'unit_price' => fake()->optional()->randomFloat(2, 1, 15),
             'currency' => 'USD',
             'price_quantity_tier' => 5000,
-            'price_note' => 'Чистый текстиль, без нанесения',
+            'price_note' => 'Бланковый текстиль',
             'preferred_density' => fake()->optional()->randomElement(['180 gsm', '200 gsm', '240 gsm']),
             'preferred_size' => fake()->optional()->randomElement(['XS–XL', 'S–2XL']),
             'preferred_color' => fake()->optional()->randomElement(['Белый', 'Чёрный', 'Цвет по ТЗ']),

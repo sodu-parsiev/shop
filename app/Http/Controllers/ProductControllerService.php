@@ -143,7 +143,7 @@ class ProductControllerService
             ['name' => 'Размеры', 'value' => $product->sizes->pluck('name')->implode(', ')],
             ['name' => 'Цвета', 'value' => $product->colors->pluck('name')->implode(', ')],
             ['name' => 'Минимальная партия', 'value' => number_format($product->moq, 0, ',', ' ').' шт.'],
-            ['name' => 'Цена чистого текстиля', 'value' => $product->startingPriceLabel()],
+            ['name' => 'Цена бланкового текстиля', 'value' => $product->startingPriceLabel()],
         ])
             ->filter(fn (array $property): bool => filled($property['value']))
             ->map(fn (array $property): array => [
