@@ -1,7 +1,10 @@
 #!/bin/bash
 # Run this from your OWN machine (not the VPS) to trigger a deployment.
 #
-# Exists because the VPS (Timeweb, Moscow) has an intermittently unreachable
+# Exists because the VPS (Timeweb, Amsterdam — confirmed via the box's own
+# hostname "ams-1-vm-rsrb" and outbound geo-lookup, not just external IP
+# geolocation; NOT in the RF, relevant for 242-ФЗ data localization) has an
+# intermittently unreachable
 # network path lasting minutes at a time — GitHub Actions' hosted runners hit
 # it just as often as anywhere else and have no one watching to retry past a
 # bad window. Running from a machine you control lets you see what's
