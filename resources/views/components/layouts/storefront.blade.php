@@ -114,5 +114,9 @@
     </head>
     <body class="overflow-x-hidden antialiased bg-brand-cream text-brand-black">
         {{ $slot }}
+
+        @if ($homeContent)
+            @include('storefront.partials.floating-messengers')
+        @endif
     </body>
 </html>

@@ -10,6 +10,7 @@ use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -280,6 +281,19 @@ class ManageHomePageContent extends Page
                                 TextInput::make('cta_section.email')->label('Email'),
                                 TextInput::make('cta_section.address_label')->label('Подпись поля Адрес'),
                                 TextInput::make('cta_section.address')->label('Адрес'),
+                            ])
+                            ->columns(2),
+
+                        Tab::make('Мессенджеры')
+                            ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                            ->schema([
+                                $this->hint('Плавающие кнопки мессенджеров в углу сайта. Кнопка появляется только если включена и заполнено значение.'),
+                                Toggle::make('messengers.whatsapp.enabled')->label('WhatsApp — показывать'),
+                                TextInput::make('messengers.whatsapp.value')->label('WhatsApp — номер телефона (только цифры, с кодом страны)')->placeholder('79130651111'),
+                                Toggle::make('messengers.telegram.enabled')->label('Telegram — показывать'),
+                                TextInput::make('messengers.telegram.value')->label('Telegram — username (без @, не номер телефона)')->placeholder('username'),
+                                Toggle::make('messengers.max.enabled')->label('MAX — показывать'),
+                                TextInput::make('messengers.max.value')->label('MAX — username профиля (не номер телефона)')->placeholder('username'),
                             ])
                             ->columns(2),
 

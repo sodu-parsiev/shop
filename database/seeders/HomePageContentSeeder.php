@@ -181,6 +181,11 @@ class HomePageContentSeeder extends Seeder
                 'address_label' => 'Адрес:',
                 'address' => 'Московская область, Котельники, Дзержинское шоссе, 13',
             ],
+            'messengers' => [
+                'whatsapp' => ['enabled' => false, 'value' => ''],
+                'telegram' => ['enabled' => false, 'value' => ''],
+                'max' => ['enabled' => false, 'value' => ''],
+            ],
             'form' => [
                 'company' => 'КОМПАНИЯ',
                 'contact_person' => 'КОНТАКТНОЕ ЛИЦО',
