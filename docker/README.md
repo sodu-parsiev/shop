@@ -61,9 +61,9 @@ production and vice versa:
   assets, final PHP-FPM image with app source baked in; no bind mounts).
 - `docker/nginx/prod.conf` — serves any hostname (`default_server`);
   HTTP redirects to HTTPS, TLS via the Let's Encrypt cert from Certbot.
-- `docker/docker-compose.prod.yml` — `nginx` (published on `:80`) + `app` +
-  `mysql` (both internal-only), named volumes for MySQL data and Laravel
-  `storage/`.
+- `docker/docker-compose.prod.yml` — `nginx` (published on `:80`) + `app`
+  (internal-only), named volumes for Laravel `storage/`. MySQL is **not**
+  part of this stack — see "External database" below.
 - `docker/scripts/deploy.sh` / `docker/scripts/healthcheck.sh` — run on the
   VPS itself; build, apply, migrate, and verify a deployment.
 - `docker/scripts/trigger-deploy.sh` — **run this from your own machine to
@@ -104,10 +104,10 @@ exist on the box. To stand up a brand-new VPS as `DEPLOY_HOST`:
 3. `git clone https://github.com/sodu-parsiev/shop.git /storage/www/app`
    (public repo, no deploy key needed for the clone itself).
 4. Create `/storage/www/app/.env` (not committed — copy `.env.example` and
-   set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, generated
-   `DB_PASSWORD`/`DB_ROOT_PASSWORD`, and **`APP_KEY`** — generate one
-   locally with `php artisan key:generate --show` and paste it in;
-   `entrypoint.prod.sh` does not generate one itself, and an empty
+   set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, the external
+   database credentials (see "External database" below), and **`APP_KEY`**
+   — generate one locally with `php artisan key:generate --show` and paste
+   it in; `entrypoint.prod.sh` does not generate one itself, and an empty
    `APP_KEY` passes the container healthcheck/`/up` route while every real
    page 500s).
 5. Run a first deploy (`trigger-deploy.sh` from your machine, or
@@ -123,3 +123,43 @@ exist on the box. To stand up a brand-new VPS as `DEPLOY_HOST`:
    (`docker compose ... up -d --force-recreate nginx`).
 7. Add a cron entry for `docker/scripts/renew-cert.sh` (twice daily, per
    Certbot's own recommendation).
+
+### External database
+
+MySQL runs on a separate, dedicated server physically located in Russia
+(not in this compose stack, not co-located with the app), to satisfy 152-FZ
+data-localization requirements — personal data of RF citizens must be
+stored on servers inside Russia. The Amsterdam app server connects to it
+over the network. Required `.env` keys:
+
+```
+DB_HOST=<RF server host/IP>
+DB_PORT=<RF server port, verify in the hosting panel — not necessarily 3306>
+DB_DATABASE=<db name>
+DB_USERNAME=<db user>
+DB_PASSWORD=<db password>
+```
+
+The DB user's auth plugin is `caching_sha2_password` (MySQL 8's default,
+shown as "SHA-2" in the panel). PHP's `pdo_mysql` (built on mysqlnd, as
+used by this app's PHP-FPM image and confirmed against the local dev
+MySQL 8 container, which uses the same default) handles the RSA
+public-key exchange for this plugin automatically over a plain
+connection — no extra PDO option is needed, and no such option exists for
+`pdo_mysql` (only `Mysql::ATTR_SERVER_PUBLIC_KEY`, which takes a PEM file
+path and is only needed if the server has RSA auto-generation disabled).
+If the pre-flight connectivity test hits an authentication/public-key
+error, the fix is either that PEM file from the provider or asking them to
+switch the user to `mysql_native_password`. If the provider ever adds TLS
+support, set `MYSQL_ATTR_SSL_CA` to a CA bundle path — `config/database.php`
+already wires it up, unused until set.
+
+Known limitation: this provider only exposes a hosting control panel (no
+SSH/root on the DB server), so there is no way to build a self-managed
+encrypted tunnel (stunnel/WireGuard) to it. The DB connection is
+unencrypted over the public internet between Amsterdam and Russia. Revisit
+with the provider or a different hosting product if this needs hardening.
+
+Since MySQL isn't in this compose file, `docker compose ... up` doesn't
+wait on it before starting `app` — `deploy.sh`'s `php artisan migrate --force`
+retry loop is what absorbs a slow/unreachable DB on boot.
