@@ -121,6 +121,15 @@ exist on the box. To stand up a brand-new VPS as `DEPLOY_HOST`:
    `git reset --hard` replaces the file, so nginx keeps serving the old
    config until its container is recreated
    (`docker compose ... up -d --force-recreate nginx`).
+
+   The same `--force-recreate nginx` is also needed any time the `app`
+   container gets recreated: nginx resolves `app`'s IP once at
+   startup/reload and won't notice if it changes (e.g. a service being
+   added/removed shifts the `internal` network's IP allocation) — the
+   symptom is `connect() failed (113: Host is unreachable)` / `502` in
+   nginx's logs while `app` itself reports healthy. `deploy.sh` now does
+   this automatically after every deploy, so this only bites on manual
+   `docker compose up` runs outside that script.
 7. Add a cron entry for `docker/scripts/renew-cert.sh` (twice daily, per
    Certbot's own recommendation).
 

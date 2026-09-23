@@ -20,6 +20,12 @@ $COMPOSE build
 echo "==> Applying deployment"
 $COMPOSE up -d --remove-orphans
 
+# nginx resolves `app`'s IP once at startup/reload and doesn't notice if the
+# app container gets recreated with a different IP (e.g. a service being
+# added/removed shifts the network's IP allocation) — force a fresh restart
+# every deploy so it can't silently keep proxying to a dead IP.
+$COMPOSE up -d --force-recreate nginx
+
 echo "==> Waiting for app container to accept exec"
 for i in $(seq 1 15); do
     if $COMPOSE exec -T app php -v >/dev/null 2>&1; then
