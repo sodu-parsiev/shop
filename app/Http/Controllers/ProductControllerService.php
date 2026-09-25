@@ -6,7 +6,6 @@ use App\Enums\ProductStatus;
 use App\Models\Catalog\Product;
 use App\Models\Content\HomePageContent;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ProductControllerService
@@ -18,18 +17,6 @@ class ProductControllerService
     {
         abort_unless($product->status === ProductStatus::Active && $product->show_on_landing, 404);
 
-        return Cache::remember(
-            "storefront:product:{$product->getKey()}",
-            60,
-            fn (): array => $this->loadProductPageData($product),
-        );
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function loadProductPageData(Product $product): array
-    {
         $product->load(['category', 'colors', 'densities', 'sizes', 'images', 'customizationServices', 'priceTiers']);
 
         $homeContent = HomePageContent::query()->firstOrCreate(['id' => 1], ['content' => []]);
