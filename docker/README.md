@@ -169,6 +169,13 @@ encrypted tunnel (stunnel/WireGuard) to it. The DB connection is
 unencrypted over the public internet between Amsterdam and Russia. Revisit
 with the provider or a different hosting product if this needs hardening.
 
+**Keep `CACHE_STORE` and `SESSION_DRIVER` off `database`.** Since the DB
+moved off-box, every `database`-backed cache/session read or write pays the
+Amsterdam↔Russia round-trip — on every request, before any page logic runs.
+Use `file` (the `.env.example` default; no extra infrastructure needed,
+since `storage/` is already a persistent volume in
+`docker-compose.prod.yml`) instead.
+
 Since MySQL isn't in this compose file, `docker compose ... up` doesn't
 wait on it before starting `app` — `deploy.sh`'s `php artisan migrate --force`
 retry loop is what absorbs a slow/unreachable DB on boot.

@@ -69,7 +69,7 @@ class OrderControllerService
             return $order->load('lines');
         });
 
-        $this->telegramNotifier->notifyOrderCreated($order);
+        defer(fn () => $this->telegramNotifier->notifyOrderCreated($order));
 
         return $order;
     }

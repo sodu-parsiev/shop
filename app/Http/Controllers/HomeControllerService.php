@@ -12,6 +12,7 @@ use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class HomeControllerService
 {
@@ -28,6 +29,23 @@ class HomeControllerService
      * }
      */
     public function getHomePageData(): array
+    {
+        return Cache::remember('storefront:home', 60, fn (): array => $this->loadHomePageData());
+    }
+
+    /**
+     * @return array{
+     *     products: Collection<int, Product>,
+     *     categories: Collection<int, Category>,
+     *     colors: Collection<int, Color>,
+     *     densities: Collection<int, Density>,
+     *     sizes: Collection<int, Size>,
+     *     customizationServices: Collection<int, CustomizationService>,
+     *     faqs: Collection<int, Faq>,
+     *     homeContent: HomePageContent,
+     * }
+     */
+    private function loadHomePageData(): array
     {
         $products = Product::query()
             ->with(['category', 'colors', 'densities', 'sizes', 'images', 'priceTiers'])
