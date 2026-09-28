@@ -57,6 +57,7 @@ class StoreOrderRequest extends FormRequest
             'utm_campaign' => ['nullable', 'string', 'max:255'],
             'utm_content' => ['nullable', 'string', 'max:255'],
             'utm_term' => ['nullable', 'string', 'max:255'],
+            'yclid' => ['nullable', 'string', 'max:255'],
             'order_lines' => ['required', 'array', 'min:1', 'max:20'],
             'order_lines.*' => ['array'],
             'order_lines.*.product_id' => ['required', 'integer', 'distinct'],

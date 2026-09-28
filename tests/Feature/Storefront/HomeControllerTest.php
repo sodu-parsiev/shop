@@ -16,6 +16,31 @@ test('it returns a successful response', function () {
     $this->get('/')->assertStatus(200);
 });
 
+test('the yandex metrika snippet is absent outside production', function () {
+    config(['services.yandex_metrika.counter_id' => '113052377']);
+    app()->detectEnvironment(fn () => 'testing');
+
+    $this->get('/')->assertDontSee('mc.yandex.ru', false);
+});
+
+test('the yandex metrika snippet is absent in production without a counter id configured', function () {
+    config(['services.yandex_metrika.counter_id' => null]);
+    app()->detectEnvironment(fn () => 'production');
+
+    $this->get('/')->assertDontSee('mc.yandex.ru', false);
+});
+
+test('the yandex metrika snippet renders in production with a counter id configured', function () {
+    config(['services.yandex_metrika.counter_id' => '113052377']);
+    app()->detectEnvironment(fn () => 'production');
+
+    $response = $this->get('/');
+
+    $response->assertSee('mc.yandex.ru', false);
+    $response->assertSee('ym(113052377, "init"', false);
+    $response->assertSee('webvisor: false', false);
+});
+
 test('it shows products flagged to show on landing and active', function () {
     $visible = Product::factory()->create([
         'name' => 'Базовая футболка — белая',

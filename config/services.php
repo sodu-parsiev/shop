@@ -40,6 +40,10 @@ return [
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
+    'yandex_metrika' => [
+        'counter_id' => env('YANDEX_METRIKA_COUNTER_ID'),
+    ],
+
     'central_bank' => [
         'daily_rates_url' => env('CBR_DAILY_RATES_URL', 'https://www.cbr.ru/scripts/XML_daily.asp'),
         'rate_cache_ttl' => (int) env('CBR_RATE_CACHE_TTL', 86400),

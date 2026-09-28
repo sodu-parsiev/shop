@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContactMethod;
 use App\Enums\OrderStatus;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Catalog\Product;
@@ -59,6 +60,7 @@ class OrderControllerService
                 'utm_campaign' => $data['utm_campaign'] ?? null,
                 'utm_content' => $data['utm_content'] ?? null,
                 'utm_term' => $data['utm_term'] ?? null,
+                'yclid' => $data['yclid'] ?? null,
                 'status' => OrderStatus::New,
             ]);
 
@@ -72,6 +74,27 @@ class OrderControllerService
         defer(fn () => $this->telegramNotifier->notifyOrderCreated($order));
 
         return $order;
+    }
+
+    /**
+     * Whitelisted, PII-free params for the `lead_submitted` analytics goal.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string>
+     */
+    public function leadEventParams(array $validated): array
+    {
+        $volume = (string) ($validated['volume'] ?? '');
+        $contactMethod = $validated['preferred_contact_method'] ?? null;
+
+        return array_filter([
+            'form_type' => 'price_request',
+            'placement' => 'contacts',
+            'quantity_bucket' => array_key_exists($volume, self::VOLUME_LABELS) ? $volume : 'other',
+            'contact_method' => in_array($contactMethod, [ContactMethod::Phone->value, ContactMethod::Email->value], true)
+                ? $contactMethod
+                : null,
+        ], fn ($value) => $value !== null);
     }
 
     /**

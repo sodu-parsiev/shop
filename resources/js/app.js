@@ -1,8 +1,20 @@
 import Alpine from 'alpinejs';
 import './animations';
 
-const ATTRIBUTION_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+const ATTRIBUTION_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid'];
 const DEFAULT_ORDER_QUANTITIES = [100, 500, 1000, 5000];
+
+// Yandex Metrika goals already created for this counter — only these reach `reachGoal`.
+const YM_GOALS = new Set([
+    'lead_submitted',
+    'lead_form_started',
+    'price_request_clicked',
+    'product_viewed',
+    'product_inquiry_clicked',
+    'inquiry_opened',
+    'whatsapp_clicked',
+    'email_clicked',
+]);
 
 window.storefrontAnalytics = window.storefrontAnalytics || {
     track(event, payload = {}) {
@@ -14,8 +26,16 @@ window.storefrontAnalytics = window.storefrontAnalytics || {
             window.gtag('event', event, payload);
         }
 
-        if (typeof window.ym === 'function' && window.YM_COUNTER_ID) {
+        if (YM_GOALS.has(event) && typeof window.ym === 'function' && window.YM_COUNTER_ID) {
             window.ym(window.YM_COUNTER_ID, 'reachGoal', event, payload);
+        }
+
+        if (event === 'contact_click') {
+            if (payload.type === 'whatsapp') {
+                this.track('whatsapp_clicked');
+            } else if (payload.type === 'email') {
+                this.track('email_clicked');
+            }
         }
 
         window.dispatchEvent(new CustomEvent('storefront:analytics', { detail: data }));
@@ -123,7 +143,7 @@ document.addEventListener('alpine:init', () => {
         clear() {
             this.lines = [];
         },
-        addProduct(product) {
+        addProduct(product, placement = null) {
             const priceQuantities = orderQuantitiesFor(product);
             const moq = Number(product.moq) || priceQuantities[0] || 100;
             const quantity = normalizeOrderQuantity(this.quantity, priceQuantities, moq);
@@ -163,13 +183,26 @@ document.addEventListener('alpine:init', () => {
                 quantity,
             });
 
-            this.drawerOpen = true;
+            window.storefrontAnalytics.track('product_inquiry_clicked', {
+                product_id: productId,
+                category: product.category,
+            });
+
+            this._openDrawer(placement);
         },
         close() {
             this.drawerOpen = false;
         },
-        open() {
+        open(placement = null) {
+            this._openDrawer(placement);
+        },
+        _openDrawer(placement = null) {
+            const wasOpen = this.drawerOpen;
             this.drawerOpen = true;
+
+            if (!wasOpen) {
+                window.storefrontAnalytics.track('inquiry_opened', placement ? { placement } : {});
+            }
         },
         remove(productId) {
             const line = this.lines.find((item) => item.product_id === Number(productId));
@@ -256,7 +289,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.started = true;
-            window.storefrontAnalytics.track('form_start');
+            window.storefrontAnalytics.track('lead_form_started', { form_type: 'price_request', placement: 'contacts' });
         },
         submit(event) {
             if (this.submitting) {

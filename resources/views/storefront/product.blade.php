@@ -53,7 +53,7 @@
                 densityNames: @js($product->densities->pluck('name', 'id')),
                 priceLabelsByDensity: @js($startingLabelsByDensity),
             }"
-            x-init="storefrontAnalytics.track('product_view', { product_id: {{ $product->id }}, product_name: @js($product->name), category: @js($categoryLabel) })"
+            x-init="storefrontAnalytics.track('product_viewed', { product_id: {{ $product->id }}, category: @js($categoryLabel) })"
             class="bg-white py-10 text-brand-black lg:py-16"
         >
             <div class="storefront-shell">
@@ -181,13 +181,13 @@
                                     availableSizes: @js($activeSizes->pluck('name')),
                                     availableDensities: @js($activeDensities->pluck('name')),
                                     colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
-                                })"
+                                }, 'catalog')"
                                 class="inline-flex items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white"
                             >
                                 {{ $product->isInStock() ? $homeContent->get('catalog.cta_stock') : $homeContent->get('catalog.cta_made_to_order') }}
                                 <span aria-hidden="true">&#8599;&#65038;</span>
                             </button>
-                            <a href="#contacts" class="inline-flex items-center justify-center border border-brand-black px-6 py-4 text-sm font-bold">
+                            <a href="#contacts" @click="storefrontAnalytics.track('price_request_clicked', { placement: 'catalog' })" class="inline-flex items-center justify-center border border-brand-black px-6 py-4 text-sm font-bold">
                                 Перейти к форме
                             </a>
                         </div>

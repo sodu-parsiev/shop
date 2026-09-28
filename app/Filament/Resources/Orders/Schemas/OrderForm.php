@@ -84,6 +84,10 @@ class OrderForm
                             ->label(__('UTM term'))
                             ->disabled()
                             ->dehydrated(false),
+                        TextInput::make('yclid')
+                            ->label(__('Yandex Click ID'))
+                            ->disabled()
+                            ->dehydrated(false),
                         TextInput::make('consent_accepted_at')
                             ->label(__('Consent accepted at'))
                             ->disabled()

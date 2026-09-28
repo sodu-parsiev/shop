@@ -2,6 +2,7 @@
 
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
+use App\Http\Controllers\OrderControllerService;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
@@ -55,6 +56,13 @@ test('a valid submission creates an order with request number, contact fields, a
     $response->assertRedirect();
     $response->assertSessionHas('orderSubmitted', true);
     $response->assertSessionHas('orderRequestNumber');
+    $response->assertSessionHas('orderIsNew', true);
+    $response->assertSessionHas('leadEventParams', [
+        'form_type' => 'price_request',
+        'placement' => 'contacts',
+        'quantity_bucket' => '5000',
+        'contact_method' => 'phone',
+    ]);
 
     $order = Order::query()->with('lines')->latest('id')->first();
 
@@ -567,12 +575,43 @@ test('a duplicate submission token returns the existing order without creating a
     $payload = validOrderPayload($product, ['submission_token' => $token]);
 
     $first = $this->post(route('orders.store'), $payload);
+    $first->assertSessionHas('orderRequestNumber');
+    $first->assertSessionHas('orderIsNew', true);
+
     $requestNumber = Order::query()->firstOrFail()->request_number;
     $second = $this->post(route('orders.store'), $payload);
 
-    $first->assertSessionHas('orderRequestNumber');
     $second->assertSessionHas('orderRequestNumber', $requestNumber);
+    $second->assertSessionHas('orderIsNew', false);
     expect(Order::query()->count())->toBe(1);
+});
+
+test('lead event params omit contact_method for whatsapp and telegram preferences', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'preferred_contact_method' => 'whatsapp',
+    ]));
+
+    $response->assertSessionHas('leadEventParams', fn (array $params): bool => ! array_key_exists('contact_method', $params));
+});
+
+test('yclid is persisted on the order when present in the submission', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $this->post(route('orders.store'), validOrderPayload($product, [
+        'yclid' => 'abc123',
+    ]));
+
+    expect(Order::query()->latest('id')->firstOrFail()->yclid)->toBe('abc123');
 });
 
 test('honeypot field blocks spam submissions', function () {
@@ -715,3 +754,14 @@ test('a complete 10 or 11 digit phone number passes validation', function (strin
 
     $response->assertSessionDoesntHaveErrors('phone');
 })->with(['+7 999 123-45-67', '9991234567']);
+
+test('lead event params fall back to other for a volume outside the known buckets', function () {
+    $service = app(OrderControllerService::class);
+
+    $params = $service->leadEventParams([
+        'volume' => '250',
+        'preferred_contact_method' => 'email',
+    ]);
+
+    expect($params['quantity_bucket'])->toBe('other');
+});

@@ -20,7 +20,7 @@
             </div>
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="#contacts" class="inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
+                <a href="#contacts" @click="storefrontAnalytics.track('price_request_clicked', { placement: 'hero' })" class="inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
                     {{ $homeContent->get('hero.cta_primary') }}
                     <span aria-hidden="true">&#8599;&#65038;</span>
                 </a>

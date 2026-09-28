@@ -17,5 +17,6 @@ test('order exporter includes request contact and attribution fields', function 
         'utm_campaign',
         'source_url',
         'referrer_url',
+        'yclid',
     );
 });

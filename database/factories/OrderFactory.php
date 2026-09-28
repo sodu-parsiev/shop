@@ -37,6 +37,7 @@ class OrderFactory extends Factory
             'utm_campaign' => fake()->optional()->word(),
             'utm_content' => fake()->optional()->word(),
             'utm_term' => fake()->optional()->word(),
+            'yclid' => fake()->optional()->word(),
             'status' => fake()->randomElement(OrderStatus::cases()),
             'internal_notes' => null,
             'assigned_to' => null,

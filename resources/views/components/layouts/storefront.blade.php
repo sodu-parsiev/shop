@@ -109,10 +109,38 @@
             <meta name="twitter:image" content="{{ $ogImage }}">
         @endif
 
+        @if (app()->environment('production') && filled(config('services.yandex_metrika.counter_id')))
+            {{-- Yandex.Metrika counter --}}
+            <script type="text/javascript">
+                (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+                (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+                ym({{ (int) config('services.yandex_metrika.counter_id') }}, "init", {
+                    ssr: true,
+                    webvisor: false,
+                    clickmap: true,
+                    referrer: document.referrer,
+                    url: location.href,
+                    accurateTrackBounce: true,
+                    trackLinks: true
+                });
+
+                window.YM_COUNTER_ID = {{ (int) config('services.yandex_metrika.counter_id') }};
+            </script>
+            {{-- /Yandex.Metrika counter --}}
+        @endif
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script type="application/ld+json">@json($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)</script>
     </head>
     <body class="overflow-x-hidden antialiased bg-brand-cream text-brand-black">
+        @if (app()->environment('production') && filled(config('services.yandex_metrika.counter_id')))
+            <noscript><div><img src="https://mc.yandex.ru/watch/{{ (int) config('services.yandex_metrika.counter_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+        @endif
+
         {{ $slot }}
 
         @if ($homeContent)

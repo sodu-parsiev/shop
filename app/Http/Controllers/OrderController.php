@@ -17,6 +17,8 @@ class OrderController extends Controller
 
         return back()
             ->with('orderSubmitted', true)
-            ->with('orderRequestNumber', $order->request_number);
+            ->with('orderRequestNumber', $order->request_number)
+            ->with('orderIsNew', $order->wasRecentlyCreated)
+            ->with('leadEventParams', $this->service->leadEventParams($request->validated()));
     }
 }

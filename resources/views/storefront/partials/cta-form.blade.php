@@ -91,7 +91,7 @@
 
         <div class="bg-brand-cream p-6 sm:p-8 lg:p-10">
             @if (session('orderSubmitted'))
-                <div x-data x-init="storefrontAnalytics.track('form_success', { request_number: @js(session('orderRequestNumber')) }); $store.orderBuilder.clear()">
+                <div class="ym-hide-content" x-data x-init="@if (session('orderIsNew')) storefrontAnalytics.track('lead_submitted', @js(session('leadEventParams', []))); @endif $store.orderBuilder.clear()">
                     <p class="text-2xl font-normal text-brand-black">{{ $homeContent->get('form.success') }}</p>
                     @if (session('orderRequestNumber'))
                         <p class="mt-4 text-sm font-bold text-brand-black/60">
@@ -117,6 +117,7 @@
                     <input type="hidden" name="utm_campaign" :value="$store.attribution.utm_campaign">
                     <input type="hidden" name="utm_content" :value="$store.attribution.utm_content">
                     <input type="hidden" name="utm_term" :value="$store.attribution.utm_term">
+                    <input type="hidden" name="yclid" :value="$store.attribution.yclid">
 
                     <template x-for="(line, index) in $store.orderBuilder.lines" :key="line.product_id">
                         <div style="position: absolute;">
@@ -138,7 +139,7 @@
                                 </li>
                             </template>
                         </ul>
-                        <button type="button" class="mt-2 text-xs font-bold text-brand-pink" @click="$store.orderBuilder.open()">Изменить состав заявки</button>
+                        <button type="button" class="mt-2 text-xs font-bold text-brand-pink" @click="$store.orderBuilder.open('contacts')">Изменить состав заявки</button>
                     </div>
                     <p class="text-xs text-brand-black/50 sm:col-span-2" x-show="$store.orderBuilder.lines.length === 0" x-cloak>В заявке пока нет товаров — выберите их в каталоге.</p>
 
@@ -150,7 +151,7 @@
                             name="company"
                             value="{{ old('company') }}"
                             placeholder="Название компании или ИП"
-                            class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
+                            class="ym-disable-keys mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
                         >
                         @error('company')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -166,7 +167,7 @@
                             value="{{ old('customer_name') }}"
                             placeholder="Как к вам обращаться"
                             required
-                            class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
+                            class="ym-disable-keys mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
                         >
                         @error('customer_name')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -182,7 +183,7 @@
                             value="{{ old('phone') }}"
                             placeholder="+7 (___) ___-__-__"
                             required
-                            class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
+                            class="ym-disable-keys mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
                         >
                         @error('phone')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -198,7 +199,7 @@
                             value="{{ old('email') }}"
                             placeholder="name@company.ru"
                             required
-                            class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
+                            class="ym-disable-keys mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
                         >
                         @error('email')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -249,7 +250,7 @@
                             name="message"
                             rows="2"
                             placeholder="Комментарий к заказу, упаковке, маркировке или срокам"
-                            class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
+                            class="ym-disable-keys mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm placeholder:text-brand-black/30 focus:border-brand-pink focus:ring-0"
                         >{{ old('message') }}</textarea>
                         @error('message')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>

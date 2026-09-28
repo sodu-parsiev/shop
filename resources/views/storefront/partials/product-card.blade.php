@@ -129,7 +129,7 @@
                     availableSizes: @js($activeSizes->pluck('name')),
                     availableDensities: @js($activeDensities->pluck('name')),
                     colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
-                })"
+                }, 'catalog')"
                 class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-3 text-xs font-bold text-white sm:text-sm"
             >
                 {{ $inStock ? $homeContent->get('catalog.cta_stock') : $homeContent->get('catalog.cta_made_to_order') }}

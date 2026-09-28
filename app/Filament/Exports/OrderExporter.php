@@ -38,6 +38,8 @@ class OrderExporter extends Exporter
                 ->label(__('UTM medium')),
             ExportColumn::make('utm_campaign')
                 ->label(__('UTM campaign')),
+            ExportColumn::make('yclid')
+                ->label(__('Yandex Click ID')),
             ExportColumn::make('source_url')
                 ->label(__('Source URL')),
             ExportColumn::make('referrer_url')

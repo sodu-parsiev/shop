@@ -49,6 +49,9 @@ class OrdersTable
                 TextColumn::make('utm_source')
                     ->label(__('UTM source'))
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('yclid')
+                    ->label(__('Yandex Click ID'))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('assignedManager.name')
                     ->label(__('Assigned manager'))
                     ->placeholder(__('Unassigned')),

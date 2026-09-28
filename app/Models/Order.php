@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'utm_campaign',
     'utm_content',
     'utm_term',
+    'yclid',
     'status',
     'internal_notes',
     'assigned_to',
