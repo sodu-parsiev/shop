@@ -156,3 +156,34 @@ test('an inactive color attached to a product is not offered in the picker', fun
     $response->assertSee('value="Активный цвет"', false);
     $response->assertDontSee('value="Скрытый цвет"', false);
 });
+
+test('a cached product page response survives being read back from a real cache store', function () {
+    config(['cache.default' => 'database']);
+    Cache::put(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY, 80, now()->addDay());
+
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'name' => 'Футболка Test',
+        'slug' => 'cache-store-tee',
+        'status' => ProductStatus::Active,
+        'show_on_landing' => true,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 5000,
+        'unit_price' => 2.12,
+        'currency' => 'USD',
+    ]);
+    ProductImage::factory()->create(['product_id' => $product->id]);
+    $product->colors()->attach(Color::factory()->create());
+    $product->densities()->attach(Density::factory()->create());
+    $product->sizes()->attach(Size::factory()->create());
+    $product->customizationServices()->attach(CustomizationService::factory()->create());
+
+    $this->get($product->publicUrl())->assertOk()->assertSee($product->name);
+
+    // Second hit reads the cached value back through unserialize() — this is
+    // what caught the __PHP_Incomplete_Class regression the array store
+    // (phpunit.xml's default) can never catch, since it never serializes.
+    $this->get($product->publicUrl())->assertOk()->assertSee($product->name);
+});

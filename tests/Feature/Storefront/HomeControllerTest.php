@@ -200,3 +200,20 @@ test('it renders consent copy for older homepage content records', function () {
     $response->assertSee('Политика конфиденциальности', false);
     $response->assertSee('Согласие на обработку', false);
 });
+
+test('a cached homepage response survives being read back from a real cache store', function () {
+    config(['cache.default' => 'database']);
+
+    $product = Product::factory()->create([
+        'name' => 'Базовая футболка — белая',
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $this->get('/')->assertOk()->assertSee($product->name);
+
+    // Second hit reads the cached value back through unserialize() — this is
+    // what caught the __PHP_Incomplete_Class regression the array store
+    // (phpunit.xml's default) can never catch, since it never serializes.
+    $this->get('/')->assertOk()->assertSee($product->name);
+});

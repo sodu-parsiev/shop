@@ -1,5 +1,20 @@
 <?php
 
+use App\Enums\AvailabilityStatus;
+use App\Enums\ProductStatus;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Color;
+use App\Models\Catalog\CustomizationService;
+use App\Models\Catalog\Density;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductImage;
+use App\Models\Catalog\ProductPriceTier;
+use App\Models\Catalog\Size;
+use App\Models\Content\Faq;
+use App\Models\Content\HomePageContent;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 return [
@@ -131,6 +146,22 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Product::class,
+        Category::class,
+        Color::class,
+        Density::class,
+        Size::class,
+        CustomizationService::class,
+        ProductImage::class,
+        ProductPriceTier::class,
+        Faq::class,
+        HomePageContent::class,
+        ProductStatus::class,
+        AvailabilityStatus::class,
+        Pivot::class,
+        Collection::class,
+        Carbon::class,
+    ],
 
 ];
