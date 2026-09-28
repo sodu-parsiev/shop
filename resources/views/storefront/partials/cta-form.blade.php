@@ -10,38 +10,12 @@
             ->get()
             ->keyBy('id');
     $oldLinesForStore = $oldOrderLines
-        ->groupBy(fn (array $line): int => (int) $line['product_id'])
-        ->map(function (\Illuminate\Support\Collection $rows) use ($oldProducts): ?array {
-            $firstRow = $rows->first();
-            $product = $oldProducts->get((int) ($firstRow['product_id'] ?? 0));
+        ->map(function (array $line) use ($oldProducts): ?array {
+            $product = $oldProducts->get((int) ($line['product_id'] ?? 0));
 
             if (! $product) {
                 return null;
             }
-
-            $availableColors = $product->colors->where('is_active', true)->pluck('name')->values()->all();
-            $availableSizes = $product->sizes->where('is_active', true)->pluck('name')->values()->all();
-            $hasGrid = count($availableColors) > 0 && count($availableSizes) > 0;
-
-            $variantQuantities = null;
-
-            if ($hasGrid) {
-                $variantQuantities = [];
-
-                foreach ($rows as $row) {
-                    $color = trim((string) ($row['color'] ?? ''));
-                    $size = trim((string) ($row['size'] ?? ''));
-
-                    if ($color === '' || $size === '') {
-                        continue;
-                    }
-
-                    $variantQuantities[$color] ??= [];
-                    $variantQuantities[$color][$size] = (int) ($row['quantity'] ?? 0);
-                }
-            }
-
-            $totalQuantity = (int) $rows->sum(fn (array $row): int => (int) ($row['quantity'] ?? 0));
 
             return [
                 'product_id' => $product->id,
@@ -50,22 +24,21 @@
                 'availability' => $product->isInStock() ? 'На складе' : 'Под заказ',
                 'image' => $product->cover_image ?: asset('brand/catalog-white-v2.jpg'),
                 'moq' => $product->moq,
-                'quantity' => $totalQuantity > 0 ? $totalQuantity : $product->moq,
+                'quantity' => (int) ($line['quantity'] ?? $product->moq),
                 'priceTiers' => $product->formattedPriceTiersByQuantity(),
                 'priceTiersByDensity' => $product->priceTiersByDensity(),
                 'priceQuantities' => $product->availableOrderQuantities(),
                 'densityOptions' => $product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()->all(),
                 'densityId' => $product->isDensityPriced()
-                    ? ($product->densities->firstWhere('name', trim((string) ($firstRow['density'] ?? '')))?->id ?? $product->cheapestDensityId())
+                    ? ($product->densities->firstWhere('name', trim((string) ($line['density'] ?? '')))?->id ?? $product->cheapestDensityId())
                     : null,
-                'colors' => collect(explode(',', (string) ($firstRow['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'sizes' => collect(explode(',', (string) ($firstRow['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'densities' => collect(explode(',', (string) ($firstRow['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'availableColors' => $availableColors,
-                'availableSizes' => $availableSizes,
+                'colors' => collect(explode(',', (string) ($line['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'sizes' => collect(explode(',', (string) ($line['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'densities' => collect(explode(',', (string) ($line['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'availableColors' => $product->colors->where('is_active', true)->pluck('name')->values()->all(),
+                'availableSizes' => $product->sizes->where('is_active', true)->pluck('name')->values()->all(),
                 'availableDensities' => $product->densities->where('is_active', true)->pluck('name')->values()->all(),
                 'colorSwatches' => $product->colors->where('is_active', true)->pluck('hex_code', 'name')->all(),
-                'variantQuantities' => $variantQuantities,
             ];
         })
         ->filter()
@@ -145,13 +118,13 @@
                     <input type="hidden" name="utm_content" :value="$store.attribution.utm_content">
                     <input type="hidden" name="utm_term" :value="$store.attribution.utm_term">
 
-                    <template x-for="(row, index) in $store.orderBuilder.submissionLines()" :key="`${row.product_id}-${row.color}-${row.size}-${index}`">
+                    <template x-for="(line, index) in $store.orderBuilder.lines" :key="line.product_id">
                         <div style="position: absolute;">
-                            <input type="hidden" :name="`order_lines[${index}][product_id]`" :value="row.product_id">
-                            <input type="hidden" :name="`order_lines[${index}][quantity]`" :value="row.quantity">
-                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="row.density">
-                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="row.size">
-                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="row.color">
+                            <input type="hidden" :name="`order_lines[${index}][product_id]`" :value="line.product_id">
+                            <input type="hidden" :name="`order_lines[${index}][quantity]`" :value="line.quantity">
+                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="(line.densities || []).join(', ')">
+                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="(line.sizes || []).join(', ')">
+                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="(line.colors || []).join(', ')">
                         </div>
                     </template>
 
@@ -295,8 +268,6 @@
                     @error('consent')
                         <p class="text-xs text-red-600 sm:col-span-2">{{ $message }}</p>
                     @enderror
-
-                    <p class="text-xs font-bold text-red-600 sm:col-span-2" x-show="variantMismatch" x-cloak>Распределите количество по цвету и размеру полностью перед отправкой.</p>
 
                     <button type="submit" :disabled="submitting" class="flex w-full items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2">
                         <span x-text="submitting ? 'Отправляем...' : @js($homeContent->get('form.submit'))">{{ $homeContent->get('form.submit') }}</span>

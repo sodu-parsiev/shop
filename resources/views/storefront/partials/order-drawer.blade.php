@@ -40,7 +40,7 @@
                                 <span class="font-normal text-brand-black/45"> · бланковый текстиль</span>
                             </p>
                             <div class="mt-2 space-y-2" x-show="line.availableColors?.length || line.availableSizes?.length || line.availableDensities?.length">
-                                <template x-if="line.availableColors?.length && !line.variantQuantities">
+                                <template x-if="line.availableColors?.length">
                                     <div>
                                         <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Цвет</p>
                                         <div class="mt-1 flex flex-wrap gap-1.5">
@@ -62,7 +62,7 @@
                                         </div>
                                     </div>
                                 </template>
-                                <template x-if="line.availableSizes?.length && !line.variantQuantities">
+                                <template x-if="line.availableSizes?.length">
                                     <div>
                                         <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Размер</p>
                                         <div class="mt-1 flex flex-wrap gap-1.5">
@@ -77,49 +77,6 @@
                                                 </label>
                                             </template>
                                         </div>
-                                    </div>
-                                </template>
-                                <template x-if="line.variantQuantities">
-                                    <div>
-                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Количество по цвету и размеру</p>
-                                        <div class="mt-1 overflow-x-auto">
-                                            <table class="min-w-full border-collapse text-[11px]">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="p-1"></th>
-                                                        <template x-for="size in line.availableSizes" :key="size">
-                                                            <th class="p-1 text-center font-bold text-brand-black/50" x-text="size"></th>
-                                                        </template>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <template x-for="color in line.availableColors" :key="color">
-                                                        <tr>
-                                                            <th class="p-1 text-left font-bold whitespace-nowrap" x-text="color"></th>
-                                                            <template x-for="size in line.availableSizes" :key="size">
-                                                                <td class="p-1">
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        step="1"
-                                                                        inputmode="numeric"
-                                                                        class="w-14 border-2 border-brand-black bg-white px-1 py-1 text-center text-xs font-bold text-brand-black"
-                                                                        :value="line.variantQuantities[color]?.[size] ?? 0"
-                                                                        @change="$store.orderBuilder.updateVariantQuantity(line.product_id, color, size, $event.target.value)"
-                                                                    >
-                                                                </td>
-                                                            </template>
-                                                        </tr>
-                                                    </template>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <p
-                                            class="mt-2 text-xs font-bold"
-                                            :class="$store.orderBuilder.variantTotal(line) === line.quantity ? 'text-brand-black/60' : 'text-red-600'"
-                                        >
-                                            Распределено: <span x-text="$store.orderBuilder.variantTotal(line).toLocaleString('ru-RU')"></span> из <span x-text="line.quantity.toLocaleString('ru-RU')"></span> шт.
-                                        </p>
                                     </div>
                                 </template>
                                 <template x-if="!line.densityId && line.availableDensities?.length">
