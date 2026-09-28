@@ -225,7 +225,7 @@ test('order lines reject inactive products', function () {
     expect(Order::query()->count())->toBe(0);
 });
 
-test('a product can only be added once to the same order', function () {
+test('the same product/color/size combination can only be added once to the same order', function () {
     $product = Product::factory()->create([
         'moq' => 5000,
         'show_on_landing' => true,
@@ -234,12 +234,66 @@ test('a product can only be added once to the same order', function () {
 
     $response = $this->post(route('orders.store'), validOrderPayload($product, [
         'order_lines' => [
-            ['product_id' => $product->id, 'quantity' => 5000],
-            ['product_id' => $product->id, 'quantity' => 5000],
+            ['product_id' => $product->id, 'quantity' => 2500],
+            ['product_id' => $product->id, 'quantity' => 2500],
         ],
     ]));
 
-    $response->assertSessionHasErrors(['order_lines.0.product_id']);
+    $response->assertSessionHasErrors(['order_lines.1.product_id']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('the same product split across different colors sums to a valid tier and creates one line per color', function () {
+    $product = Product::factory()->create([
+        'moq' => 100,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    ProductPriceTier::factory()->create([
+        'product_id' => $product->id,
+        'quantity' => 100,
+        'unit_price' => 200,
+        'currency' => 'RUB',
+    ]);
+
+    $black = Color::factory()->create(['is_active' => true]);
+    $white = Color::factory()->create(['is_active' => true]);
+    $product->colors()->attach([$black->id, $white->id]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'volume' => '100',
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 60, 'color' => $black->name],
+            ['product_id' => $product->id, 'quantity' => 40, 'color' => $white->name],
+        ],
+    ]));
+
+    $response->assertSessionHasNoErrors();
+    $order = Order::query()->sole();
+    expect($order->lines()->count())->toBe(2);
+    expect($order->lines()->sum('quantity'))->toBe(100);
+    expect($order->lines()->pluck('unit_price')->unique()->all())->toBe(['200.00']);
+});
+
+test('a product split across colors/sizes that does not sum to a valid tier fails validation', function () {
+    $product = Product::factory()->create([
+        'moq' => 100,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $black = Color::factory()->create(['is_active' => true]);
+    $white = Color::factory()->create(['is_active' => true]);
+    $product->colors()->attach([$black->id, $white->id]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'order_lines' => [
+            ['product_id' => $product->id, 'quantity' => 60, 'color' => $black->name],
+            ['product_id' => $product->id, 'quantity' => 41, 'color' => $white->name],
+        ],
+    ]));
+
+    $response->assertSessionHasErrors(['order_lines.0.quantity']);
     expect(Order::query()->count())->toBe(0);
 });
 
@@ -671,3 +725,47 @@ test('order submission still succeeds when the Telegram API call fails', functio
     $response->assertSessionHas('orderSubmitted', true);
     expect(Order::query()->count())->toBe(1);
 });
+
+test('whatsapp and telegram are accepted as preferred contact methods', function (string $method) {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'preferred_contact_method' => $method,
+    ]));
+
+    $response->assertSessionHasNoErrors();
+    expect(Order::query()->sole()->preferred_contact_method)->toBe($method);
+})->with(['whatsapp', 'telegram']);
+
+test('a truncated phone number fails validation', function () {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'phone' => '+7 999',
+    ]));
+
+    $response->assertSessionHasErrors(['phone']);
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('a complete 10 or 11 digit phone number passes validation', function (string $phone) {
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product, [
+        'phone' => $phone,
+    ]));
+
+    $response->assertSessionDoesntHaveErrors('phone');
+})->with(['+7 999 123-45-67', '9991234567']);

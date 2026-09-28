@@ -27,7 +27,7 @@
 
                         <div class="mt-8 space-y-5 text-base leading-relaxed text-brand-black/70">
                             @foreach (preg_split('/\R{2,}/', trim((string) $page->body)) ?: [] as $paragraph)
-                                <p>{{ $paragraph }}</p>
+                                <p class="whitespace-pre-line">{{ $paragraph }}</p>
                             @endforeach
                         </div>
                     </article>

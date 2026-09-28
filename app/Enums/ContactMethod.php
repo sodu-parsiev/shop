@@ -8,12 +8,16 @@ enum ContactMethod: string implements HasLabel
 {
     case Phone = 'phone';
     case Email = 'email';
+    case Whatsapp = 'whatsapp';
+    case Telegram = 'telegram';
 
     public function label(): string
     {
         return match ($this) {
             self::Phone => __('Phone'),
             self::Email => __('Email'),
+            self::Whatsapp => 'WhatsApp',
+            self::Telegram => 'Telegram',
         };
     }
 

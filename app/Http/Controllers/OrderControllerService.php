@@ -7,6 +7,7 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Models\Catalog\Product;
 use App\Models\Order;
 use App\Services\TelegramOrderNotifier;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class OrderControllerService
@@ -89,6 +90,10 @@ class OrderControllerService
             ->get()
             ->keyBy('id');
 
+        $totalsByProduct = collect($lines)
+            ->groupBy(fn (array $line): int => (int) $line['product_id'])
+            ->map(fn (Collection $rows): int => (int) $rows->sum(fn (array $row): int => (int) $row['quantity']));
+
         foreach ($lines as $line) {
             /** @var Product $product */
             $product = $products->get($line['product_id']);
@@ -96,7 +101,8 @@ class OrderControllerService
             $densityId = $product->isDensityPriced()
                 ? $product->densities->firstWhere('name', $densityName)?->id
                 : null;
-            $priceTier = $product->priceTierForQuantity((int) $line['quantity'], $densityId);
+            $productTotal = $totalsByProduct->get((int) $line['product_id'], (int) $line['quantity']);
+            $priceTier = $product->priceTierForQuantity($productTotal, $densityId);
 
             $order->lines()->create([
                 'product_id' => $product->id,

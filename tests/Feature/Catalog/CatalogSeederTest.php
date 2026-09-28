@@ -76,9 +76,9 @@ test('catalog seeder consolidates densities per the assortment update', function
     $this->seed(CatalogSeeder::class);
 
     $densityBySlug = [
-        'kids-tee-175-185' => ['180 гр'],
-        'longsleeve-140-150' => ['180 гр'],
-        'hoodie-three-thread-260-280' => ['320 гр'],
+        'kids-tee-180' => ['180 гр'],
+        'longsleeve-180' => ['180 гр'],
+        'hoodie-three-thread-320' => ['320 гр'],
     ];
 
     foreach ($densityBySlug as $slug => $expectedDensities) {
@@ -101,7 +101,7 @@ test('catalog seeder trims the catalog to the final assortment', function () {
         expect(Product::query()->where('slug', $slug)->exists())->toBeFalse();
     }
 
-    $hoodie = Product::query()->with(['colors', 'priceTiers'])->where('slug', 'hoodie-three-thread-260-280')->firstOrFail();
+    $hoodie = Product::query()->with(['colors', 'priceTiers'])->where('slug', 'hoodie-three-thread-320')->firstOrFail();
     expect($hoodie->name)->toBe('Худи');
     expect($hoodie->colors->pluck('name')->all())->toBe(['Чёрный']);
     expect($hoodie->priceTierForQuantity(100)->unit_price)->toBe('11.94');
@@ -110,14 +110,14 @@ test('catalog seeder trims the catalog to the final assortment', function () {
     expect($basicTee->colors->pluck('name')->all())->toBe(['Белый', 'Чёрный']);
     expect($basicTee->colors->pluck('hex_code')->all())->toBe(['#FFFFFF', '#000000']);
 
-    foreach (['oversize-tee-180', 'kids-tee-175-185', 'longsleeve-140-150'] as $slug) {
+    foreach (['oversize-tee-180', 'kids-tee-180', 'longsleeve-180'] as $slug) {
         $product = Product::query()->with('colors')->where('slug', $slug)->firstOrFail();
 
         expect($product->colors->pluck('name')->all())->toBe(['Белый', 'Чёрный']);
     }
 
-    expect(Product::query()->where('slug', 'kids-tee-175-185')->value('name'))->toBe('Детская футболка');
-    expect(Product::query()->where('slug', 'longsleeve-140-150')->value('name'))->toBe('Лонгслив');
+    expect(Product::query()->where('slug', 'kids-tee-180')->value('name'))->toBe('Детская футболка');
+    expect(Product::query()->where('slug', 'longsleeve-180')->value('name'))->toBe('Лонгслив');
     expect(Product::query()->where('name', 'like', '%гр%')->count())->toBe(0);
 
     foreach (['baseball-cap', 'shopper'] as $slug) {
@@ -146,9 +146,12 @@ test('catalog seeder merges density-only tee families into single variant produc
     expect(Redirect::where('source_path', '/catalog/basic-tee-155-165')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
     expect(Redirect::where('source_path', '/catalog/basic-tee-175-185')->value('target_url'))->toBe('/catalog/basic-tee-140-150');
     expect(Redirect::where('source_path', '/catalog/oversize-tee-220-240')->value('target_url'))->toBe('/catalog/oversize-tee-180');
-    expect(Redirect::where('source_path', '/catalog/hoodie-two-thread-220-240')->value('target_url'))->toBe('/catalog/hoodie-three-thread-260-280');
+    expect(Redirect::where('source_path', '/catalog/hoodie-two-thread-220-240')->value('target_url'))->toBe('/catalog/hoodie-three-thread-320');
     expect(Redirect::where('source_path', '/catalog/women-tee-180')->value('target_url'))->toBe('/#catalog');
     expect(Redirect::where('source_path', '/catalog/sweatshirt-two-thread-220-240')->value('target_url'))->toBe('/#catalog');
+    expect(Redirect::where('source_path', '/catalog/kids-tee-175-185')->value('target_url'))->toBe('/catalog/kids-tee-180');
+    expect(Redirect::where('source_path', '/catalog/longsleeve-140-150')->value('target_url'))->toBe('/catalog/longsleeve-180');
+    expect(Redirect::where('source_path', '/catalog/hoodie-three-thread-260-280')->value('target_url'))->toBe('/catalog/hoodie-three-thread-320');
 });
 
 test('catalog seeder offers kids size 170 without a matching measurement row', function () {
@@ -156,7 +159,7 @@ test('catalog seeder offers kids size 170 without a matching measurement row', f
 
     $product = Product::query()
         ->with('sizes')
-        ->where('slug', 'kids-tee-175-185')
+        ->where('slug', 'kids-tee-180')
         ->firstOrFail();
 
     expect($product->sizes->pluck('name')->all())->toContain('170');

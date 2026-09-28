@@ -22,6 +22,32 @@ window.storefrontAnalytics = window.storefrontAnalytics || {
     },
 };
 
+const ORDER_DRAFT_STORAGE_KEY = 'storefront_order_draft';
+
+function loadOrderDraft() {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(ORDER_DRAFT_STORAGE_KEY) || '{}');
+
+        return {
+            lines: Array.isArray(parsed.lines) ? parsed.lines : [],
+            quantity: Number(parsed.quantity) || 100,
+        };
+    } catch {
+        return { lines: [], quantity: 100 };
+    }
+}
+
+function persistOrderDraft(state) {
+    try {
+        window.localStorage.setItem(ORDER_DRAFT_STORAGE_KEY, JSON.stringify({
+            lines: state.lines,
+            quantity: state.quantity,
+        }));
+    } catch {
+        // localStorage unavailable (private mode / quota) — draft simply won't persist.
+    }
+}
+
 function storedAttribution() {
     try {
         return JSON.parse(window.localStorage.getItem('storefront_attribution') || '{}');
@@ -72,6 +98,31 @@ function orderQuantitiesFor(product) {
     return quantities.length > 0 ? quantities : DEFAULT_ORDER_QUANTITIES;
 }
 
+function evenSplitVariantQuantities(colors, sizes, total) {
+    const cells = [];
+
+    colors.forEach((color) => sizes.forEach((size) => cells.push([color, size])));
+
+    const count = cells.length;
+    const base = count > 0 ? Math.floor(total / count) : 0;
+    const remainder = count > 0 ? total % count : 0;
+
+    const result = {};
+
+    cells.forEach(([color, size], index) => {
+        result[color] = result[color] || {};
+        result[color][size] = base + (index < remainder ? 1 : 0);
+    });
+
+    return result;
+}
+
+function variantQuantityTotal(variantQuantities) {
+    return Object.values(variantQuantities)
+        .flatMap((sizes) => Object.values(sizes))
+        .reduce((sum, quantity) => sum + (Number(quantity) || 0), 0);
+}
+
 function normalizeOrderQuantity(value, allowedQuantities = DEFAULT_ORDER_QUANTITIES, minimum = 100) {
     const quantities = sortedUniqueNumbers(allowedQuantities).filter((quantity) => quantity >= minimum);
     const fallback = quantities[0] || minimum;
@@ -88,10 +139,15 @@ document.addEventListener('alpine:init', () => {
     Alpine.store('volume', { selected: '100' });
     Alpine.store('attribution', currentAttribution());
 
+    const orderDraft = loadOrderDraft();
+
     Alpine.store('orderBuilder', {
         drawerOpen: false,
-        lines: [],
-        quantity: 100,
+        lines: orderDraft.lines,
+        quantity: orderDraft.quantity,
+        clear() {
+            this.lines = [];
+        },
         addProduct(product) {
             const priceQuantities = orderQuantitiesFor(product);
             const moq = Number(product.moq) || priceQuantities[0] || 100;
@@ -118,7 +174,12 @@ document.addEventListener('alpine:init', () => {
                 availableSizes: product.availableSizes ?? [],
                 availableDensities: product.availableDensities ?? [],
                 colorSwatches: product.colorSwatches ?? {},
+                variantQuantities: null,
             };
+
+            if (line.availableColors.length > 0 && line.availableSizes.length > 0) {
+                line.variantQuantities = evenSplitVariantQuantities(line.availableColors, line.availableSizes, line.quantity);
+            }
 
             if (existing) {
                 Object.assign(existing, line);
@@ -165,6 +226,56 @@ document.addEventListener('alpine:init', () => {
             }
 
             line.quantity = normalizeOrderQuantity(value, line.priceQuantities, line.moq);
+
+            if (line.availableColors.length > 0 && line.availableSizes.length > 0) {
+                line.variantQuantities = evenSplitVariantQuantities(line.availableColors, line.availableSizes, line.quantity);
+            }
+        },
+        updateVariantQuantity(productId, color, size, value) {
+            const line = this.lines.find((item) => item.product_id === Number(productId));
+
+            if (!line || !line.variantQuantities) {
+                return;
+            }
+
+            const quantity = Math.max(0, Math.trunc(Number(value)) || 0);
+
+            line.variantQuantities[color] = line.variantQuantities[color] || {};
+            line.variantQuantities[color][size] = quantity;
+        },
+        variantTotal(line) {
+            return line.variantQuantities ? variantQuantityTotal(line.variantQuantities) : line.quantity;
+        },
+        submissionLines() {
+            return this.lines.flatMap((line) => {
+                if (!line.variantQuantities) {
+                    return [{
+                        product_id: line.product_id,
+                        quantity: line.quantity,
+                        density: (line.densities || []).join(', '),
+                        size: (line.sizes || []).join(', '),
+                        color: (line.colors || []).join(', '),
+                    }];
+                }
+
+                const rows = [];
+
+                Object.entries(line.variantQuantities).forEach(([color, sizes]) => {
+                    Object.entries(sizes).forEach(([size, quantity]) => {
+                        if (Number(quantity) > 0) {
+                            rows.push({
+                                product_id: line.product_id,
+                                quantity: Number(quantity),
+                                density: (line.densities || []).join(', '),
+                                size,
+                                color,
+                            });
+                        }
+                    });
+                });
+
+                return rows;
+            });
         },
         updateLineDensity(productId, densityId) {
             const line = this.lines.find((item) => item.product_id === Number(productId));
@@ -194,6 +305,12 @@ document.addEventListener('alpine:init', () => {
         },
     });
 
+    Alpine.effect(() => {
+        const orderBuilder = Alpine.store('orderBuilder');
+
+        persistOrderDraft({ lines: orderBuilder.lines, quantity: orderBuilder.quantity });
+    });
+
     Alpine.data('mobileNav', () => ({
         open: false,
     }));
@@ -208,8 +325,9 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('requestForm', (oldLines = []) => ({
         started: false,
         submitting: false,
+        variantMismatch: false,
         init() {
-            if (oldLines.length > 0 && Alpine.store('orderBuilder').lines.length === 0) {
+            if (oldLines.length > 0) {
                 Alpine.store('orderBuilder').lines = oldLines;
             }
         },
@@ -228,9 +346,22 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            const orderBuilder = Alpine.store('orderBuilder');
+            const unbalanced = orderBuilder.lines.some((line) => (
+                line.variantQuantities && orderBuilder.variantTotal(line) !== line.quantity
+            ));
+
+            if (unbalanced) {
+                event.preventDefault();
+                this.variantMismatch = true;
+
+                return;
+            }
+
+            this.variantMismatch = false;
             this.submitting = true;
             window.storefrontAnalytics.track('form_submit', {
-                line_count: Alpine.store('orderBuilder').lines.length,
+                line_count: orderBuilder.lines.length,
             });
         },
     }));

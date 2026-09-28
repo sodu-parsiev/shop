@@ -10,7 +10,7 @@ function seedPreCtaRebuildContent(): void
             'heading_main' => 'Пора сделать',
             'heading_accent' => 'свой ход.',
             'subcopy' => 'Сформируйте черновик заявки: выберите товары в каталоге, укажите количество по каждой позиции и оставьте контакты для расчёта.',
-            'email' => 'info@svojkhod.ru',
+            'email' => 'info@svoyhod.ru',
         ],
         'form' => [
             'submit' => 'Сформировать заявку',
@@ -35,7 +35,7 @@ test('the final CTA migration rebuilds the section around one price-request acti
     expect($content->get('form.submit'))->toBe('Запросить прайс');
 
     expect($content->get('cta_section.eyebrow'))->toBe('Начать сотрудничество');
-    expect($content->get('cta_section.email'))->toBe('info@svojkhod.ru');
+    expect($content->get('cta_section.email'))->toBe('info@svoyhod.ru');
     expect($content->get('form.company'))->toBe('КОМПАНИЯ');
 });
 

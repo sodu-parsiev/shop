@@ -1,5 +1,7 @@
 @php
     $contactHref = request()->routeIs('home', 'products.show') ? '#contacts' : route('home').'#contacts';
+    $phone = $homeContent->get('cta_section.phone');
+    $phoneHref = 'tel:'.preg_replace('/[^\d+]/', '', (string) $phone);
 @endphp
 
 <header class="sticky top-0 z-40 border-b border-brand-black/10 bg-white/95 backdrop-blur">
@@ -13,6 +15,9 @@
             <a href="{{ route('home') }}#production" class="hover:text-brand-pink">{{ $homeContent->get('nav.production') }}</a>
             <a href="{{ route('home') }}#terms" class="hover:text-brand-pink">{{ $homeContent->get('nav.terms') }}</a>
             <a href="{{ $contactHref }}" class="hover:text-brand-pink">{{ $homeContent->get('nav.contacts') }}</a>
+            @if ($phone)
+                <a href="{{ $phoneHref }}" class="hover:text-brand-pink" @click="storefrontAnalytics.track('contact_click', { type: 'phone', location: 'header' })">{{ $phone }}</a>
+            @endif
         </nav>
 
         <div class="flex items-center gap-3">
@@ -48,6 +53,9 @@
             <a href="{{ route('home') }}#production" @click="open = false">{{ $homeContent->get('nav.production') }}</a>
             <a href="{{ route('home') }}#terms" @click="open = false">{{ $homeContent->get('nav.terms') }}</a>
             <a href="{{ $contactHref }}" @click="open = false">{{ $homeContent->get('nav.contacts') }}</a>
+            @if ($phone)
+                <a href="{{ $phoneHref }}" @click="open = false; storefrontAnalytics.track('contact_click', { type: 'phone', location: 'header' })">{{ $phone }}</a>
+            @endif
         </div>
     </div>
 </header>

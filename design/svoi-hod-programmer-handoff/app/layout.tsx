@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "Organization", "@id": "https://svojkhod.ru/#organization", name: "Свой Ход", url: "https://svojkhod.ru", email: "info@svojkhod.ru", description: "Производитель базовой одежды крупным оптом для продавцов маркетплейсов", areaServed: { "@type": "Country", name: "Россия" }, knowsAbout: ["Оптовый пошив одежды", "Футболки для Wildberries", "Футболки для Ozon", "Шелкография", "Вышивка", "DTF-печать"] },
+    { "@type": "Organization", "@id": "https://svoyhod.ru/#organization", name: "Свой Ход", url: "https://svoyhod.ru", email: "info@svoyhod.ru", description: "Производитель базовой одежды крупным оптом для продавцов маркетплейсов", areaServed: { "@type": "Country", name: "Россия" }, knowsAbout: ["Оптовый пошив одежды", "Футболки для Wildberries", "Футболки для Ozon", "Шелкография", "Вышивка", "DTF-печать"] },
     { "@type": "FAQPage", mainEntity: [
       { "@type": "Question", name: "Какой минимальный заказ?", acceptedAnswer: { "@type": "Answer", text: "Минимальная производственная партия — 5 000 изделий. Параметры серии фиксируются в спецификации." } },
       { "@type": "Question", name: "Что сейчас есть на складе?", acceptedAnswer: { "@type": "Answer", text: "На складе доступны белые и чёрные базовые футболки. Размерные остатки подтверждаются перед заказом." } },

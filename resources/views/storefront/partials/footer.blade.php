@@ -28,6 +28,13 @@
             <div>
                 <p class="text-xs font-bold tracking-widest text-brand-pink uppercase">{{ $homeContent->get('footer.contacts_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm">
+                    @if ($homeContent->get('cta_section.phone'))
+                        <li>
+                            <a href="tel:{{ preg_replace('/[^\d+]/', '', (string) $homeContent->get('cta_section.phone')) }}" class="hover:text-white" @click="storefrontAnalytics.track('contact_click', { type: 'phone', location: 'footer' })">
+                                {{ $homeContent->get('cta_section.phone') }}
+                            </a>
+                        </li>
+                    @endif
                     <li>
                         <a href="mailto:{{ $homeContent->get('cta_section.email') }}" class="hover:text-white" @click="storefrontAnalytics.track('contact_click', { type: 'email', location: 'footer' })">
                             {{ $homeContent->get('cta_section.email') }}

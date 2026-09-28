@@ -30,9 +30,13 @@
     data-sizes='@json($product->sizes->pluck('id')->map(fn ($id) => (string) $id)->values())'
     data-product-card
     x-show="matches($el)"
-    @if ($isVariant)
-        x-data="{ densityId: {{ $product->cheapestDensityId() }}, densityNames: @js($product->densities->pluck('name', 'id')), priceLabelsByDensity: @js($startingLabelsByDensity) }"
-    @endif
+    x-data="{
+        densityId: {{ $isVariant ? $product->cheapestDensityId() : 'null' }},
+        densityNames: @js($isVariant ? $product->densities->pluck('name', 'id') : []),
+        priceLabelsByDensity: @js($isVariant ? $startingLabelsByDensity : []),
+        priceTiers: @js($product->formattedPriceTiersByQuantity()),
+        priceTiersByDensity: @js($product->priceTiersByDensity()),
+    }"
     class="flex flex-col overflow-hidden bg-white text-brand-black"
 >
     <div class="relative aspect-[4/5] w-full overflow-hidden bg-brand-cream">
@@ -97,7 +101,10 @@
         <div class="mt-auto flex items-end justify-between gap-3 pt-2">
             <div>
                 <p class="text-xs text-brand-black/50">{{ $homeContent->get('catalog.price_label') }}</p>
-                <p class="text-2xl font-normal leading-none" @if ($isVariant) x-text="priceLabelsByDensity[densityId]" @endif>{{ $product->startingPriceLabel() }}</p>
+                <p
+                    class="text-2xl font-normal leading-none"
+                    x-text="({{ $isVariant ? 'true' : 'false' }} ? priceTiersByDensity[densityId]?.[$store.orderBuilder.quantity] : priceTiers[$store.orderBuilder.quantity]) ?? @js($product->startingPriceLabel())"
+                >{{ $product->startingPriceLabel() }}</p>
                 <p class="text-xs text-brand-black/40">{{ $priceNote }}</p>
                 <a href="{{ $product->publicUrl() }}" class="mt-3 inline-block text-xs font-bold text-brand-pink">Подробнее</a>
             </div>
@@ -115,7 +122,7 @@
                     priceQuantities: @js($product->availableOrderQuantities()),
                     densityId: {{ $isVariant ? 'densityId' : 'null' }},
                     densityOptions: @js($product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()),
-                    densities: [{{ $isVariant ? 'densityNames[densityId]' : "selectedOptionLabel('density', @js($defaultDensity))" }}],
+                    densities: [{{ $isVariant ? 'densityNames[densityId]' : "selectedOptionLabel('density', ".\Illuminate\Support\Js::from($defaultDensity)->toHtml().')' }}],
                     sizes: [selectedOptionLabel('size', @js($defaultSize))],
                     colors: [selectedOptionLabel('color', @js($defaultColor))],
                     availableColors: @js($activeColors->pluck('name')),

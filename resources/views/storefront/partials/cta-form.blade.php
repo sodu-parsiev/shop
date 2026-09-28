@@ -10,12 +10,38 @@
             ->get()
             ->keyBy('id');
     $oldLinesForStore = $oldOrderLines
-        ->map(function (array $line) use ($oldProducts): ?array {
-            $product = $oldProducts->get((int) ($line['product_id'] ?? 0));
+        ->groupBy(fn (array $line): int => (int) $line['product_id'])
+        ->map(function (\Illuminate\Support\Collection $rows) use ($oldProducts): ?array {
+            $firstRow = $rows->first();
+            $product = $oldProducts->get((int) ($firstRow['product_id'] ?? 0));
 
             if (! $product) {
                 return null;
             }
+
+            $availableColors = $product->colors->where('is_active', true)->pluck('name')->values()->all();
+            $availableSizes = $product->sizes->where('is_active', true)->pluck('name')->values()->all();
+            $hasGrid = count($availableColors) > 0 && count($availableSizes) > 0;
+
+            $variantQuantities = null;
+
+            if ($hasGrid) {
+                $variantQuantities = [];
+
+                foreach ($rows as $row) {
+                    $color = trim((string) ($row['color'] ?? ''));
+                    $size = trim((string) ($row['size'] ?? ''));
+
+                    if ($color === '' || $size === '') {
+                        continue;
+                    }
+
+                    $variantQuantities[$color] ??= [];
+                    $variantQuantities[$color][$size] = (int) ($row['quantity'] ?? 0);
+                }
+            }
+
+            $totalQuantity = (int) $rows->sum(fn (array $row): int => (int) ($row['quantity'] ?? 0));
 
             return [
                 'product_id' => $product->id,
@@ -24,21 +50,22 @@
                 'availability' => $product->isInStock() ? 'На складе' : 'Под заказ',
                 'image' => $product->cover_image ?: asset('brand/catalog-white-v2.jpg'),
                 'moq' => $product->moq,
-                'quantity' => (int) ($line['quantity'] ?? $product->moq),
+                'quantity' => $totalQuantity > 0 ? $totalQuantity : $product->moq,
                 'priceTiers' => $product->formattedPriceTiersByQuantity(),
                 'priceTiersByDensity' => $product->priceTiersByDensity(),
                 'priceQuantities' => $product->availableOrderQuantities(),
                 'densityOptions' => $product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()->all(),
                 'densityId' => $product->isDensityPriced()
-                    ? ($product->densities->firstWhere('name', trim((string) ($line['density'] ?? '')))?->id ?? $product->cheapestDensityId())
+                    ? ($product->densities->firstWhere('name', trim((string) ($firstRow['density'] ?? '')))?->id ?? $product->cheapestDensityId())
                     : null,
-                'colors' => collect(explode(',', (string) ($line['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'sizes' => collect(explode(',', (string) ($line['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'densities' => collect(explode(',', (string) ($line['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
-                'availableColors' => $product->colors->where('is_active', true)->pluck('name')->values()->all(),
-                'availableSizes' => $product->sizes->where('is_active', true)->pluck('name')->values()->all(),
+                'colors' => collect(explode(',', (string) ($firstRow['color'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'sizes' => collect(explode(',', (string) ($firstRow['size'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'densities' => collect(explode(',', (string) ($firstRow['density'] ?? '')))->map(fn (string $value): string => trim($value))->filter()->values()->all(),
+                'availableColors' => $availableColors,
+                'availableSizes' => $availableSizes,
                 'availableDensities' => $product->densities->where('is_active', true)->pluck('name')->values()->all(),
                 'colorSwatches' => $product->colors->where('is_active', true)->pluck('hex_code', 'name')->all(),
+                'variantQuantities' => $variantQuantities,
             ];
         })
         ->filter()
@@ -59,7 +86,21 @@
                 <p class="mt-6 max-w-xl text-base leading-relaxed text-brand-black/65">{{ $homeContent->get('cta_section.subcopy') }}</p>
             </div>
 
+            @php
+                $ctaPhone = $homeContent->get('cta_section.phone');
+                $ctaPhoneHref = 'tel:'.preg_replace('/[^\d+]/', '', (string) $ctaPhone);
+            @endphp
             <dl class="mt-10 divide-y divide-brand-black/10 border-y border-brand-black/10 text-sm">
+                @if ($ctaPhone)
+                    <div class="grid gap-1 py-4 sm:grid-cols-[120px_1fr]">
+                        <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">{{ $homeContent->get('cta_section.phone_label') }}</dt>
+                        <dd class="font-bold">
+                            <a href="{{ $ctaPhoneHref }}" @click="storefrontAnalytics.track('contact_click', { type: 'phone', location: 'cta' })">
+                                {{ $ctaPhone }}
+                            </a>
+                        </dd>
+                    </div>
+                @endif
                 <div class="grid gap-1 py-4 sm:grid-cols-[120px_1fr]">
                     <dt class="text-xs font-bold tracking-wide text-brand-black/40 uppercase">{{ $homeContent->get('cta_section.email_label') }}</dt>
                     <dd class="font-bold">
@@ -77,7 +118,7 @@
 
         <div class="bg-brand-cream p-6 sm:p-8 lg:p-10">
             @if (session('orderSubmitted'))
-                <div x-data x-init="storefrontAnalytics.track('form_success', { request_number: @js(session('orderRequestNumber')) })">
+                <div x-data x-init="storefrontAnalytics.track('form_success', { request_number: @js(session('orderRequestNumber')) }); $store.orderBuilder.clear()">
                     <p class="text-2xl font-normal text-brand-black">{{ $homeContent->get('form.success') }}</p>
                     @if (session('orderRequestNumber'))
                         <p class="mt-4 text-sm font-bold text-brand-black/60">
@@ -104,15 +145,29 @@
                     <input type="hidden" name="utm_content" :value="$store.attribution.utm_content">
                     <input type="hidden" name="utm_term" :value="$store.attribution.utm_term">
 
-                    <template x-for="(line, index) in $store.orderBuilder.lines" :key="line.product_id">
+                    <template x-for="(row, index) in $store.orderBuilder.submissionLines()" :key="`${row.product_id}-${row.color}-${row.size}-${index}`">
                         <div style="position: absolute;">
-                            <input type="hidden" :name="`order_lines[${index}][product_id]`" :value="line.product_id">
-                            <input type="hidden" :name="`order_lines[${index}][quantity]`" :value="line.quantity">
-                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="(line.densities || []).join(', ')">
-                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="(line.sizes || []).join(', ')">
-                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="(line.colors || []).join(', ')">
+                            <input type="hidden" :name="`order_lines[${index}][product_id]`" :value="row.product_id">
+                            <input type="hidden" :name="`order_lines[${index}][quantity]`" :value="row.quantity">
+                            <input type="hidden" :name="`order_lines[${index}][density]`" :value="row.density">
+                            <input type="hidden" :name="`order_lines[${index}][size]`" :value="row.size">
+                            <input type="hidden" :name="`order_lines[${index}][color]`" :value="row.color">
                         </div>
                     </template>
+
+                    <div class="sm:col-span-2" x-show="$store.orderBuilder.lines.length > 0" x-cloak>
+                        <p class="text-xs font-bold tracking-wide text-brand-black/50 uppercase">В заявке уже добавлено</p>
+                        <ul class="mt-2 divide-y divide-brand-black/10 text-sm">
+                            <template x-for="line in $store.orderBuilder.lines" :key="line.product_id">
+                                <li class="flex items-center justify-between gap-3 py-2">
+                                    <span x-text="line.name"></span>
+                                    <span class="text-brand-black/50" x-text="`${$store.orderBuilder.priceFor(line)} · ${line.quantity.toLocaleString('ru-RU')} шт.`"></span>
+                                </li>
+                            </template>
+                        </ul>
+                        <button type="button" class="mt-2 text-xs font-bold text-brand-pink" @click="$store.orderBuilder.open()">Изменить состав заявки</button>
+                    </div>
+                    <p class="text-xs text-brand-black/50 sm:col-span-2" x-show="$store.orderBuilder.lines.length === 0" x-cloak>В заявке пока нет товаров — выберите их в каталоге.</p>
 
                     <div>
                         <label for="company" class="text-xs font-bold tracking-wide text-brand-black/50 uppercase">{{ $homeContent->get('form.company') }}</label>
@@ -187,6 +242,8 @@
                         >
                             <option value="phone" @selected(old('preferred_contact_method', 'phone') === 'phone')>{{ $homeContent->get('form.contact_phone') }}</option>
                             <option value="email" @selected(old('preferred_contact_method') === 'email')>{{ $homeContent->get('form.contact_email') }}</option>
+                            <option value="whatsapp" @selected(old('preferred_contact_method') === 'whatsapp')>{{ $homeContent->get('form.contact_whatsapp') }}</option>
+                            <option value="telegram" @selected(old('preferred_contact_method') === 'telegram')>{{ $homeContent->get('form.contact_telegram') }}</option>
                         </select>
                         @error('preferred_contact_method')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -238,6 +295,8 @@
                     @error('consent')
                         <p class="text-xs text-red-600 sm:col-span-2">{{ $message }}</p>
                     @enderror
+
+                    <p class="text-xs font-bold text-red-600 sm:col-span-2" x-show="variantMismatch" x-cloak>Распределите количество по цвету и размеру полностью перед отправкой.</p>
 
                     <button type="submit" :disabled="submitting" class="flex w-full items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2">
                         <span x-text="submitting ? 'Отправляем...' : @js($homeContent->get('form.submit'))">{{ $homeContent->get('form.submit') }}</span>

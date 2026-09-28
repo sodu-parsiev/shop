@@ -18,9 +18,12 @@ class CatalogRedirectSeeder extends Seeder
         'basic-tee-155-165' => '/catalog/basic-tee-140-150',
         'basic-tee-175-185' => '/catalog/basic-tee-140-150',
         'oversize-tee-220-240' => '/catalog/oversize-tee-180',
-        'hoodie-two-thread-220-240' => '/catalog/hoodie-three-thread-260-280',
+        'hoodie-two-thread-220-240' => '/catalog/hoodie-three-thread-320',
         'women-tee-180' => '/#catalog',
         'sweatshirt-two-thread-220-240' => '/#catalog',
+        'kids-tee-175-185' => '/catalog/kids-tee-180',
+        'longsleeve-140-150' => '/catalog/longsleeve-180',
+        'hoodie-three-thread-260-280' => '/catalog/hoodie-three-thread-320',
     ];
 
     public function run(): void

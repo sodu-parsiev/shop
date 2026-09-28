@@ -30,7 +30,18 @@ class StoreOrderRequest extends FormRequest
         return [
             'company' => ['nullable', 'string', 'max:255'],
             'customer_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:50'],
+            'phone' => [
+                'required',
+                'string',
+                'max:50',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $digits = preg_replace('/\D/', '', (string) $value);
+
+                    if (strlen($digits) < 10 || strlen($digits) > 11) {
+                        $fail('Введите номер телефона полностью.');
+                    }
+                },
+            ],
             'email' => ['required', 'email:rfc', 'max:255'],
             'preferred_contact_method' => ['required', Rule::enum(ContactMethod::class)],
             'volume' => ['required', Rule::in(array_map('strval', ProductPriceTier::publicQuantities()))],
@@ -46,10 +57,10 @@ class StoreOrderRequest extends FormRequest
             'utm_campaign' => ['nullable', 'string', 'max:255'],
             'utm_content' => ['nullable', 'string', 'max:255'],
             'utm_term' => ['nullable', 'string', 'max:255'],
-            'order_lines' => ['required', 'array', 'min:1', 'max:20'],
+            'order_lines' => ['required', 'array', 'min:1', 'max:100'],
             'order_lines.*' => ['array'],
-            'order_lines.*.product_id' => ['required', 'integer', 'distinct'],
-            'order_lines.*.quantity' => ['required', 'integer', Rule::in(ProductPriceTier::publicQuantities())],
+            'order_lines.*.product_id' => ['required', 'integer'],
+            'order_lines.*.quantity' => ['required', 'integer', 'min:1'],
             'order_lines.*.density' => ['nullable', 'string', 'max:255'],
             'order_lines.*.size' => ['nullable', 'string', 'max:255'],
             'order_lines.*.color' => ['nullable', 'string', 'max:255'],
@@ -80,13 +91,20 @@ class StoreOrderRequest extends FormRequest
                     ->get()
                     ->keyBy('id');
 
+                $quantityByProduct = collect($lines)
+                    ->filter(fn ($line): bool => is_array($line))
+                    ->groupBy(fn (array $line): int => (int) ($line['product_id'] ?? 0))
+                    ->map(fn (Collection $rows): int => (int) $rows->sum(fn (array $row): int => (int) ($row['quantity'] ?? 0)));
+
+                $seenVariants = [];
+                $reportedProducts = [];
+
                 foreach ($lines as $index => $line) {
                     if (! is_array($line)) {
                         continue;
                     }
 
-                    $productId = $line['product_id'] ?? null;
-                    $quantity = (int) ($line['quantity'] ?? 0);
+                    $productId = (int) ($line['product_id'] ?? 0);
                     $product = $products->get($productId);
 
                     if (! $product) {
@@ -95,18 +113,44 @@ class StoreOrderRequest extends FormRequest
                         continue;
                     }
 
-                    if ($quantity < $product->moq) {
-                        $validator->errors()->add(
-                            "order_lines.{$index}.quantity",
-                            sprintf('Минимальный объём для этого товара — %s шт.', number_format($product->moq, 0, ',', ' '))
-                        );
+                    $variantKey = implode('|', [
+                        $productId,
+                        trim((string) ($line['color'] ?? '')),
+                        trim((string) ($line['size'] ?? '')),
+                        trim((string) ($line['density'] ?? '')),
+                    ]);
+
+                    if (isset($seenVariants[$variantKey])) {
+                        $validator->errors()->add("order_lines.{$index}.product_id", 'Такое сочетание цвета и размера уже добавлено в заявку.');
+
+                        continue;
+                    }
+
+                    $seenVariants[$variantKey] = true;
+
+                    $totalQuantity = $quantityByProduct->get($productId, 0);
+
+                    if (! isset($reportedProducts[$productId])) {
+                        $reportedProducts[$productId] = true;
+
+                        if ($totalQuantity < $product->moq) {
+                            $validator->errors()->add(
+                                "order_lines.{$index}.quantity",
+                                sprintf('Минимальный объём для этого товара — %s шт.', number_format($product->moq, 0, ',', ' '))
+                            );
+                        } elseif (! in_array($totalQuantity, ProductPriceTier::publicQuantities(), true)) {
+                            $validator->errors()->add(
+                                "order_lines.{$index}.quantity",
+                                sprintf('Сумма количеств по цветам и размерам товара «%s» должна равняться 100, 500, 1000 или 5000 шт.', $product->name)
+                            );
+                        }
                     }
 
                     $this->validateAttributeChoice($validator, $index, 'color', $line['color'] ?? null, $product->colors);
                     $this->validateAttributeChoice($validator, $index, 'size', $line['size'] ?? null, $product->sizes);
 
                     if ($product->isDensityPriced()) {
-                        $this->validateDensityPriced($validator, $index, $line, $product, $quantity);
+                        $this->validateDensityPriced($validator, $index, $line, $product, $totalQuantity);
                     } else {
                         $this->validateAttributeChoice($validator, $index, 'density', $line['density'] ?? null, $product->densities);
                     }
@@ -184,8 +228,6 @@ class StoreOrderRequest extends FormRequest
             'website.prohibited' => 'Заявка не прошла антиспам-проверку.',
             'order_lines.required' => 'Добавьте хотя бы один товар в заявку.',
             'order_lines.min' => 'Добавьте хотя бы один товар в заявку.',
-            'order_lines.*.product_id.distinct' => 'Товар уже добавлен в заявку.',
-            'order_lines.*.quantity.in' => 'Выберите объём из прайса.',
         ];
     }
 
