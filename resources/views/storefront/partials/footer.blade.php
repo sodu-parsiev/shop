@@ -1,4 +1,4 @@
-<footer class="bg-brand-black py-12 text-white/70 lg:py-16">
+<footer x-data class="bg-brand-black py-12 text-white/70 lg:py-16">
     <div class="storefront-shell">
         <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>

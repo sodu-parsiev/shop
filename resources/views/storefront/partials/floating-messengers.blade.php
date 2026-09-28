@@ -19,7 +19,7 @@
 @endphp
 
 @if ($messengers->isNotEmpty())
-    <div class="fixed right-4 bottom-4 z-40 flex flex-col gap-3 sm:right-6 sm:bottom-6" style="padding-bottom: env(safe-area-inset-bottom);">
+    <div x-data class="fixed right-4 bottom-4 z-40 flex flex-col gap-3 sm:right-6 sm:bottom-6" style="padding-bottom: env(safe-area-inset-bottom);">
         @foreach ($messengers as $key => $channel)
             <a
                 href="{{ $channel['href'] }}"

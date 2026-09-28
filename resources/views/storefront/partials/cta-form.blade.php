@@ -49,7 +49,7 @@
     <span id="apply" class="sr-only"></span>
 
     <div class="storefront-shell grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)] lg:gap-16">
-        <div class="flex flex-col justify-between">
+        <div x-data class="flex flex-col justify-between">
             <div>
                 <x-storefront.section-label number="06">{{ $homeContent->get('cta_section.eyebrow') }}</x-storefront.section-label>
 

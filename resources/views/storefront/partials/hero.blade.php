@@ -1,4 +1,4 @@
-<section id="top" data-animate="hero" class="border-b border-brand-black/10 bg-white">
+<section id="top" data-animate="hero" x-data class="border-b border-brand-black/10 bg-white">
     <div class="storefront-shell grid grid-cols-1 items-center gap-12 py-10 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(430px,0.86fr)] lg:gap-20 lg:py-14">
         <div>
             <div class="flex flex-wrap gap-2">
