@@ -199,6 +199,9 @@ test('it renders order builder hooks with real catalog filters and preferences',
     $response->assertSee('value="'.$color->id.'"', false);
     $response->assertSee('value="'.$density->id.'"', false);
     $response->assertSee('value="'.$size->id.'"', false);
+    $response->assertSee("isOptionAvailable('color', '".$color->id."')", false);
+    $response->assertSee("isOptionAvailable('density', '".$density->id."')", false);
+    $response->assertSee("isOptionAvailable('size', '".$size->id."')", false);
 });
 
 test('home page content resolves nested keys with a fallback', function () {

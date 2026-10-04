@@ -69,7 +69,12 @@
                 >
                     <option value="all" class="text-brand-black">{{ $homeContent->get('catalog.filter_all_label') }}</option>
                     @foreach ($colors as $color)
-                        <option value="{{ $color->id }}" class="text-brand-black">{{ $color->name }}</option>
+                        <option
+                            value="{{ $color->id }}"
+                            x-show="isOptionAvailable('color', '{{ $color->id }}')"
+                            :disabled="!isOptionAvailable('color', '{{ $color->id }}')"
+                            class="text-brand-black"
+                        >{{ $color->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -83,7 +88,12 @@
                 >
                     <option value="all" class="text-brand-black">{{ $homeContent->get('catalog.filter_all_label') }}</option>
                     @foreach ($densities as $density)
-                        <option value="{{ $density->id }}" class="text-brand-black">{{ $density->name }}</option>
+                        <option
+                            value="{{ $density->id }}"
+                            x-show="isOptionAvailable('density', '{{ $density->id }}')"
+                            :disabled="!isOptionAvailable('density', '{{ $density->id }}')"
+                            class="text-brand-black"
+                        >{{ $density->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -97,7 +107,12 @@
                 >
                     <option value="all" class="text-brand-black">{{ $homeContent->get('catalog.filter_all_label') }}</option>
                     @foreach ($sizes as $size)
-                        <option value="{{ $size->id }}" class="text-brand-black">{{ $size->name }}</option>
+                        <option
+                            value="{{ $size->id }}"
+                            x-show="isOptionAvailable('size', '{{ $size->id }}')"
+                            :disabled="!isOptionAvailable('size', '{{ $size->id }}')"
+                            class="text-brand-black"
+                        >{{ $size->name }}</option>
                     @endforeach
                 </select>
             </div>

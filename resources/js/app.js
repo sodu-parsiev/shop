@@ -44,6 +44,10 @@ window.storefrontAnalytics = window.storefrontAnalytics || {
 
 const ORDER_DRAFT_STORAGE_KEY = 'storefront_order_draft';
 
+// Catalog filter fields whose options narrow to what the other active filters leave possible,
+// mapped to the product-card dataset key that holds the card's values.
+const FACET_FIELDS = { color: 'colors', density: 'densities', size: 'sizes' };
+
 function loadOrderDraft() {
     try {
         const parsed = JSON.parse(window.localStorage.getItem(ORDER_DRAFT_STORAGE_KEY) || '{}');
@@ -315,6 +319,7 @@ document.addEventListener('alpine:init', () => {
         color: 'all',
         density: 'all',
         size: 'all',
+        availableOptions: null,
         init() {
             const params = new URLSearchParams(window.location.search);
 
@@ -334,6 +339,14 @@ document.addEventListener('alpine:init', () => {
         },
         setFilter(field, value) {
             this[field] = value || 'all';
+
+            if (field === 'category') {
+                this.availability = 'all';
+                this.color = 'all';
+                this.density = 'all';
+                this.size = 'all';
+            }
+
             this.refresh();
             this.updateUrl();
 
@@ -356,22 +369,50 @@ document.addEventListener('alpine:init', () => {
         matches(card) {
             return this.matchesCard(card);
         },
-        matchesCard(card) {
+        matchesCard(card, ignoredField = null) {
             const categoryMatches = this.category === 'all' || String(this.category) === String(card.dataset.category);
             const inStock = card.dataset.inStock === 'true';
             const availabilityMatches = this.availability === 'all'
                 || (this.availability === 'stock' && inStock)
                 || (this.availability === 'order' && !inStock);
-            const colorMatches = this.color === 'all' || parseJsonArray(card.dataset.colors).includes(String(this.color));
-            const densityMatches = this.density === 'all' || parseJsonArray(card.dataset.densities).includes(String(this.density));
-            const sizeMatches = this.size === 'all' || parseJsonArray(card.dataset.sizes).includes(String(this.size));
+            const facetsMatch = Object.entries(FACET_FIELDS).every(([field, datasetKey]) => field === ignoredField
+                || this[field] === 'all'
+                || parseJsonArray(card.dataset[datasetKey]).includes(String(this[field])));
 
-            return categoryMatches && availabilityMatches && colorMatches && densityMatches && sizeMatches;
+            return categoryMatches && availabilityMatches && facetsMatch;
         },
         refresh() {
-            this.visibleCount = [...this.$root.querySelectorAll('[data-product-card]')]
-                .filter((card) => this.matchesCard(card))
-                .length;
+            const cards = [...this.$root.querySelectorAll('[data-product-card]')];
+
+            this.pruneUnavailableSelections(cards);
+            this.availableOptions = Object.fromEntries(
+                Object.keys(FACET_FIELDS).map((field) => [field, this.facetValues(cards, field)]),
+            );
+            this.visibleCount = cards.filter((card) => this.matchesCard(card)).length;
+        },
+        // Values of `field` still reachable given every other active filter.
+        facetValues(cards, field) {
+            const values = {};
+
+            cards
+                .filter((card) => this.matchesCard(card, field))
+                .forEach((card) => parseJsonArray(card.dataset[FACET_FIELDS[field]]).forEach((value) => {
+                    values[value] = true;
+                }));
+
+            return values;
+        },
+        // Drop selections that the other filters made impossible (e.g. after an availability
+        // switch or a stale deep link). Resetting one field only widens the rest, so one pass suffices.
+        pruneUnavailableSelections(cards) {
+            Object.keys(FACET_FIELDS).forEach((field) => {
+                if (this[field] !== 'all' && !this.facetValues(cards, field)[String(this[field])]) {
+                    this[field] = 'all';
+                }
+            });
+        },
+        isOptionAvailable(field, value) {
+            return this.availableOptions === null || Boolean(this.availableOptions[field]?.[String(value)]);
         },
         updateUrl() {
             const url = new URL(window.location.href);
