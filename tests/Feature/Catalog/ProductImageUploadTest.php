@@ -3,10 +3,12 @@
 use App\Filament\Resources\Catalog\Products\Pages\CreateProduct;
 use App\Filament\Resources\Catalog\Products\Pages\EditProduct;
 use App\Models\Catalog\Category;
+use App\Models\Catalog\Color;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductImage;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Filament\Forms\Components\Select;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -64,4 +66,45 @@ test('deleting a product cascades to delete its gallery images', function () {
     foreach ($images as $image) {
         $this->assertDatabaseMissing('product_images', ['id' => $image->id]);
     }
+});
+
+test('an admin can tag a gallery image with one of the product colors', function () {
+    $white = Color::factory()->create(['name' => 'Белый', 'sort_order' => 1]);
+    $black = Color::factory()->create(['name' => 'Чёрный', 'sort_order' => 2]);
+    Color::factory()->create(['name' => 'Красный', 'sort_order' => 3]);
+    $product = Product::factory()->create();
+    $product->colors()->attach([$white->id, $black->id]);
+    $image = ProductImage::factory()->create(['product_id' => $product->id]);
+    Storage::disk('public')->put($image->path, 'image');
+
+    Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+        ->assertFormFieldExists(
+            "images.record-{$image->id}.color_id",
+            fn (Select $field): bool => $field->getOptions() === [$white->id => 'Белый', $black->id => 'Чёрный'],
+        )
+        ->set("data.images.record-{$image->id}.color_id", $black->id)
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($image->fresh()->color_id)->toBe($black->id);
+});
+
+test('saving a product keeps seeded color photos that live in public/ rather than on the upload disk', function () {
+    $black = Color::factory()->create(['name' => 'Чёрный']);
+    $product = Product::factory()->create(['cover_image' => '/brand/products/basic-tee-140-150.jpg']);
+    $product->colors()->attach($black);
+    $image = ProductImage::factory()->create([
+        'product_id' => $product->id,
+        'color_id' => $black->id,
+        'path' => '/brand/products/basic-tee-175-185.jpg',
+    ]);
+
+    Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($image->fresh())
+        ->path->toBe('/brand/products/basic-tee-175-185.jpg')
+        ->color_id->toBe($black->id)
+        ->and($product->fresh()->cover_image)->toBe('/brand/products/basic-tee-140-150.jpg');
 });

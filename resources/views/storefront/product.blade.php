@@ -16,7 +16,7 @@
         ['url' => $coverImage, 'alt' => $product->name],
     ])->merge(
         $product->images->map(fn ($image): array => [
-            'url' => $toAsset($image->path),
+            'url' => $image->url(),
             'alt' => $image->alt_text ?: $product->name,
         ])
     )->unique('url')->values();
@@ -30,6 +30,7 @@
     $activeDensities = $product->densities->where('is_active', true)->values();
     $priceNote = $product->hasPriceTiers() ? 'бланковый текстиль' : 'уточнит менеджер';
     $isVariant = $product->isDensityPriced();
+    $colorImages = $product->colorImageUrls();
     $startingLabelsByDensity = $isVariant
         ? $product->densities->mapWithKeys(fn ($d) => [$d->id => 'от '.$product->lowestPriceTier($d->id)?->formattedUnitPrice()])
         : collect();
@@ -48,12 +49,16 @@
         <section
             x-data="{
                 activeImage: @js($gallery->first()['url']), zoomOpen: false,
+                coverImage: @js($coverImage), colorImages: @js($colorImages),
                 selectedColors: [], selectedSizes: [], selectedDensities: [],
                 densityId: {{ $isVariant ? $product->cheapestDensityId() : 'null' }},
                 densityNames: @js($product->densities->pluck('name', 'id')),
                 priceLabelsByDensity: @js($startingLabelsByDensity),
             }"
-            x-init="storefrontAnalytics.track('product_viewed', { product_id: {{ $product->id }}, category: @js($categoryLabel) })"
+            x-init="
+                storefrontAnalytics.track('product_viewed', { product_id: {{ $product->id }}, category: @js($categoryLabel) });
+                $watch('selectedColors', (colors) => activeImage = colorImages[colors.at(-1)] ?? coverImage);
+            "
             class="bg-white py-10 text-brand-black lg:py-16"
         >
             <div class="storefront-shell">
@@ -181,6 +186,7 @@
                                     availableSizes: @js($activeSizes->pluck('name')),
                                     availableDensities: @js($activeDensities->pluck('name')),
                                     colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
+                                    colorImages: colorImages,
                                 }, 'catalog')"
                                 class="inline-flex items-center justify-between bg-brand-pink px-6 py-4 text-sm font-bold text-white"
                             >

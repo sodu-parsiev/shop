@@ -5,7 +5,7 @@
     $oldProducts = $oldOrderLines->isEmpty()
         ? collect()
         : \App\Models\Catalog\Product::query()
-            ->with(['category', 'colors', 'sizes', 'densities', 'priceTiers'])
+            ->with(['category', 'colors', 'sizes', 'densities', 'images', 'priceTiers'])
             ->whereIn('id', $oldOrderLines->pluck('product_id')->all())
             ->get()
             ->keyBy('id');
@@ -39,6 +39,7 @@
                 'availableSizes' => $product->sizes->where('is_active', true)->pluck('name')->values()->all(),
                 'availableDensities' => $product->densities->where('is_active', true)->pluck('name')->values()->all(),
                 'colorSwatches' => $product->colors->where('is_active', true)->pluck('hex_code', 'name')->all(),
+                'colorImages' => $product->colorImageUrls(),
             ];
         })
         ->filter()

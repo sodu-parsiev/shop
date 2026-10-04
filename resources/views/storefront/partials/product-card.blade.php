@@ -17,6 +17,7 @@
     $activeDensities = $densities->where('is_active', true)->values();
     $priceNote = $product->hasPriceTiers() ? 'бланковый текстиль' : 'уточнит менеджер';
     $isVariant = $product->isDensityPriced();
+    $colorImages = $product->colorImageUrls();
     $startingLabelsByDensity = $isVariant
         ? $product->densities->mapWithKeys(fn ($d) => [$d->id => 'от '.$product->lowestPriceTier($d->id)?->formattedUnitPrice()])
         : collect();
@@ -36,6 +37,7 @@
         priceLabelsByDensity: @js($isVariant ? $startingLabelsByDensity : []),
         priceTiers: @js($product->formattedPriceTiersByQuantity()),
         priceTiersByDensity: @js($product->priceTiersByDensity()),
+        colorImages: @js($colorImages),
     }"
     class="flex flex-col overflow-hidden bg-white text-brand-black"
 >
@@ -50,6 +52,7 @@
 
         <img
             src="{{ $coverImage }}"
+            :src="colorImages[selectedOptionLabel('color', '')] ?? @js($coverImage)"
             alt="{{ $product->name }}"
             class="h-full w-full object-cover"
             loading="lazy"
@@ -129,6 +132,7 @@
                     availableSizes: @js($activeSizes->pluck('name')),
                     availableDensities: @js($activeDensities->pluck('name')),
                     colorSwatches: @js($activeColors->pluck('hex_code', 'name')),
+                    colorImages: colorImages,
                 }, 'catalog')"
                 class="inline-flex shrink-0 items-center gap-2 bg-brand-pink px-4 py-3 text-xs font-bold text-white sm:text-sm"
             >

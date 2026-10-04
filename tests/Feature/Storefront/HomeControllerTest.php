@@ -5,12 +5,14 @@ use App\Models\Catalog\Category;
 use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
 use App\Services\Currency\CentralBankCurrencyRateService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Js;
 
 test('it returns a successful response', function () {
     $this->get('/')->assertStatus(200);
@@ -241,4 +243,32 @@ test('a cached homepage response survives being read back from a real cache stor
     // what caught the __PHP_Incomplete_Class regression the array store
     // (phpunit.xml's default) can never catch, since it never serializes.
     $this->get('/')->assertOk()->assertSee($product->name);
+});
+
+test('a catalog card swaps to the photo tagged with the filtered color, also after a cache round trip', function () {
+    config(['cache.default' => 'database']);
+
+    $product = Product::factory()->create([
+        'name' => 'Базовая футболка',
+        'cover_image' => '/brand/products/basic-tee-140-150.jpg',
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+    $black = Color::factory()->create(['name' => 'Чёрный']);
+    $product->colors()->attach($black);
+    ProductImage::factory()->create([
+        'product_id' => $product->id,
+        'color_id' => $black->id,
+        'path' => '/brand/products/basic-tee-175-185.jpg',
+    ]);
+    $colorImages = Js::from(['Чёрный' => asset('brand/products/basic-tee-175-185.jpg')])->toHtml();
+
+    foreach (range(1, 2) as $hit) {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('colorImages: '.$colorImages, false);
+        $response->assertSee(':src="colorImages[selectedOptionLabel(\'color\', \'\')]', false);
+        $response->assertSee('colorImages: colorImages', false);
+    }
 });

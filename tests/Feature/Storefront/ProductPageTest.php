@@ -11,6 +11,7 @@ use App\Models\Catalog\Size;
 use App\Models\Content\HomePageContent;
 use App\Services\Currency\CentralBankCurrencyRateService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Js;
 
 test('an active product has a public detail page with gallery specs and product schema', function () {
     Cache::put(CentralBankCurrencyRateService::USD_RUB_CACHE_KEY, 80, now()->addDay());
@@ -186,4 +187,47 @@ test('a cached product page response survives being read back from a real cache 
     // what caught the __PHP_Incomplete_Class regression the array store
     // (phpunit.xml's default) can never catch, since it never serializes.
     $this->get($product->publicUrl())->assertOk()->assertSee($product->name);
+});
+
+test('the product page swaps the main photo to the photo tagged with the selected color', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'basic-tee',
+        'cover_image' => '/brand/products/basic-tee-140-150.jpg',
+        'status' => ProductStatus::Active,
+        'show_on_landing' => true,
+    ]);
+    $white = Color::factory()->create(['name' => 'Белый', 'sort_order' => 1]);
+    $black = Color::factory()->create(['name' => 'Чёрный', 'sort_order' => 2]);
+    $product->colors()->attach([$white->id, $black->id]);
+    ProductImage::factory()->create([
+        'product_id' => $product->id,
+        'color_id' => $black->id,
+        'path' => '/brand/products/basic-tee-175-185.jpg',
+    ]);
+
+    $response = $this->get($product->publicUrl());
+
+    $response->assertOk();
+    $response->assertSee('colorImages: '.Js::from(['Чёрный' => asset('brand/products/basic-tee-175-185.jpg')])->toHtml(), false);
+    $response->assertSee('coverImage: '.Js::from(asset('brand/products/basic-tee-140-150.jpg'))->toHtml(), false);
+    $response->assertSee("\$watch('selectedColors', (colors) => activeImage = colorImages[colors.at(-1)] ?? coverImage)", false);
+    $response->assertSee('src="'.asset('brand/products/basic-tee-175-185.jpg').'"', false);
+});
+
+test('the product page resolves gallery photos uploaded through the admin to the public disk', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    $product = Product::factory()->create([
+        'slug' => 'uploaded-gallery-tee',
+        'status' => ProductStatus::Active,
+        'show_on_landing' => true,
+    ]);
+    ProductImage::factory()->create([
+        'product_id' => $product->id,
+        'path' => 'products/gallery/uploaded.png',
+    ]);
+
+    $this->get($product->publicUrl())
+        ->assertOk()
+        ->assertSee('src="'.asset('storage/products/gallery/uploaded.png').'"', false);
 });

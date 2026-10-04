@@ -31,7 +31,7 @@
             <div class="min-h-0 flex-1 overflow-y-auto">
                 <template x-for="line in $store.orderBuilder.lines" :key="line.product_id">
                     <div class="grid grid-cols-[84px_minmax(0,1fr)_44px] gap-4 border-b border-brand-black/10 py-4">
-                        <img :src="line.image" alt="" class="h-24 w-[84px] object-cover">
+                        <img :src="line.colorImages?.[line.colors.at(-1)] ?? line.image" alt="" class="h-24 w-[84px] object-cover">
                         <div class="min-w-0">
                             <p class="font-bold leading-tight" x-text="line.name"></p>
                             <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>

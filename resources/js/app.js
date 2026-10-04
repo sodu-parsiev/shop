@@ -169,6 +169,7 @@ document.addEventListener('alpine:init', () => {
                 availableSizes: product.availableSizes ?? [],
                 availableDensities: product.availableDensities ?? [],
                 colorSwatches: product.colorSwatches ?? {},
+                colorImages: product.colorImages ?? {},
             };
 
             if (existing) {

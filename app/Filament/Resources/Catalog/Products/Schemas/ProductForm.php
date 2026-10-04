@@ -4,8 +4,10 @@ namespace App\Filament\Resources\Catalog\Products\Schemas;
 
 use App\Enums\AvailabilityStatus;
 use App\Enums\ProductStatus;
+use App\Models\Catalog\Color;
 use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductPriceTier;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
@@ -113,6 +115,7 @@ class ProductForm
                                             )
                                             ->bulkToggleable()
                                             ->searchable()
+                                            ->live()
                                             ->columns(3),
                                         CheckboxList::make('sizes')
                                             ->label(__('Sizes'))
@@ -217,7 +220,14 @@ class ProductForm
                                     ->imageEditor()
                                     ->disk('public')
                                     ->directory('products/covers')
-                                    ->visibility('public'),
+                                    ->visibility('public')
+                                    ->fetchFileInformation(false)
+                                    ->getUploadedFileUsing(fn (string $file): array => [
+                                        'name' => basename($file),
+                                        'size' => 0,
+                                        'type' => null,
+                                        'url' => ProductImage::urlForPath($file),
+                                    ]),
                                 Repeater::make('images')
                                     ->relationship('images')
                                     ->orderColumn('sort_order')
@@ -225,6 +235,9 @@ class ProductForm
                                     ->defaultItems(0)
                                     ->addActionLabel(__('Add gallery image'))
                                     ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => filled($state['color_id'] ?? null)
+                                        ? Color::find($state['color_id'])?->name
+                                        : null)
                                     ->schema([
                                         FileUpload::make('path')
                                             ->label(__('Image'))
@@ -232,9 +245,25 @@ class ProductForm
                                             ->required()
                                             ->disk('public')
                                             ->directory('products/gallery')
-                                            ->visibility('public'),
+                                            ->visibility('public')
+                                            // Seeded photos ("/brand/...") live in public/, not on the disk: keep them instead of treating them as missing.
+                                            ->fetchFileInformation(false)
+                                            ->getUploadedFileUsing(fn (string $file): array => [
+                                                'name' => basename($file),
+                                                'size' => 0,
+                                                'type' => null,
+                                                'url' => ProductImage::urlForPath($file),
+                                            ]),
                                         TextInput::make('alt_text')
                                             ->label(__('Alt text')),
+                                        Select::make('color_id')
+                                            ->label(__('Color'))
+                                            ->options(fn (Get $get): array => Color::query()
+                                                ->whereIn('id', $get('../../colors') ?? [])
+                                                ->orderBy('sort_order')
+                                                ->pluck('name', 'id')
+                                                ->all())
+                                            ->helperText(__('Shown on the storefront when a customer picks this color.')),
                                     ]),
                             ]),
                         Tab::make(__('Publishing'))

@@ -216,6 +216,24 @@ class Product extends Model
     }
 
     /**
+     * Photo URL per offered color name, taken from the first gallery image tagged with that color.
+     *
+     * @return array<string, string>
+     */
+    public function colorImageUrls(): array
+    {
+        $taggedImages = $this->images
+            ->whereNotNull('color_id')
+            ->unique('color_id')
+            ->keyBy('color_id');
+
+        return $this->colors
+            ->filter(fn (Color $color): bool => $taggedImages->has($color->id))
+            ->mapWithKeys(fn (Color $color): array => [$color->name => $taggedImages->get($color->id)->url()])
+            ->all();
+    }
+
+    /**
      * @return Collection<int, ProductPriceTier>
      */
     private function loadedPriceTiers(): Collection
