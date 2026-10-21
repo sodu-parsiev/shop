@@ -15,6 +15,12 @@ class StorefrontRedirectService
             return null;
         }
 
+        $canonicalPath = $this->canonicalPath($request->getPathInfo());
+
+        if ($canonicalPath !== $request->getPathInfo()) {
+            return redirect()->to($this->targetUrl($canonicalPath, $request), 301);
+        }
+
         if (! Schema::hasTable('redirects')) {
             return null;
         }
@@ -41,6 +47,18 @@ class StorefrontRedirectService
         ])->save();
 
         return redirect()->to($targetUrl, $redirect->status_code);
+    }
+
+    /**
+     * "/catalog/shopper/" and "/catalog/Shopper" both resolve to the same product
+     * (MySQL slug lookups ignore case), so send them to the one indexable URL.
+     */
+    private function canonicalPath(string $path): string
+    {
+        $canonical = rtrim($path, '/') ?: '/';
+
+        // Only catalog slugs: upload filenames under /storage are uppercase ULIDs.
+        return str_starts_with($canonical, '/catalog/') ? strtolower($canonical) : $canonical;
     }
 
     private function targetUrl(string $targetUrl, Request $request): string

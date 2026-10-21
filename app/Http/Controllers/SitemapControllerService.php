@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProductStatus;
 use App\Models\Catalog\Product;
+use App\Models\Content\Faq;
+use App\Models\Content\HomePageContent;
 use App\Models\Content\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class SitemapControllerService
@@ -16,8 +19,9 @@ class SitemapControllerService
     {
         $urls = collect([
             [
-                'loc' => url('/'),
-                'lastmod' => now()->toAtomString(),
+                // Trailing slash matches the homepage's canonical URL.
+                'loc' => url('/').'/',
+                'lastmod' => $this->homeLastModified(),
                 'priority' => '1.0',
             ],
         ]);
@@ -34,7 +38,7 @@ class SitemapControllerService
 
         Page::query()
             ->where('is_published', true)
-            ->whereIn('slug', ['privacy', 'consent', 'requisites'])
+            ->whereIn('slug', ['privacy', 'consent', 'requisites', 'size-guide'])
             ->orderBy('sort_order')
             ->get(['slug', 'updated_at'])
             ->each(fn (Page $page) => $urls->push([
@@ -44,5 +48,19 @@ class SitemapControllerService
             ]));
 
         return $urls;
+    }
+
+    /**
+     * When the homepage's content last changed — a lastmod that is always "now" teaches crawlers to ignore it.
+     */
+    private function homeLastModified(): ?string
+    {
+        $latest = collect([
+            HomePageContent::query()->max('updated_at'),
+            Product::query()->max('updated_at'),
+            Faq::query()->max('updated_at'),
+        ])->filter()->max();
+
+        return $latest ? Carbon::parse($latest)->toAtomString() : null;
     }
 }

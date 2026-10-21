@@ -28,11 +28,16 @@
     };
     $ogImage = $toAbsoluteUrl(data_get($seoMeta, 'og_image') ?: data_get($seo, 'og_image') ?: '/brand/model-motion.jpg');
     $icon = $toAbsoluteUrl(data_get($seo, 'icon') ?: '/brand/mark.png');
+    $absoluteCanonicalUrl = $toAbsoluteUrl($canonicalUrl) ?? url('/');
+    $siteName = data_get($seo, 'organization_name') ?: config('app.name');
+    $phone = $homeContent?->get('cta_section.phone');
     $organization = array_filter([
         '@type' => 'Organization',
         '@id' => url('/#organization'),
-        'name' => data_get($seo, 'organization_name') ?: config('app.name'),
+        'name' => $siteName,
         'url' => url('/'),
+        'logo' => $icon,
+        'telephone' => $phone,
         'email' => $homeContent?->get('cta_section.email'),
         'description' => data_get($seo, 'organization_description') ?: $description,
         'areaServed' => ['@type' => 'Country', 'name' => 'Россия'],
@@ -40,8 +45,9 @@
     $localBusiness = array_filter([
         '@type' => 'LocalBusiness',
         '@id' => url('/#localbusiness'),
-        'name' => data_get($seo, 'organization_name') ?: config('app.name'),
+        'name' => $siteName,
         'url' => url('/'),
+        'telephone' => $phone,
         'email' => $homeContent?->get('cta_section.email'),
         'address' => $homeContent?->get('cta_section.address'),
         'description' => data_get($seo, 'organization_description') ?: $description,
@@ -86,12 +92,15 @@
             <meta name="keywords" content="{{ $keywords }}">
         @endif
         <meta name="robots" content="index, follow">
-        <link rel="canonical" href="{{ $toAbsoluteUrl($canonicalUrl) ?? url('/') }}">
+        <link rel="canonical" href="{{ $absoluteCanonicalUrl }}">
+        <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
         @if ($icon)
             <link rel="icon" href="{{ $icon }}">
             <link rel="apple-touch-icon" href="{{ $icon }}">
         @endif
         <meta property="og:type" content="{{ $ogType }}">
+        <meta property="og:url" content="{{ $absoluteCanonicalUrl }}">
+        <meta property="og:site_name" content="{{ $siteName }}">
         <meta property="og:locale" content="ru_RU">
         <meta property="og:title" content="{{ $ogTitle }}">
         @if ($ogDescription)

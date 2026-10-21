@@ -304,3 +304,26 @@ test('the order drawer markup has no orphan moq text and a single density label'
         ->and((string) $drawer)->not->toContain('MOQ <span')
         ->toContain('MOQ ${line.moq.toLocaleString(');
 });
+
+test('the head links the favicon and gives sharing previews the canonical url and site name', function () {
+    $this->seed(HomePageContentSeeder::class);
+
+    $html = $this->get('/')->assertOk()->getContent();
+    preg_match('/<link rel="canonical" href="([^"]+)">/', $html, $canonical);
+
+    expect($html)->toContain('<link rel="icon" href="'.asset('favicon.ico').'" sizes="any">')
+        ->toContain('<meta property="og:url" content="'.$canonical[1].'">')
+        ->toContain('<meta property="og:site_name" content="');
+});
+
+test('the organization schema carries the logo and phone number', function () {
+    $this->seed(HomePageContentSeeder::class);
+
+    preg_match('/<script type="application\/ld\+json">(.*?)<\/script>/s', $this->get('/')->getContent(), $json);
+    $graph = collect(json_decode($json[1], true)['@graph'])->keyBy('@type');
+    $phone = HomePageContent::query()->first()->get('cta_section.phone');
+
+    expect($phone)->not->toBeEmpty()
+        ->and($graph['Organization'])->toMatchArray(['telephone' => $phone, 'logo' => asset('brand/mark.png')])
+        ->and($graph['LocalBusiness']['telephone'])->toBe($phone);
+});
