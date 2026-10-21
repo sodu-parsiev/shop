@@ -181,7 +181,7 @@ class HomePageContentSeeder extends Seeder
                 'phone_label' => 'Телефон:',
                 'phone' => '+7 913 065-11-11',
                 'address_label' => 'Адрес:',
-                'address' => 'Московская область, Котельники, Дзержинское шоссе, 13',
+                'address' => 'г. Москва, ул. Вишнёвая, д. 9, корп. 1, бизнес-центр «Империал»',
             ],
             'messengers' => [
                 'whatsapp' => ['enabled' => false, 'value' => ''],
