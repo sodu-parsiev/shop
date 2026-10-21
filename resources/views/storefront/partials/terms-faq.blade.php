@@ -35,12 +35,16 @@
                             <button
                                 type="button"
                                 @click="toggle({{ $i }})"
+                                aria-expanded="false"
+                                :aria-expanded="(openIndex === {{ $i }}).toString()"
+                                aria-controls="faq-answer-{{ $i }}"
                                 class="flex w-full items-center justify-between gap-4 py-4 text-left text-sm font-bold"
                             >
                                 {{ $faq->question }}
                                 <span aria-hidden="true" class="text-brand-pink" x-text="openIndex === {{ $i }} ? '−' : '+'"></span>
                             </button>
                             <div
+                                id="faq-answer-{{ $i }}"
                                 x-show="openIndex === {{ $i }}"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 -translate-y-1"

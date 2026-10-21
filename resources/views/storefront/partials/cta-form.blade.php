@@ -212,7 +212,6 @@
                         <select
                             id="preferred_contact_method"
                             name="preferred_contact_method"
-                            required
                             class="mt-1 w-full border-0 border-b border-brand-black/20 bg-transparent px-0 py-2 text-sm focus:border-brand-pink focus:ring-0"
                         >
                             <option value="phone" @selected(old('preferred_contact_method', 'phone') === 'phone')>{{ $homeContent->get('form.contact_phone') }}</option>

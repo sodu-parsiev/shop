@@ -9,9 +9,6 @@
         : ($product->slug === 'full-cycle-custom-production' ? 'Индивидуальная размерная сетка' : 'Размерный ряд уточняет менеджер');
     $coverImage = $product->cover_image ?: asset('brand/catalog-white-v2.webp');
     $categoryLabel = $product->category?->name ?? $homeContent->get('catalog.kicker');
-    $defaultDensity = $densities->first()?->name ?: 'Уточнить с менеджером';
-    $defaultSize = $product->sizes->first()?->name ?: $homeContent->get('catalog.filter_size_grid_label');
-    $defaultColor = $product->colors->first()?->name ?: 'Уточнить с менеджером';
     $activeColors = $colors->where('is_active', true)->values();
     $activeSizes = $product->sizes->where('is_active', true)->values();
     $activeDensities = $densities->where('is_active', true)->values();
@@ -125,9 +122,9 @@
                     priceQuantities: @js($product->availableOrderQuantities()),
                     densityId: {{ $isVariant ? 'densityId' : 'null' }},
                     densityOptions: @js($product->densities->map(fn ($d) => ['id' => $d->id, 'name' => $d->name])->values()),
-                    densities: [{{ $isVariant ? 'densityNames[densityId]' : "selectedOptionLabel('density', ".\Illuminate\Support\Js::from($defaultDensity)->toHtml().')' }}],
-                    sizes: [selectedOptionLabel('size', @js($defaultSize))],
-                    colors: [selectedOptionLabel('color', @js($defaultColor))],
+                    densities: @if ($isVariant) [densityNames[densityId]] @else selectedOptions('density') @endif,
+                    sizes: selectedOptions('size'),
+                    colors: selectedOptions('color'),
                     availableColors: @js($activeColors->pluck('name')),
                     availableSizes: @js($activeSizes->pluck('name')),
                     availableDensities: @js($activeDensities->pluck('name')),

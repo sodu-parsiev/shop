@@ -9,6 +9,7 @@ use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
+use App\Models\Content\HomePageContent;
 use App\Models\Content\Page;
 use App\Models\Content\Redirect;
 use App\Models\Order;
@@ -28,6 +29,7 @@ use App\Policies\UserPolicy;
 use App\Services\Currency\CentralBankCurrencyRateService;
 use App\Services\Currency\PriceFormatter;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 
@@ -48,6 +50,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(fn (User $user) => $user->hasRole('Administrator') ? true : null);
+
+        // The 404 page reuses the storefront header and footer, which read the homepage content.
+        View::composer('errors::404', fn ($view) => $view->with(
+            'homeContent',
+            HomePageContent::query()->firstOrCreate(['id' => 1], ['content' => []]),
+        ));
 
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);

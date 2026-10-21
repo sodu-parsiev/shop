@@ -134,3 +134,14 @@ test('redirect loops are ignored', function () {
 
     $this->get('/loop')->assertNotFound();
 });
+
+test('the order drawer sends visitors on pages without the form to the homepage form', function () {
+    Page::factory()->create(['slug' => 'privacy', 'is_published' => true]);
+
+    $drawer = str($this->get(route('legal.privacy'))->assertOk()->getContent())
+        ->after('aria-label="Заявка на расчёт"')
+        ->before('</aside>');
+
+    expect((string) $drawer)->toContain('href="'.route('home').'#contacts"')
+        ->not->toContain('href="#contacts"');
+});

@@ -4,6 +4,7 @@
     'faqs' => collect(),
     'seoMeta' => [],
     'schemaGraph' => [],
+    'robots' => 'index, follow',
 ])
 
 @php
@@ -91,7 +92,7 @@
         @if ($keywords)
             <meta name="keywords" content="{{ $keywords }}">
         @endif
-        <meta name="robots" content="index, follow">
+        <meta name="robots" content="{{ $robots }}">
         <link rel="canonical" href="{{ $absoluteCanonicalUrl }}">
         <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
         @if ($icon)

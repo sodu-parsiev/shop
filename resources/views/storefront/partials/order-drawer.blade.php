@@ -1,3 +1,8 @@
+@php
+    // The form only exists on the home and product pages; elsewhere the link has to leave the page.
+    $formHref = request()->routeIs('home', 'products.show') ? '#contacts' : route('home').'#contacts';
+@endphp
+
 <div
     x-data
     x-cloak
@@ -139,7 +144,7 @@
                     <b class="text-3xl" x-text="$store.orderBuilder.lines.length"></b>
                 </div>
                 <p class="mt-3 text-xs leading-relaxed text-brand-black/60">Стоимость, сроки и остатки подтвердит менеджер после проверки заказа.</p>
-                <a href="#contacts" class="mt-5 flex items-center justify-between bg-brand-pink px-5 py-4 text-sm font-bold text-white" @click="storefrontAnalytics.track('price_request_clicked', { placement: 'inquiry_panel' }); $store.orderBuilder.close()">
+                <a href="{{ $formHref }}" class="mt-5 flex items-center justify-between bg-brand-pink px-5 py-4 text-sm font-bold text-white" @click="storefrontAnalytics.track('price_request_clicked', { placement: 'inquiry_panel' }); $store.orderBuilder.close()">
                     Перейти к форме
                     <span aria-hidden="true">&#8599;&#65038;</span>
                 </a>

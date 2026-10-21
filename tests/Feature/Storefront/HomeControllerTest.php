@@ -327,3 +327,30 @@ test('the organization schema carries the logo and phone number', function () {
         ->and($graph['Organization'])->toMatchArray(['telephone' => $phone, 'logo' => asset('brand/mark.png')])
         ->and($graph['LocalBusiness']['telephone'])->toBe($phone);
 });
+
+test('catalog cards add only the options the visitor picked, never placeholders', function () {
+    $this->seed(HomePageContentSeeder::class);
+    $tee = Product::factory()->create(['show_on_landing' => true, 'status' => ProductStatus::Active]);
+    $tee->colors()->attach(Color::factory()->create(['name' => 'Белый']));
+    $tee->sizes()->attach(Size::factory()->create(['name' => '2XS']));
+    Product::factory()->create(['show_on_landing' => true, 'status' => ProductStatus::Active]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee("sizes: selectedOptions('size')", false)
+        ->assertSee("colors: selectedOptions('color')", false)
+        ->assertSee("selectedOptions('density')", false)
+        ->assertDontSee('Уточнить с менеджером')
+        ->assertDontSee("selectedOptionLabel('size'", false);
+});
+
+test('faq buttons expose their expanded state to assistive technology', function () {
+    $this->seed(HomePageContentSeeder::class);
+    Faq::factory()->create(['is_active' => true]);
+
+    $this->get('/')
+        ->assertSee('aria-expanded="false"', false)
+        ->assertSee(':aria-expanded="(openIndex === 0).toString()"', false)
+        ->assertSee('aria-controls="faq-answer-0"', false)
+        ->assertSee('id="faq-answer-0"', false);
+});

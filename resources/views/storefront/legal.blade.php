@@ -18,7 +18,10 @@
 
                 <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[0.34fr_1fr]">
                     <div>
-                        <x-storefront.section-label number="Документ">B2B</x-storefront.section-label>
+                        <div class="flex flex-wrap gap-2">
+                            <x-storefront.pill-badge tone="outline">Документ</x-storefront.pill-badge>
+                            <x-storefront.pill-badge tone="dark">B2B</x-storefront.pill-badge>
+                        </div>
                     </div>
                     <article class="max-w-4xl">
                         <h1 class="text-[42px] leading-[0.98] font-normal sm:text-[64px] lg:text-[82px]">

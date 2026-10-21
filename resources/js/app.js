@@ -53,12 +53,29 @@ function loadOrderDraft() {
         const parsed = JSON.parse(window.localStorage.getItem(ORDER_DRAFT_STORAGE_KEY) || '{}');
 
         return {
-            lines: Array.isArray(parsed.lines) ? parsed.lines : [],
+            lines: Array.isArray(parsed.lines) ? parsed.lines.map(normalizeDraftLine) : [],
             quantity: Number(parsed.quantity) || 100,
         };
     } catch {
         return { lines: [], quantity: 100 };
     }
+}
+
+// Drafts outlive deploys: bundled /brand photos moved from .jpg to .webp, and older catalog cards
+// saved placeholder options ("Уточнить с менеджером") that the order form rejects.
+function normalizeDraftLine(line) {
+    const webp = (url) => (typeof url === 'string' ? url.replace(/(\/brand\/.+)\.jpg$/, '$1.webp') : url);
+    const offered = (values, available) => (Array.isArray(values) ? values : [])
+        .filter((value) => (available ?? []).includes(value));
+
+    return {
+        ...line,
+        image: webp(line.image),
+        colorImages: Object.fromEntries(Object.entries(line.colorImages ?? {}).map(([color, url]) => [color, webp(url)])),
+        colors: offered(line.colors, line.availableColors),
+        sizes: offered(line.sizes, line.availableSizes),
+        densities: line.densityId ? (line.densities ?? []) : offered(line.densities, line.availableDensities),
+    };
 }
 
 function persistOrderDraft(state) {
@@ -426,6 +443,12 @@ document.addEventListener('alpine:init', () => {
             });
 
             window.history.replaceState({}, '', url);
+        },
+        // The catalog filter's choice for `type` as an order-line value: only what the visitor picked, never a guess.
+        selectedOptions(type) {
+            const label = this.selectedOptionLabel(type, null);
+
+            return label ? [label] : [];
         },
         selectedOptionLabel(type, fallback) {
             const value = this[type];
