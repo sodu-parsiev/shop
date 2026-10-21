@@ -16,7 +16,7 @@
                 {{ $homeContent->get('sellers.customization_note') }}
             </p>
 
-            <a href="#contacts" class="mt-8 inline-flex items-center gap-2 border-b border-white pb-1 text-sm font-bold">
+            <a href="#contacts" class="mt-8 inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
                 {{ $homeContent->get('sellers.cta') }}
                 <span aria-hidden="true">&#8599;&#65038;</span>
             </a>

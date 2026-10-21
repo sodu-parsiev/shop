@@ -71,7 +71,7 @@
                     <h3 class="mt-2 text-3xl font-normal sm:text-5xl">{{ $homeContent->get('portal_callout.heading') }}</h3>
                     <p class="mt-3 text-sm text-brand-black/70">{{ $homeContent->get('portal_callout.description') }}</p>
                 </div>
-                <a href="#contacts" class="inline-flex items-center justify-between gap-8 bg-brand-black px-6 py-4 text-sm font-bold text-white">
+                <a href="#contacts" class="inline-flex items-center justify-between gap-8 bg-brand-pink px-6 py-4 text-sm font-bold text-white">
                     {{ $homeContent->get('portal_callout.cta') }}
                     <span aria-hidden="true">&#8599;&#65038;</span>
                 </a>

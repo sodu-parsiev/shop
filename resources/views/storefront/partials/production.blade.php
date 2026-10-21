@@ -34,7 +34,7 @@
                 @endforeach
             </div>
 
-            <a href="#contacts" class="mt-8 inline-flex items-center gap-2 border-b border-brand-black pb-1 text-sm font-bold">
+            <a href="#contacts" class="mt-8 inline-flex items-center justify-between gap-8 bg-brand-pink px-6 py-4 text-sm font-bold text-white">
                 {{ $homeContent->get('process.cta') }}
                 <span aria-hidden="true">&#8599;&#65038;</span>
             </a>

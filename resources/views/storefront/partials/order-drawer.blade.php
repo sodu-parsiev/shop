@@ -29,7 +29,7 @@
             <img src="{{ asset('brand/mark.webp') }}" alt="" aria-hidden="true" class="h-20 w-20" loading="lazy">
             <p class="mt-5 text-2xl font-bold">Добавьте товар</p>
             <p class="mt-2 text-sm text-brand-black/60">Выберите складскую футболку или производство под заказ.</p>
-            <button type="button" class="mt-6 bg-brand-black px-5 py-3 text-sm font-bold text-white" @click="$store.orderBuilder.close()">Вернуться в каталог</button>
+            <button type="button" class="mt-6 bg-brand-pink px-5 py-3 text-sm font-bold text-white" @click="$store.orderBuilder.close()">Вернуться в каталог</button>
         </div>
 
         <div x-show="$store.orderBuilder.lines.length > 0" class="flex min-h-0 flex-1 flex-col">
