@@ -22,7 +22,7 @@
                 'name' => $product->name,
                 'category' => $product->category?->name,
                 'availability' => $product->isInStock() ? 'На складе' : 'Под заказ',
-                'image' => $product->cover_image ?: asset('brand/catalog-white-v2.jpg'),
+                'image' => $product->cover_image ?: asset('brand/catalog-white-v2.webp'),
                 'moq' => $product->moq,
                 'quantity' => (int) ($line['quantity'] ?? $product->moq),
                 'priceTiers' => $product->formattedPriceTiersByQuantity(),

@@ -231,3 +231,18 @@ test('the product page resolves gallery photos uploaded through the admin to the
         ->assertOk()
         ->assertSee('src="'.asset('storage/products/gallery/uploaded.png').'"', false);
 });
+
+test('the main product photo is in the html without waiting for javascript', function () {
+    HomePageContent::query()->create(['content' => ['seo' => ['title' => 'Home']]]);
+    Product::factory()->create([
+        'name' => 'Шоппер',
+        'slug' => 'shopper',
+        'status' => ProductStatus::Active,
+        'show_on_landing' => true,
+        'cover_image' => '/brand/products/shopper.webp',
+    ]);
+
+    $this->get('/catalog/shopper')
+        ->assertOk()
+        ->assertSee('<img src="'.asset('brand/products/shopper.webp').'" :src="activeImage" alt="Шоппер"', false);
+});

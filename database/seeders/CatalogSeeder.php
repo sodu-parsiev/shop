@@ -416,30 +416,30 @@ class CatalogSeeder extends Seeder
                 ['density' => '140-150 гр', 'prices' => [10000 => 165, 5000 => 170, 1000 => 175, 500 => 180, 100 => 185, 10 => 190]],
                 ['density' => '160 гр', 'prices' => [10000 => 185, 5000 => 190, 1000 => 195, 500 => 200, 100 => 205, 10 => 210]],
                 ['density' => '180 гр', 'prices' => [10000 => 205, 5000 => 210, 1000 => 215, 500 => 220, 100 => 225, 10 => 230]],
-            ], '/brand/products/basic-tee-140-150.jpg', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
-                'Белый' => '/brand/products/basic-tee-140-150.jpg',
-                'Чёрный' => '/brand/products/basic-tee-175-185.jpg',
+            ], '/brand/products/basic-tee-140-150.webp', sizeNames: self::TEE_SIZES, sizeTable: $this->basicTeeSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
+                'Белый' => '/brand/products/basic-tee-140-150.webp',
+                'Чёрный' => '/brand/products/basic-tee-175-185.webp',
             ]),
             $this->variantRow('oversize-tee-180', 'SH-TEE-OVR-180', 'Оверсайз футболка', 'Футболки', 'Oversized', [
                 ['density' => '180 гр', 'prices' => [10000 => 265, 5000 => 270, 1000 => 275, 500 => 280, 100 => 285, 10 => 290]],
                 ['density' => '220 гр', 'prices' => [10000 => 315, 5000 => 320, 1000 => 325, 500 => 330, 100 => 335, 10 => 340]],
-            ], '/brand/products/oversize-tee-180-white.jpg', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
-                'Белый' => '/brand/products/oversize-tee-180-white.jpg',
-                'Чёрный' => '/brand/products/oversize-tee-180-black.jpg',
+            ], '/brand/products/oversize-tee-180-white.webp', sizeNames: self::OVERSIZE_SIZES, sizeTable: $this->oversizeSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
+                'Белый' => '/brand/products/oversize-tee-180-white.webp',
+                'Чёрный' => '/brand/products/oversize-tee-180-black.webp',
             ]),
-            $this->row('kids-tee-180', 'SH-KIDS-TEE-180', 'Детская футболка', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.jpg', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
-                'Белый' => '/brand/products/kids-tee-175-185.jpg',
-                'Чёрный' => '/brand/products/kids-tee-180-black.jpg',
+            $this->row('kids-tee-180', 'SH-KIDS-TEE-180', 'Детская футболка', 'Детская одежда', '180 гр', 'Regular Fit', [10000 => 155, 5000 => 160, 1000 => 165, 500 => 170, 100 => 175, 10 => 180], '/brand/products/kids-tee-175-185.webp', sizeNames: self::KIDS_SIZES, sizeTable: $this->kidsSizeTable(), colorNames: ['Белый', 'Чёрный'], colorImages: [
+                'Белый' => '/brand/products/kids-tee-175-185.webp',
+                'Чёрный' => '/brand/products/kids-tee-180-black.webp',
             ]),
-            $this->row('longsleeve-180', 'SH-LONG-145', 'Лонгслив', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-180-white.jpg', colorNames: ['Белый', 'Чёрный'], colorImages: [
-                'Белый' => '/brand/products/longsleeve-180-white.jpg',
-                'Чёрный' => '/brand/products/longsleeve-180-black.jpg',
+            $this->row('longsleeve-180', 'SH-LONG-145', 'Лонгслив', 'Лонгсливы', '180 гр', 'Regular Fit', [10000 => 210, 5000 => 215, 1000 => 220, 500 => 225, 100 => 230, 10 => 235], '/brand/products/longsleeve-180-white.webp', colorNames: ['Белый', 'Чёрный'], colorImages: [
+                'Белый' => '/brand/products/longsleeve-180-white.webp',
+                'Чёрный' => '/brand/products/longsleeve-180-black.webp',
             ]),
-            $this->row('hoodie-three-thread-320', 'SH-HOODIE-3T-270', 'Худи', 'Худи', '320 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-320-black.jpg', colorNames: ['Чёрный'], colorImages: [
-                'Чёрный' => '/brand/products/hoodie-320-black.jpg',
+            $this->row('hoodie-three-thread-320', 'SH-HOODIE-3T-270', 'Худи', 'Худи', '320 гр', 'Regular Fit', [10000 => 935, 5000 => 940, 1000 => 945, 500 => 950, 100 => 955, 10 => 960], '/brand/products/hoodie-320-black.webp', colorNames: ['Чёрный'], colorImages: [
+                'Чёрный' => '/brand/products/hoodie-320-black.webp',
             ]),
-            $this->row('baseball-cap', 'SH-CAP-BASE', 'Бейсболка', 'Аксессуары', null, null, [10000 => 115, 5000 => 120, 1000 => 125, 500 => 130, 100 => 135, 10 => 140], '/brand/products/baseball-cap.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
-            $this->row('shopper', 'SH-SHOPPER', 'Шоппер', 'Аксессуары', null, null, null, '/brand/products/shopper.jpg', AvailabilityStatus::MadeToOrder, 'заказ'),
+            $this->row('baseball-cap', 'SH-CAP-BASE', 'Бейсболка', 'Аксессуары', null, null, [10000 => 115, 5000 => 120, 1000 => 125, 500 => 130, 100 => 135, 10 => 140], '/brand/products/baseball-cap.webp', AvailabilityStatus::MadeToOrder, 'заказ'),
+            $this->row('shopper', 'SH-SHOPPER', 'Шоппер', 'Аксессуары', null, null, null, '/brand/products/shopper.webp', AvailabilityStatus::MadeToOrder, 'заказ'),
         ];
     }
 

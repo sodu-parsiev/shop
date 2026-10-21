@@ -9,6 +9,7 @@ use App\Models\Catalog\Density;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductPriceTier;
+use App\Services\Images\WebpConverter;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -22,9 +23,13 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
+    private const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -216,11 +221,12 @@ class ProductForm
                             ->components([
                                 FileUpload::make('cover_image')
                                     ->label(__('Cover image'))
-                                    ->image()
+                                    ->acceptedFileTypes(self::PHOTO_TYPES)
                                     ->imageEditor()
                                     ->disk('public')
                                     ->directory('products/covers')
                                     ->visibility('public')
+                                    ->saveUploadedFileUsing(self::storeAsWebp(...))
                                     ->fetchFileInformation(false)
                                     ->getUploadedFileUsing(fn (string $file): array => [
                                         'name' => basename($file),
@@ -241,11 +247,12 @@ class ProductForm
                                     ->schema([
                                         FileUpload::make('path')
                                             ->label(__('Image'))
-                                            ->image()
+                                            ->acceptedFileTypes(self::PHOTO_TYPES)
                                             ->required()
                                             ->disk('public')
                                             ->directory('products/gallery')
                                             ->visibility('public')
+                                            ->saveUploadedFileUsing(self::storeAsWebp(...))
                                             // Seeded photos ("/brand/...") live in public/, not on the disk: keep them instead of treating them as missing.
                                             ->fetchFileInformation(false)
                                             ->getUploadedFileUsing(fn (string $file): array => [
@@ -300,5 +307,21 @@ class ProductForm
                             ->columns(2),
                     ]),
             ]);
+    }
+
+    /**
+     * Stores product photos as WebP within the storefront's size budget, whatever format was uploaded.
+     */
+    private static function storeAsWebp(FileUpload $component, TemporaryUploadedFile $file): string
+    {
+        $path = trim($component->getDirectory().'/'.Str::ulid().'.webp', '/');
+
+        $component->getDisk()->put(
+            $path,
+            app(WebpConverter::class)->convert($file->get()),
+            $component->getVisibility(),
+        );
+
+        return $path;
     }
 }

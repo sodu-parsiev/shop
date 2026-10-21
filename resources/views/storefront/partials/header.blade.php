@@ -7,7 +7,7 @@
 <header class="sticky top-0 z-40 border-b border-brand-black/10 bg-white/95 backdrop-blur">
     <div x-data="mobileNav" class="relative storefront-shell flex h-[72px] items-center justify-between gap-4 sm:h-[86px]">
         <a href="{{ route('home') }}" class="flex items-center" aria-label="{{ config('app.name') }} — на главную">
-            <img src="{{ asset('brand/logo-dark.png') }}" alt="{{ config('app.name') }}" class="h-11 w-auto sm:h-14">
+            <img src="{{ asset('brand/logo-dark.webp') }}" alt="{{ config('app.name') }}" class="h-11 w-auto sm:h-14">
         </a>
 
         <nav class="hidden items-center gap-8 text-sm font-bold md:flex">

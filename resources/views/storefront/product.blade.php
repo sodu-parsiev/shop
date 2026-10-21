@@ -1,7 +1,7 @@
 @php
     $toAsset = static function (?string $path): string {
         if (! $path) {
-            return asset('brand/catalog-white-v2.jpg');
+            return asset('brand/catalog-white-v2.webp');
         }
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
@@ -73,14 +73,14 @@
                 <div class="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.82fr)] lg:gap-14">
                     <div>
                         <button type="button" class="block w-full overflow-hidden bg-brand-cream" @click="zoomOpen = true">
-                            <img :src="activeImage" alt="{{ $product->name }}" class="aspect-[4/5] w-full object-cover">
+                            <img src="{{ $gallery->first()['url'] }}" :src="activeImage" alt="{{ $product->name }}" class="aspect-[4/5] w-full object-cover" fetchpriority="high">
                         </button>
 
                         @if ($gallery->count() > 1)
                             <div class="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-6">
                                 @foreach ($gallery as $image)
                                     <button type="button" class="aspect-square overflow-hidden bg-brand-cream ring-1 ring-brand-black/10" @click="activeImage = @js($image['url'])">
-                                        <img src="{{ $image['url'] }}" alt="{{ $image['alt'] }}" class="h-full w-full object-cover">
+                                        <img src="{{ $image['url'] }}" alt="{{ $image['alt'] }}" class="h-full w-full object-cover" loading="lazy">
                                     </button>
                                 @endforeach
                             </div>
@@ -270,7 +270,7 @@
             </div>
 
             <div x-show="zoomOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click="zoomOpen = false" @keydown.escape.window="zoomOpen = false">
-                <img :src="activeImage" alt="{{ $product->name }}" class="max-h-full max-w-full object-contain">
+                <img src="{{ $gallery->first()['url'] }}" :src="activeImage" alt="{{ $product->name }}" class="max-h-full max-w-full object-contain" loading="lazy">
             </div>
         </section>
 

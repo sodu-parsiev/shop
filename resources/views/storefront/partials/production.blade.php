@@ -2,7 +2,7 @@
     <div class="grid w-full grid-cols-1 items-center gap-12 px-[18px] min-[801px]:pl-0 min-[801px]:pr-[4vw] lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16">
         <div class="relative aspect-[4/3] w-full overflow-hidden bg-brand-black/5">
             <img
-                src="{{ asset('brand/fabric-touch.jpg') }}"
+                src="{{ asset('brand/fabric-touch.webp') }}"
                 alt="{{ $homeContent->get('process.eyebrow') }}"
                 class="h-full w-full object-cover"
                 loading="lazy"

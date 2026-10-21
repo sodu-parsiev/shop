@@ -2,7 +2,7 @@
     <div class="storefront-shell">
         <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                <img src="{{ asset('brand/logo.png') }}" alt="{{ config('app.name') }}" class="h-14 w-auto">
+                <img src="{{ asset('brand/logo.webp') }}" alt="{{ config('app.name') }}" class="h-14 w-auto" loading="lazy">
                 <p class="mt-5 max-w-xs text-sm leading-relaxed">{{ $homeContent->get('footer.tagline') }}</p>
             </div>
 

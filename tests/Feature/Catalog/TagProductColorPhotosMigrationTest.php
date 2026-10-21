@@ -60,10 +60,10 @@ test('rolling back restores the seeded cover and removes only the photos it adde
         ->and(ProductImage::where('product_id', $oversize->id)->pluck('id')->all())->toBe([$untouched->id]);
 });
 
-test('every photo the migration links exists in public/', function () {
+test('every photo the migration links has the WebP copy the later webp migration switches to', function () {
     $migration = new ReflectionClass(tagProductColorPhotosMigration());
     $paths = collect($migration->getConstant('SKU_COLOR_PHOTOS'))->flatten()
         ->merge(collect($migration->getConstant('SKU_COVER_SWAPS'))->flatten());
 
-    $paths->each(fn (string $path) => expect(public_path(ltrim($path, '/')))->toBeFile());
+    $paths->each(fn (string $path) => expect(public_path(ltrim(preg_replace('/\.jpg$/', '.webp', $path), '/')))->toBeFile());
 });

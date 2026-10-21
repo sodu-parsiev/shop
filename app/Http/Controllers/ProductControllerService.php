@@ -141,7 +141,7 @@ class ProductControllerService
             ->values()
             ->all();
 
-        return $images === [] ? [asset('brand/catalog-white-v2.jpg')] : $images;
+        return $images === [] ? [asset('brand/catalog-white-v2.webp')] : $images;
     }
 
     /**

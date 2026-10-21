@@ -61,7 +61,7 @@
     <div class="bg-[#e5e0d0] py-16 lg:py-24">
         <div class="storefront-shell">
             <div class="grid gap-8 bg-white p-8 sm:grid-cols-[auto_1fr_auto] sm:items-center lg:p-12">
-                <img src="{{ asset('brand/mark.png') }}" alt="" class="h-16 w-16">
+                <img src="{{ asset('brand/mark.webp') }}" alt="" aria-hidden="true" class="h-16 w-16" loading="lazy">
                 <div>
                     <p class="text-xs font-bold tracking-widest text-brand-black/40 uppercase">{{ $homeContent->get('portal_callout.eyebrow') }}</p>
                     <h3 class="mt-2 text-3xl font-normal sm:text-5xl">{{ $homeContent->get('portal_callout.heading') }}</h3>

@@ -11,6 +11,7 @@ use App\Models\Catalog\Size;
 use App\Models\Content\Faq;
 use App\Models\Content\HomePageContent;
 use App\Services\Currency\CentralBankCurrencyRateService;
+use Database\Seeders\HomePageContentSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Js;
 
@@ -102,17 +103,17 @@ test('it shows active faqs and hides inactive ones', function () {
 test('it renders mock storefront assets instead of placeholders', function () {
     Product::factory()->create([
         'name' => 'Базовая футболка — белая',
-        'cover_image' => '/brand/catalog-white-v2.jpg',
+        'cover_image' => '/brand/catalog-white-v2.webp',
         'show_on_landing' => true,
         'status' => ProductStatus::Active,
     ]);
 
     $response = $this->get('/');
 
-    $response->assertSee('/brand/logo-dark.png', false);
-    $response->assertSee('/brand/model-motion.jpg', false);
-    $response->assertSee('/brand/mark.png', false);
-    $response->assertSee('/brand/catalog-white-v2.jpg', false);
+    $response->assertSee('/brand/logo-dark.webp', false);
+    $response->assertSee('/brand/model-motion.webp', false);
+    $response->assertSee('/brand/mark.webp', false);
+    $response->assertSee('/brand/catalog-white-v2.webp', false);
     $response->assertSee('id="contacts"', false);
     $response->assertDontSee('placehold.co', false);
 });
@@ -274,4 +275,32 @@ test('a catalog card swaps to the photo tagged with the filtered color, also aft
         $response->assertSee(':src="colorImages[selectedOptionLabel(\'color\', \'\')]', false);
         $response->assertSee('colorImages: colorImages', false);
     }
+});
+
+test('every image ships its src in the html and decorative ones are explicitly hidden', function () {
+    $this->seed(HomePageContentSeeder::class);
+    Product::factory()->create([
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+        'cover_image' => '/brand/products/shopper.webp',
+    ]);
+
+    preg_match_all('/<img\b[^>]*>/', $this->get('/')->assertOk()->getContent(), $matches);
+
+    expect($matches[0])->not->toBeEmpty()
+        ->each(fn ($img) => $img->toMatch('/\ssrc="[^"]+"/'));
+
+    collect($matches[0])
+        ->filter(fn (string $img): bool => str_contains($img, 'alt=""'))
+        ->each(fn (string $img) => expect($img)->toContain('aria-hidden="true"'));
+});
+
+test('the order drawer markup has no orphan moq text and a single density label', function () {
+    $drawer = str($this->get('/')->getContent())
+        ->after('aria-label="Заявка на расчёт"')
+        ->before('</aside>');
+
+    expect(substr_count($drawer, '>Плотность</p>'))->toBe(1)
+        ->and((string) $drawer)->not->toContain('MOQ <span')
+        ->toContain('MOQ ${line.moq.toLocaleString(');
 });

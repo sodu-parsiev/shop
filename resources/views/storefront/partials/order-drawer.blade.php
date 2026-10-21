@@ -21,7 +21,7 @@
         </div>
 
         <div x-show="$store.orderBuilder.lines.length === 0" class="m-auto flex max-w-xs flex-col items-center text-center">
-            <img src="{{ asset('brand/mark.png') }}" alt="" class="h-20 w-20">
+            <img src="{{ asset('brand/mark.webp') }}" alt="" aria-hidden="true" class="h-20 w-20" loading="lazy">
             <p class="mt-5 text-2xl font-bold">Добавьте товар</p>
             <p class="mt-2 text-sm text-brand-black/60">Выберите складскую футболку или производство под заказ.</p>
             <button type="button" class="mt-6 bg-brand-black px-5 py-3 text-sm font-bold text-white" @click="$store.orderBuilder.close()">Вернуться в каталог</button>
@@ -31,10 +31,15 @@
             <div class="min-h-0 flex-1 overflow-y-auto">
                 <template x-for="line in $store.orderBuilder.lines" :key="line.product_id">
                     <div class="grid grid-cols-[84px_minmax(0,1fr)_44px] gap-4 border-b border-brand-black/10 py-4">
-                        <img :src="line.colorImages?.[line.colors.at(-1)] ?? line.image" alt="" class="h-24 w-[84px] object-cover">
+                        <div
+                            role="img"
+                            :aria-label="line.name"
+                            class="h-24 w-[84px] bg-brand-cream bg-cover bg-center"
+                            :style="`background-image: url('${line.colorImages?.[line.colors.at(-1)] ?? line.image}')`"
+                        ></div>
                         <div class="min-w-0">
                             <p class="font-bold leading-tight" x-text="line.name"></p>
-                            <p class="mt-1 text-xs text-brand-black/50"><span x-text="line.availability"></span> · MOQ <span x-text="line.moq.toLocaleString('ru-RU')"></span> шт.</p>
+                            <p class="mt-1 text-xs text-brand-black/50" x-text="`${line.availability} · MOQ ${line.moq.toLocaleString('ru-RU')} шт.`"></p>
                             <p class="mt-1 text-xs font-bold text-brand-black/70">
                                 <span x-text="$store.orderBuilder.priceFor(line)"></span>
                                 <span class="font-normal text-brand-black/45"> · бланковый текстиль</span>
@@ -79,35 +84,34 @@
                                         </div>
                                     </div>
                                 </template>
-                                <template x-if="!line.densityId && line.availableDensities?.length">
+                                <template x-if="line.densityId || line.availableDensities?.length">
                                     <div>
                                         <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Плотность</p>
-                                        <div class="mt-1 flex flex-wrap gap-1.5">
-                                            <template x-for="option in line.availableDensities" :key="option">
-                                                <label
-                                                    class="inline-flex cursor-pointer items-center gap-1 border px-2 py-1 text-[11px] font-bold transition-colors"
-                                                    :class="line.densities.includes(option) ? 'border-brand-black bg-brand-black text-white' : 'border-brand-black/15 text-brand-black/60'"
-                                                >
-                                                    <input type="checkbox" :value="option" x-model="line.densities" class="sr-only">
-                                                    <span x-show="line.densities.includes(option)" aria-hidden="true">&#10003;</span>
-                                                    <span x-text="option"></span>
-                                                </label>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="line.densityId">
-                                    <div>
-                                        <p class="text-[10px] font-bold tracking-wide text-brand-black/40 uppercase">Плотность</p>
-                                        <select
-                                            x-model.number="line.densityId"
-                                            @change="$store.orderBuilder.updateLineDensity(line.product_id, $event.target.value)"
-                                            class="mt-1 w-full border border-brand-black/15 px-2 py-1.5 text-xs font-bold"
-                                        >
-                                            <template x-for="option in line.densityOptions" :key="option.id">
-                                                <option :value="option.id" x-text="option.name"></option>
-                                            </template>
-                                        </select>
+                                        <template x-if="line.densityId">
+                                            <select
+                                                x-model.number="line.densityId"
+                                                @change="$store.orderBuilder.updateLineDensity(line.product_id, $event.target.value)"
+                                                class="mt-1 w-full border border-brand-black/15 px-2 py-1.5 text-xs font-bold"
+                                            >
+                                                <template x-for="option in line.densityOptions" :key="option.id">
+                                                    <option :value="option.id" x-text="option.name"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+                                        <template x-if="!line.densityId">
+                                            <div class="mt-1 flex flex-wrap gap-1.5">
+                                                <template x-for="option in line.availableDensities" :key="option">
+                                                    <label
+                                                        class="inline-flex cursor-pointer items-center gap-1 border px-2 py-1 text-[11px] font-bold transition-colors"
+                                                        :class="line.densities.includes(option) ? 'border-brand-black bg-brand-black text-white' : 'border-brand-black/15 text-brand-black/60'"
+                                                    >
+                                                        <input type="checkbox" :value="option" x-model="line.densities" class="sr-only">
+                                                        <span x-show="line.densities.includes(option)" aria-hidden="true">&#10003;</span>
+                                                        <span x-text="option"></span>
+                                                    </label>
+                                                </template>
+                                            </div>
+                                        </template>
                                     </div>
                                 </template>
                             </div>

@@ -43,10 +43,12 @@
             <div class="aspect-[3/4] w-full overflow-hidden rounded-tl-[96px] bg-brand-black/5 sm:rounded-tl-[150px]">
                 <img
                     data-hero-photo
-                    src="{{ asset('brand/model-motion.jpg') }}"
+                    src="{{ asset('brand/model-motion.webp') }}"
                     alt="{{ $homeContent->get('hero.headline_main') }} {{ $homeContent->get('hero.headline_accent') }}"
+                    width="1200"
+                    height="1489"
                     class="h-full w-full object-cover"
-                    loading="lazy"
+                    fetchpriority="high"
                 >
             </div>
 
@@ -56,7 +58,7 @@
             </div>
 
             <div class="absolute bottom-6 left-6 flex items-center gap-3 bg-white px-4 py-3 shadow-lg sm:px-5">
-                <img src="{{ asset('brand/mark.png') }}" alt="" class="h-11 w-11">
+                <img src="{{ asset('brand/mark.webp') }}" alt="" aria-hidden="true" class="h-11 w-11">
                 <span class="text-xs font-bold uppercase leading-tight">
                     От сырья<br>
                     <strong>до готовой партии</strong>
