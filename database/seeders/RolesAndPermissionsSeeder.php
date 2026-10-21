@@ -54,6 +54,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::findOrCreate('export_order');
         Permission::findOrCreate('manage_media');
         Permission::findOrCreate('manage_seo');
+        Permission::findOrCreate('manage_integrations');
 
         // Permissions were just created above; the registrar's cache must be
         // flushed before syncPermissions() below resolves them by name,

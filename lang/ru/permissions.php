@@ -29,5 +29,6 @@ return [
         'export_order' => 'Экспорт заказов',
         'manage_media' => 'Управление медиафайлами',
         'manage_seo' => 'Управление SEO',
+        'manage_integrations' => 'Управление интеграциями',
     ],
 ];

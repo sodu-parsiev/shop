@@ -10,6 +10,7 @@ use App\Models\Catalog\ProductPriceTier;
 use App\Models\Catalog\Size;
 use App\Models\Order;
 use App\Models\OrderLine;
+use App\Models\Settings\IntegrationSettings;
 use App\Services\Currency\CentralBankCurrencyRateService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -709,6 +710,97 @@ test('order submission still succeeds when the Telegram API call fails', functio
 
     $response->assertSessionHas('orderSubmitted', true);
     expect(Order::query()->count())->toBe(1);
+});
+
+test('a valid submission creates a Bitrix24 lead and stores its id when bitrix24 is configured', function () {
+    IntegrationSettings::create([
+        'bitrix24_enabled' => true,
+        'bitrix24_webhook_url' => 'https://example.bitrix24.ru/rest/1/secret/',
+    ]);
+    Http::fake(['example.bitrix24.ru/*' => Http::response(['result' => 4242])]);
+
+    $product = Product::factory()->create([
+        'name' => 'Базовая футболка — белая',
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $this->post(route('orders.store'), validOrderPayload($product, ['utm_source' => 'yandex']));
+
+    $order = Order::query()->sole();
+
+    expect($order->bitrix_lead_id)->toBe(4242);
+
+    Http::assertSent(function ($request) use ($order) {
+        $fields = $request['fields'];
+
+        return $request->url() === 'https://example.bitrix24.ru/rest/1/secret/crm.lead.add.json'
+            && $fields['TITLE'] === "Заявка {$order->request_number} с сайта"
+            && $fields['NAME'] === 'Иван Иванов'
+            && $fields['COMPANY_TITLE'] === 'ООО Ромашка'
+            && $fields['PHONE'] === [['VALUE' => '+7 999 123-45-67', 'VALUE_TYPE' => 'WORK']]
+            && $fields['EMAIL'] === [['VALUE' => 'buyer@example.com', 'VALUE_TYPE' => 'WORK']]
+            && $fields['UTM_SOURCE'] === 'yandex'
+            && str_contains($fields['COMMENTS'], 'Базовая футболка — белая')
+            && str_contains($fields['COMMENTS'], 'Нужна консультация по маркировке.');
+    });
+});
+
+test('no Bitrix24 request is made when bitrix24 is not configured', function () {
+    Http::fake();
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
+
+    $response->assertSessionHas('orderSubmitted', true);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'crm.lead.add'));
+});
+
+test('no Bitrix24 request is made when sending is switched off in the admin', function () {
+    IntegrationSettings::create([
+        'bitrix24_enabled' => false,
+        'bitrix24_webhook_url' => 'https://example.bitrix24.ru/rest/1/secret/',
+    ]);
+    Http::fake();
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
+
+    $response->assertSessionHas('orderSubmitted', true);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'crm.lead.add'));
+});
+
+test('order submission still succeeds when Bitrix24 rejects the lead', function () {
+    IntegrationSettings::create([
+        'bitrix24_enabled' => true,
+        'bitrix24_webhook_url' => 'https://example.bitrix24.ru/rest/1/secret/',
+    ]);
+    Http::fake(['example.bitrix24.ru/*' => Http::response([
+        'error' => 'INVALID_CREDENTIALS',
+        'error_description' => 'Invalid request credentials',
+    ], 401)]);
+
+    $product = Product::factory()->create([
+        'moq' => 5000,
+        'show_on_landing' => true,
+        'status' => ProductStatus::Active,
+    ]);
+
+    $response = $this->post(route('orders.store'), validOrderPayload($product));
+
+    $response->assertSessionHas('orderSubmitted', true);
+    expect(Order::query()->sole()->bitrix_lead_id)->toBeNull();
 });
 
 test('whatsapp and telegram are accepted as preferred contact methods', function (string $method) {

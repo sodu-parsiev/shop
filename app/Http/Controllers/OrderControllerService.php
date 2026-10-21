@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Catalog\Product;
 use App\Models\Order;
+use App\Services\Bitrix24\Bitrix24LeadSender;
 use App\Services\TelegramOrderNotifier;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,10 @@ class OrderControllerService
         '5000' => '5 000 шт.',
     ];
 
-    public function __construct(private readonly TelegramOrderNotifier $telegramNotifier) {}
+    public function __construct(
+        private readonly TelegramOrderNotifier $telegramNotifier,
+        private readonly Bitrix24LeadSender $bitrix24LeadSender,
+    ) {}
 
     public function createFromRequest(StoreOrderRequest $request): Order
     {
@@ -72,6 +76,7 @@ class OrderControllerService
         });
 
         defer(fn () => $this->telegramNotifier->notifyOrderCreated($order));
+        defer(fn () => $this->bitrix24LeadSender->send($order));
 
         return $order;
     }
